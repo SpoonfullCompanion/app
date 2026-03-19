@@ -87,12 +87,12 @@ export default function LoginScreen({
           <img
             src="/Spoonfull-Logo-DarkBG copy.svg"
             alt="Spoonfull"
-            className="w-40 h-auto"
+            className="w-44 h-auto md:w-52"
           />
         </div>
         <div>
            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
-            Sign In 
+            Sign In
           </p>
         </div>
 
@@ -165,11 +165,12 @@ export default function LoginScreen({
           </div>
         </form>
 
+         <p className="mt-.5 text-sm text-off-white/70">
+           First time?{' '}
            <button
              type="button"
              onClick={onShowSignup}
              className="text-periwinkle underline"
-             className="text-sm text-periwinkle underline font-bold"
            >
              Create an account.
            </button>
