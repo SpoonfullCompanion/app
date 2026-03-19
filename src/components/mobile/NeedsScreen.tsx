@@ -1,38 +1,107 @@
+import { useState, useEffect } from 'react';
 import { Volume2, VolumeX, Send } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { NEEDS } from '../../utils/communicationData';
 import { speak } from '../../utils/textToSpeech';
-import type { CommunicationSubmission } from '../../types/app';
+import type { CommunicationSubmission, StatusUpdate } from '../../types/app';
+import { supabase } from '../../lib/supabaseClient';
+import { formatDistanceToNow } from './time';
 
 interface NeedsScreenProps {
   ttsEnabled: boolean;
   onToggleTTS: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
+  profileId: string;
 }
 
-export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: NeedsScreenProps) {
-  const handleNeedClick = async (needId: string) => {
+export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, profileId }: NeedsScreenProps) {
+  const [selectedNeeds, setSelectedNeeds] = useState<Set<string>>(new Set());
+  const [isSending, setIsSending] = useState(false);
+  const [lastCommunication, setLastCommunication] = useState<StatusUpdate | null>(null);
+
+  useEffect(() => {
+    fetchLastCommunication();
+  }, [profileId]);
+
+  const fetchLastCommunication = async () => {
+    if (!supabase) return;
+
+    const { data, error } = await supabase
+      .from('status_updates')
+      .select('*')
+      .eq('patient_id', profileId)
+      .not('selected_needs', 'eq', '[]')
+      .order('sent_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      setLastCommunication({
+        id: data.id,
+        patientId: data.patient_id,
+        caregiverId: data.caregiver_id,
+        helperLocation: data.helper_location,
+        selectedNeeds: data.selected_needs,
+        energyStatus: data.energy_status,
+        selectedSymptoms: data.selected_symptoms,
+        messageText: data.message_text,
+        sentAt: data.sent_at,
+        delivery: data.delivery,
+      });
+    }
+  };
+
+  const handleNeedClick = (needId: string) => {
     const need = NEEDS.find(n => n.id === needId);
     if (!need) return;
 
-    if (ttsEnabled) {
-      speak(need.speech);
+    const newNeeds = new Set(selectedNeeds);
+    if (newNeeds.has(needId)) {
+      newNeeds.delete(needId);
+    } else {
+      newNeeds.add(needId);
+      if (ttsEnabled) {
+        speak(need.speech);
+      }
     }
-
-    await onSendUpdate({
-      type: 'need',
-      need: needId,
-      message: need.speech,
-    });
+    setSelectedNeeds(newNeeds);
   };
 
+  const handleSendNeeds = async () => {
+    if (selectedNeeds.size === 0) return;
+
+    setIsSending(true);
+    try {
+      const needsArray = Array.from(selectedNeeds);
+      const messages = needsArray
+        .map(id => NEEDS.find(n => n.id === id)?.speech)
+        .filter(Boolean)
+        .join('. ');
+
+      await onSendUpdate({
+        type: 'need',
+        selectedNeeds: needsArray,
+        message: messages,
+      });
+
+      setSelectedNeeds(new Set());
+      await fetchLastCommunication();
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const lastCommunicatedNeeds = (lastCommunication?.selectedNeeds ?? [])
+    .map(id => NEEDS.find(n => n.id === id))
+    .filter(Boolean);
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
       <div className="mx-auto max-w-2xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-periwinkle">Needs</h1>
-            <p className="text-sm text-periwinkle/70">Tap to speak or send</p>
+            <p className="text-sm text-periwinkle/70">Tap to select, then send</p>
           </div>
           <button
             onClick={onToggleTTS}
@@ -42,14 +111,43 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: N
           </button>
         </div>
 
+        {lastCommunication && lastCommunicatedNeeds.length > 0 && (
+          <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-periwinkle/60">
+                Last Communication
+              </h2>
+              <p className="text-xs text-periwinkle/50">
+                {formatDistanceToNow(lastCommunication.sentAt)}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {lastCommunicatedNeeds.map((need) => {
+                const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+                return (
+                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-electric-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
+                    {Icon && <Icon className="h-4 w-4" />}
+                    {need.label}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {NEEDS.map((need) => {
             const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+            const isSelected = selectedNeeds.has(need.id);
             return (
               <button
                 key={need.id}
-                onClick={() => void handleNeedClick(need.id)}
-                className="group rounded-xl border-2 border-electric-blue bg-electric-blue p-4 text-center transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-electric-blue/20 active:scale-95"
+                onClick={() => handleNeedClick(need.id)}
+                className={`group rounded-xl border-2 p-4 text-center transition-all ${
+                  isSelected
+                    ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                    : 'border-electric-blue bg-electric-blue hover:scale-[1.02] hover:shadow-lg'
+                }`}
               >
                 <div className="mb-2 flex justify-center">
                   {Icon && (
@@ -70,11 +168,26 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: N
             <div>
               <p className="mb-1 text-sm font-medium text-periwinkle">Quick Communication</p>
               <p className="text-xs leading-relaxed text-periwinkle/60">
-                Each tap sends a message to your caregiver and can speak it aloud if sound is enabled.
+                Select one or more needs, then tap Send to notify your caregiver. Sound plays when you select.
               </p>
             </div>
           </div>
         </div>
+
+        {selectedNeeds.size > 0 && (
+          <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className="mx-auto max-w-2xl">
+              <button
+                onClick={() => void handleSendNeeds()}
+                disabled={isSending}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-electric-blue px-6 py-4 font-semibold text-white shadow-xl shadow-electric-blue/30 transition-all hover:bg-electric-blue/90 disabled:opacity-50"
+              >
+                <Send className="h-5 w-5" />
+                {isSending ? 'Sending...' : `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

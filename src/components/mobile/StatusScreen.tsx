@@ -26,10 +26,14 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
   }, [latestStatus]);
 
   const handleEnergySelect = (energyId: string) => {
-    setSelectedEnergy(energyId);
-    const energy = ENERGY_STATUSES.find(e => e.id === energyId);
-    if (energy && ttsEnabled) {
-      speak(energy.speech);
+    if (selectedEnergy === energyId) {
+      setSelectedEnergy(null);
+    } else {
+      setSelectedEnergy(energyId);
+      const energy = ENERGY_STATUSES.find(e => e.id === energyId);
+      if (energy && ttsEnabled) {
+        speak(energy.speech);
+      }
     }
   };
 
@@ -147,16 +151,16 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
                       ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                      : 'border-periwinkle/30 bg-midnight-black/50 hover:border-electric-blue/50 hover:bg-midnight-black/70'
+                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:scale-[1.02]'
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
-                    <span className={`font-semibold ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
+                    {Icon && <Icon className="h-5 w-5 text-white" />}
+                    <span className="font-semibold text-white">
                       {energy.label}
                     </span>
                   </div>
-                  <p className={`text-xs ${isSelected ? 'text-white/90' : 'text-periwinkle/70'}`}>
+                  <p className="text-xs text-white/90">
                     {energy.description}
                   </p>
                 </button>
@@ -180,12 +184,12 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                   className={`rounded-xl border-2 p-3 text-left transition-all ${
                     isSelected
                       ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                      : 'border-periwinkle/30 bg-midnight-black/50 hover:border-electric-blue/50 hover:bg-midnight-black/70'
+                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:scale-[1.02]'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {Icon && <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
-                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
+                    {Icon && <Icon className="h-4 w-4 text-white" />}
+                    <span className="text-sm font-medium text-white">
                       {symptom.label}
                     </span>
                   </div>

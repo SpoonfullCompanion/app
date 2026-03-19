@@ -61,6 +61,7 @@ export default function PatientHome({
           ttsEnabled={ttsEnabled}
           onToggleTTS={handleToggleTTS}
           onSendUpdate={onSendUpdate}
+          profileId={session?.profileId || ''}
         />
       )}
       {activeRoute === 'hospital' && (

@@ -63,10 +63,10 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
     <div className="space-y-6">
       <button
         onClick={() => handlePlay(urgentMessage)}
-        className={`w-full flex items-center justify-center gap-4 p-6 rounded-xl border-3 transition-all duration-200 ${
+        className={`w-full flex items-center justify-center gap-4 p-6 rounded-xl border-3 transition-all ${
           selectedMessages.has(urgentMessage.id)
-            ? 'bg-red-600 border-red-500 text-white shadow-2xl scale-[1.02]'
-            : 'bg-red-500/90 border-red-400 text-white hover:bg-red-600 hover:border-red-300 shadow-lg'
+            ? 'bg-red-600 border-red-500 text-white shadow-2xl shadow-red-500/30 scale-[1.02]'
+            : 'bg-red-500/90 border-red-400 text-white hover:bg-red-600 hover:shadow-2xl hover:scale-[1.02]'
         }`}
       >
         <urgentMessage.icon
@@ -84,9 +84,9 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
             <button
               key={message.id}
               onClick={() => handlePlay(message)}
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
                 selectedMessages.has(message.id)
-                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg scale-[1.02]'
+                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg shadow-electric-blue/30 scale-[1.02]'
                   : 'bg-electric-blue border-electric-blue text-white hover:shadow-lg hover:scale-[1.02]'
               }`}
             >
@@ -108,9 +108,9 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
             <button
               key={message.id}
               onClick={() => handlePlay(message)}
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
                 selectedMessages.has(message.id)
-                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg scale-[1.02]'
+                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg shadow-electric-blue/30 scale-[1.02]'
                   : 'bg-electric-blue border-electric-blue text-white hover:shadow-lg hover:scale-[1.02]'
               }`}
             >
