@@ -90,7 +90,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-periwinkle">Status</h1>
-            <p className="text-sm text-periwinkle/70">Updates your caregiver portal</p>
+            <p className="text-sm text-periwinkle/70">Update your status for your helper.</p>
           </div>
           <button
             onClick={onToggleTTS}
