@@ -97,19 +97,19 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                 <button
                   key={energy.id}
                   onClick={() => handleEnergySelect(energy.id)}
-                  className={`rounded-xl border p-4 text-left transition-all ${
+                  className={`rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
                       ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/20'
-                      : 'border-dark-blue/50 bg-midnight-black/50 hover:border-dark-blue hover:bg-midnight-black/70'
+                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:shadow-electric-blue/20'
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
-                    <span className={`font-semibold ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
+                    {Icon && <Icon className="h-5 w-5 text-white" />}
+                    <span className="font-semibold text-white">
                       {energy.label}
                     </span>
                   </div>
-                  <p className={`text-xs ${isSelected ? 'text-white/90' : 'text-periwinkle/60'}`}>
+                  <p className="text-xs text-white/90">
                     {energy.description}
                   </p>
                 </button>
@@ -130,15 +130,15 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                 <button
                   key={symptom.id}
                   onClick={() => toggleSymptom(symptom.id)}
-                  className={`rounded-xl border p-3 text-left transition-all ${
+                  className={`rounded-xl border-2 p-3 text-left transition-all ${
                     isSelected
                       ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/20'
-                      : 'border-dark-blue/50 bg-midnight-black/50 hover:border-dark-blue hover:bg-midnight-black/70'
+                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:shadow-electric-blue/20'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {Icon && <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
-                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
+                    {Icon && <Icon className="h-4 w-4 text-white" />}
+                    <span className="text-sm font-medium text-white">
                       {symptom.label}
                     </span>
                   </div>

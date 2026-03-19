@@ -87,7 +87,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
                 selectedMessages.has(message.id)
                   ? 'bg-electric-blue border-electric-blue text-white shadow-lg scale-[1.02]'
-                  : 'bg-midnight-black/50 border-dark-blue text-periwinkle hover:border-periwinkle hover:bg-midnight-black/70'
+                  : 'bg-electric-blue border-electric-blue text-white hover:shadow-lg hover:scale-[1.02]'
               }`}
             >
               <message.icon
@@ -111,7 +111,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
                 selectedMessages.has(message.id)
                   ? 'bg-electric-blue border-electric-blue text-white shadow-lg scale-[1.02]'
-                  : 'bg-midnight-black/50 border-dark-blue text-periwinkle hover:border-periwinkle hover:bg-midnight-black/70'
+                  : 'bg-electric-blue border-electric-blue text-white hover:shadow-lg hover:scale-[1.02]'
               }`}
             >
               <message.icon
