@@ -165,11 +165,11 @@ export default function LoginScreen({
           </div>
         </form>
 
-         <className="text-sm text-periwinkle underline font-bold"
            <button
              type="button"
              onClick={onShowSignup}
              className="text-periwinkle underline"
+             className="text-sm text-periwinkle underline font-bold"
            >
              Create an account.
            </button>
