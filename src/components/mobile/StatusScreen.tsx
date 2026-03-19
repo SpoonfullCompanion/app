@@ -17,16 +17,13 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
   const [selectedEnergy, setSelectedEnergy] = useState<string | null>(latestStatus?.energyStatus ?? null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set(latestStatus?.selectedSymptoms ?? []));
   const [isSending, setIsSending] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Only initialize from latestStatus once, on mount
   useEffect(() => {
-    if (!hasInitialized && latestStatus) {
+    if (latestStatus) {
       setSelectedEnergy(latestStatus.energyStatus);
       setSelectedSymptoms(new Set(latestStatus.selectedSymptoms ?? []));
-      setHasInitialized(true);
     }
-  }, [latestStatus, hasInitialized]);
+  }, [latestStatus]);
 
   const handleEnergySelect = (energyId: string) => {
     setSelectedEnergy(energyId);
