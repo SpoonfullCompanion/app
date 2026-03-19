@@ -37,3 +37,34 @@
     }
   }
 }
+
+/* Gentle pulsating animation for loading screen */
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes gentleGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(120, 148, 255, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(120, 148, 255, 0.5));
+  }
+}
+
+.pulse-animation {
+  animation: gentlePulse 2.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.glow-animation {
+  animation: gentleGlow 2.5s ease-in-out infinite;
+  will-change: filter;
+}

@@ -6,6 +6,7 @@ import DemoRoleScreen from './components/mobile/DemoRoleScreen';
 import CaregiverHome from './components/mobile/CaregiverHome';
 import PatientHome from './components/mobile/PatientHome';
 import PatientPairingScreen from './components/mobile/PatientPairingScreen';
+import { LoadingScreen } from './components/mobile/LoadingScreen';
 import { appConfig } from './lib/appConfig';
 import { isNativeApp } from './lib/nativeAuth';
 import { supabase } from './lib/supabaseClient';
@@ -334,13 +335,7 @@ function App() {
   };
 
   if (isLoading) {
-    return (
-      <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white">
-        <div className="mx-auto max-w-xl rounded-[2rem] border border-dark-blue bg-dark-blue/20 p-6">
-          Loading Spoonfull mobile...
-        </div>
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   if (!session) {
