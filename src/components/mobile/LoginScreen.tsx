@@ -91,11 +91,7 @@ export default function LoginScreen({
           />
         </div>
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Spoonfull mobile</p>
-          <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">Crash Companion</h1>
-          <p className="mt-3 text-base text-off-white/75">
-            Tools that connect us.
-          </p>
+         <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">SignIn to your account</h1>
         </div>
 
         <form onSubmit={handleSignIn} className="mt-10 space-y-4">
