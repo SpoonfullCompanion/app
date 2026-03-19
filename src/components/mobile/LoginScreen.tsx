@@ -166,7 +166,6 @@ export default function LoginScreen({
         </form>
 
          <p className="mt-.5 text-sm text-off-white/70">
-           First time?{' '}
            <button
              type="button"
              onClick={onShowSignup}
