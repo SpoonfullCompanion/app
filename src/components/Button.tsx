@@ -25,9 +25,9 @@ export default function Button({
   const baseClasses = 'font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-midnight-black disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantClasses = {
-    primary: 'bg-bold-blue text-off-white hover:bg-periwinkle focus:ring-bold-blue shadow-lg hover:shadow-xl',
-    secondary: 'bg-periwinkle text-off-white hover:bg-periwinkle/90 focus:ring-periwinkle shadow-lg hover:shadow-xl',
-    outline: 'border-2 border-bold-blue text-bold-blue hover:bg-bold-blue hover:text-off-white focus:ring-bold-blue'
+    primary: 'bg-bold-blue text-white hover:bg-periwinkle focus:ring-bold-blue shadow-lg hover:shadow-xl',
+    secondary: 'bg-periwinkle text-white hover:bg-periwinkle/90 focus:ring-periwinkle shadow-lg hover:shadow-xl',
+    outline: 'border-2 border-bold-blue text-bold-blue hover:bg-bold-blue hover:text-white focus:ring-bold-blue'
   };
   
   const sizeClasses = {
