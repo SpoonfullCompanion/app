@@ -90,7 +90,7 @@ export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalT
         </button>
 
         <div>
-          <h3 className="text-xl font-semibold text-off-white mb-4">How I feel</h3>
+          <h3 className="text-xl font-semibold text-white mb-4">How I feel</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {bodySymptomMessages.map((message) => (
               <button
@@ -98,8 +98,8 @@ export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalT
                 onClick={() => handlePlay(message)}
                 className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
                   selectedMessages.has(message.id)
-                    ? 'bg-bold-blue border-bold-blue text-off-white shadow-lg scale-[1.02]'
-                    : 'bg-dark-blue/40 border-dark-blue text-off-white hover:border-periwinkle hover:bg-midnight-black/70'
+                    ? 'bg-bold-blue border-bold-blue text-white shadow-lg scale-[1.02]'
+                    : 'bg-dark-blue/40 border-dark-blue text-white hover:border-periwinkle hover:bg-midnight-black/70'
                 }`}
               >
                 <message.icon
@@ -114,7 +114,7 @@ export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalT
         </div>
 
         <div>
-          <h3 className="text-xl font-semibold text-off-white mb-4">What I need</h3>
+          <h3 className="text-xl font-semibold text-white mb-4">What I need</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {actionRequestMessages.map((message) => (
               <button
@@ -122,8 +122,8 @@ export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalT
                 onClick={() => handlePlay(message)}
                 className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
                   selectedMessages.has(message.id)
-                    ? 'bg-bold-blue border-bold-blue text-off-white shadow-lg scale-[1.02]'
-                    : 'bg-dark-blue/40 border-dark-blue text-off-white hover:border-periwinkle hover:bg-midnight-black/70'
+                    ? 'bg-bold-blue border-bold-blue text-white shadow-lg scale-[1.02]'
+                    : 'bg-dark-blue/40 border-dark-blue text-white hover:border-periwinkle hover:bg-midnight-black/70'
                 }`}
               >
                 <message.icon
@@ -138,19 +138,19 @@ export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalT
         </div>
 
         <div className="pt-4 border-t border-dark-blue/50">
-          <h3 className="text-xl font-semibold text-off-white mb-2">Type here to speak out loud</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">Type here to speak out loud</h3>
           <div className="flex flex-col gap-3">
             <textarea
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="Type your message here..."
               rows={4}
-              className="w-full px-4 py-3 rounded-xl bg-dark-blue/40 border-2 border-dark-blue text-off-white placeholder-gray-400 focus:outline-none focus:border-periwinkle transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-xl bg-dark-blue/40 border-2 border-dark-blue text-white placeholder-gray-400 focus:outline-none focus:border-periwinkle transition-colors resize-none"
             />
             <button
               onClick={handleCustomSpeak}
               disabled={!customText.trim()}
-              className="self-end px-6 py-3 rounded-xl bg-bold-blue hover:bg-periwinkle disabled:bg-gray-600 disabled:cursor-not-allowed text-off-white font-medium transition-colors flex items-center gap-2"
+              className="self-end px-6 py-3 rounded-xl bg-bold-blue hover:bg-periwinkle disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
             >
               <Volume2 size={20} />
               Speak

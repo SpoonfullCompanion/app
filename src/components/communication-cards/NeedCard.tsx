@@ -19,8 +19,8 @@ export default function NeedCard({ label, icon, isSelected = false, onClick }: N
       onClick={onClick}
       className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 min-h-[110px] ${
         isSelected
-          ? 'bg-bold-blue border-bold-blue text-off-white'
-          : 'bg-dark-blue/40 border-dark-blue text-off-white hover:border-periwinkle hover:bg-midnight-black/70'
+          ? 'bg-bold-blue border-bold-blue text-white'
+          : 'bg-dark-blue/40 border-dark-blue text-white hover:border-periwinkle hover:bg-midnight-black/70'
       }`}
       aria-pressed={isSelected}
     >

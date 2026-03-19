@@ -16,7 +16,7 @@ function resolveLabels(ids: string[], collection: { id: string; label: string }[
 export default function StatusSummaryCard({ update, emptyMessage }: StatusSummaryCardProps) {
   if (!update) {
     return (
-      <div className="rounded-3xl border border-dark-blue bg-dark-blue/30 p-5 text-off-white/80">
+      <div className="rounded-3xl border border-dark-blue bg-dark-blue/30 p-5 text-white/80">
         {emptyMessage}
       </div>
     );
@@ -31,30 +31,30 @@ export default function StatusSummaryCard({ update, emptyMessage }: StatusSummar
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Latest status</p>
-          <h3 className="mt-2 text-2xl font-bold text-off-white">{energyLabel}</h3>
+          <h3 className="mt-2 text-2xl font-bold text-white">{energyLabel}</h3>
         </div>
-        <p className="text-sm text-off-white/70">{formatDistanceToNow(update.sentAt)}</p>
+        <p className="text-sm text-white/70">{formatDistanceToNow(update.sentAt)}</p>
       </div>
 
-      <div className="mt-5 space-y-4 text-off-white">
+      <div className="mt-5 space-y-4 text-white">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Helper location</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-white/60">Helper location</p>
           <p className="mt-1 text-lg font-semibold">{update.helperLocation ?? 'Not set'}</p>
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Needs</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-white/60">Needs</p>
           <p className="mt-1 text-base">{needs.length > 0 ? needs.join(', ') : 'No needs selected'}</p>
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Symptoms</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-white/60">Symptoms</p>
           <p className="mt-1 text-base">{symptoms.length > 0 ? symptoms.join(', ') : 'No symptoms selected'}</p>
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Message</p>
-          <p className="mt-1 whitespace-pre-wrap text-base leading-relaxed text-off-white/90">
+          <p className="text-xs uppercase tracking-[0.25em] text-white/60">Message</p>
+          <p className="mt-1 whitespace-pre-wrap text-base leading-relaxed text-white/90">
             {update.messageText}
           </p>
         </div>

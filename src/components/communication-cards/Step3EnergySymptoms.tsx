@@ -42,7 +42,7 @@ export default function Step3EnergySymptoms({
       headerAction={
         <button
           onClick={handleNext}
-          className="px-6 py-2 text-off-white/80 hover:text-off-white font-semibold underline transition-colors"
+          className="px-6 py-2 text-white/80 hover:text-white font-semibold underline transition-colors"
         >
           Skip
         </button>
@@ -50,7 +50,7 @@ export default function Step3EnergySymptoms({
       footer={
         <button
           onClick={handleNext}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-off-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
         >
           Next
           <ArrowRight className="w-6 h-6" aria-hidden="true" />
@@ -64,9 +64,9 @@ export default function Step3EnergySymptoms({
             className="w-full flex items-center justify-between p-4 text-left hover:bg-midnight-black/50 transition-colors"
             aria-expanded={isSymptomsOpen}
           >
-            <h2 className="text-xl font-semibold text-off-white">Symptoms</h2>
+            <h2 className="text-xl font-semibold text-white">Symptoms</h2>
             <ChevronDown
-              className={`w-6 h-6 text-off-white transition-transform duration-200 ${
+              className={`w-6 h-6 text-white transition-transform duration-200 ${
                 isSymptomsOpen ? 'rotate-180' : ''
               }`}
               aria-hidden="true"
@@ -85,8 +85,8 @@ export default function Step3EnergySymptoms({
                       onClick={() => onToggleSymptom(symptom.id)}
                       className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 min-h-[90px] ${
                         isSelected
-                          ? 'bg-bold-blue border-bold-blue text-off-white'
-                          : 'bg-midnight-black/50 border-dark-blue text-off-white hover:border-periwinkle hover:bg-midnight-black/70'
+                          ? 'bg-bold-blue border-bold-blue text-white'
+                          : 'bg-midnight-black/50 border-dark-blue text-white hover:border-periwinkle hover:bg-midnight-black/70'
                       }`}
                       aria-pressed={isSelected}
                     >
@@ -106,9 +106,9 @@ export default function Step3EnergySymptoms({
             className="w-full flex items-center justify-between p-4 text-left hover:bg-midnight-black/50 transition-colors"
             aria-expanded={isEnergyOpen}
           >
-            <h2 className="text-xl font-semibold text-off-white">Energy status</h2>
+            <h2 className="text-xl font-semibold text-white">Energy status</h2>
             <ChevronDown
-              className={`w-6 h-6 text-off-white transition-transform duration-200 ${
+              className={`w-6 h-6 text-white transition-transform duration-200 ${
                 isEnergyOpen ? 'rotate-180' : ''
               }`}
               aria-hidden="true"
@@ -134,8 +134,8 @@ export default function Step3EnergySymptoms({
                     >
                       <IconComponent className="w-6 h-6 text-periwinkle flex-shrink-0 mt-1" aria-hidden="true" />
                       <div className="flex-1">
-                        <div className="text-base font-semibold text-off-white mb-1">{status.label}</div>
-                        <div className="text-xs text-off-white/80">{status.description}</div>
+                        <div className="text-base font-semibold text-white mb-1">{status.label}</div>
+                        <div className="text-xs text-white/80">{status.description}</div>
                       </div>
                     </button>
                   );

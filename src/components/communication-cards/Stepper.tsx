@@ -13,7 +13,7 @@ export default function Stepper({ currentStep, totalSteps, onBack }: StepperProp
       {onBack && (
         <button
           onClick={onBack}
-          className="p-2 text-off-white/60 hover:text-off-white transition-colors flex-shrink-0"
+          className="p-2 text-white/60 hover:text-white transition-colors flex-shrink-0"
           aria-label="Go back"
         >
           <ArrowLeft className="w-6 h-6" />
@@ -33,7 +33,7 @@ export default function Stepper({ currentStep, totalSteps, onBack }: StepperProp
         ))}
       </div>
 
-      <span className="text-off-white/60 text-sm flex-shrink-0">
+      <span className="text-white/60 text-sm flex-shrink-0">
         {currentStep + 1} / {totalSteps}
       </span>
     </div>

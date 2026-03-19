@@ -24,7 +24,7 @@ export default function StepLayout({ heading, description, children, footer, cur
           <div className="flex items-center justify-between gap-4 mb-3">
             {typeof heading === 'string' ? (
               <>
-                <h1 className="text-3xl sm:text-4xl font-bold text-off-white font-league-spartan">
+                <h1 className="text-3xl sm:text-4xl font-bold text-white font-league-spartan">
                   {heading}
                 </h1>
                 {headerAction && (
@@ -34,13 +34,13 @@ export default function StepLayout({ heading, description, children, footer, cur
                 )}
               </>
             ) : (
-              <h1 className="text-3xl sm:text-4xl font-bold text-off-white font-league-spartan w-full">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white font-league-spartan w-full">
                 {heading}
               </h1>
             )}
           </div>
           {description && (
-            <p className="text-lg text-off-white/80">{description}</p>
+            <p className="text-lg text-white/80">{description}</p>
           )}
         </div>
 

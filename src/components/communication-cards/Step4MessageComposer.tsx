@@ -51,7 +51,7 @@ export default function Step4MessageComposer({
         <div className="space-y-4">
           <button
             onClick={() => void handleSendUpdate()}
-            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-off-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
           >
             <MessageSquare className="w-6 h-6" aria-hidden="true" />
             Send update
@@ -60,7 +60,7 @@ export default function Step4MessageComposer({
           <div className="flex gap-4">
             <button
               onClick={handleCopy}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-periwinkle text-periwinkle font-semibold rounded-lg hover:bg-periwinkle hover:text-off-white transition-colors duration-200 min-h-[56px]"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-periwinkle text-periwinkle font-semibold rounded-lg hover:bg-periwinkle hover:text-white transition-colors duration-200 min-h-[56px]"
             >
               <Copy className="w-5 h-5" aria-hidden="true" />
               {showCopySuccess ? 'Copied!' : 'Copy text'}
@@ -68,7 +68,7 @@ export default function Step4MessageComposer({
 
             <button
               onClick={onReset}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-dark-blue text-off-white font-semibold rounded-lg hover:border-periwinkle transition-colors duration-200 min-h-[56px]"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-dark-blue text-white font-semibold rounded-lg hover:border-periwinkle transition-colors duration-200 min-h-[56px]"
             >
               <RotateCcw className="w-5 h-5" aria-hidden="true" />
               Start over
@@ -77,7 +77,7 @@ export default function Step4MessageComposer({
 
           <button
             onClick={() => openSMS(message)}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 border-2 border-dark-blue text-off-white font-semibold rounded-lg hover:border-periwinkle transition-colors duration-200 min-h-[56px]"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 border-2 border-dark-blue text-white font-semibold rounded-lg hover:border-periwinkle transition-colors duration-200 min-h-[56px]"
           >
             <MessageSquare className="w-5 h-5" aria-hidden="true" />
             Text instead
@@ -86,14 +86,14 @@ export default function Step4MessageComposer({
       }
     >
       <div className="max-w-2xl mx-auto">
-        <p className="text-sm text-off-white/80 mb-4">
+        <p className="text-sm text-white/80 mb-4">
          Send this update to your paired caregiver, or use the SMS fallback if you need to text instead.
         </p>
 
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="w-full px-4 py-3 bg-midnight-black/50 border-2 border-dark-blue rounded-lg text-off-white focus:border-periwinkle focus:outline-none resize-none overflow-y-auto"
+          className="w-full px-4 py-3 bg-midnight-black/50 border-2 border-dark-blue rounded-lg text-white focus:border-periwinkle focus:outline-none resize-none overflow-y-auto"
           rows={6}
           style={{
             scrollbarWidth: 'thin',
