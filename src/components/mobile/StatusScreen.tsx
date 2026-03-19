@@ -75,7 +75,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-periwinkle">Status</h1>
-            <p className="text-sm text-periwinkle/70">Share how you're doing</p>
+            <p className="text-sm text-periwinkle/70">Update how you're doing</p>
           </div>
           <button
             onClick={onToggleTTS}
