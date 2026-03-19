@@ -87,7 +87,7 @@ export default function LoginScreen({
           <img
             src="/Spoonfull-Logo-DarkBG copy.svg"
             alt="Spoonfull"
-            className="w-40 h-auto md:w-48"
+            className="w-48 h-auto md:w-58"
           />
         </div>
         <div>
