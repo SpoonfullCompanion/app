@@ -87,15 +87,19 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
                 selectedMessages.has(message.id)
                   ? 'bg-electric-blue border-electric-blue text-white shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                  : 'bg-electric-blue border-electric-blue text-white hover:shadow-lg hover:scale-[1.02]'
+                  : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
               }`}
             >
               <message.icon
-                className="flex-shrink-0"
+                className={`flex-shrink-0 transition-colors ${
+                  selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+                }`}
                 size={24}
                 aria-hidden="true"
               />
-              <span className="text-left font-medium leading-tight">{message.text}</span>
+              <span className={`text-left font-medium leading-tight transition-colors ${
+                selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+              }`}>{message.text}</span>
             </button>
           ))}
         </div>
@@ -111,15 +115,19 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
                 selectedMessages.has(message.id)
                   ? 'bg-electric-blue border-electric-blue text-white shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                  : 'bg-electric-blue border-electric-blue text-white hover:shadow-lg hover:scale-[1.02]'
+                  : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
               }`}
             >
               <message.icon
-                className="flex-shrink-0"
+                className={`flex-shrink-0 transition-colors ${
+                  selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+                }`}
                 size={24}
                 aria-hidden="true"
               />
-              <span className="text-left font-medium leading-tight">{message.text}</span>
+              <span className={`text-left font-medium leading-tight transition-colors ${
+                selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+              }`}>{message.text}</span>
             </button>
           ))}
         </div>
