@@ -50,7 +50,7 @@ export default function SignupScreen({
 
   if (!selectedRole) {
     return (
-      <main className="min-h-screen bg-midnight-black px-4 py-8 text-white sm:px-6">
+      <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
         <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col justify-between rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
           <div>
             <button onClick={onBack} className="text-sm font-semibold text-periwinkle underline">
@@ -58,7 +58,7 @@ export default function SignupScreen({
             </button>
             <p className="mt-8 text-xs uppercase tracking-[0.3em] text-periwinkle">Create account</p>
             <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-none">Choose your role</h1>
-            <p className="mt-4 max-w-xl text-base text-white/80">
+            <p className="mt-4 max-w-xl text-base text-off-white/80">
               Select how you'll use Spoonfull.
             </p>
           </div>
@@ -70,7 +70,7 @@ export default function SignupScreen({
             >
               <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Send your status</p>
               <h2 className="mt-3 text-3xl font-bold font-league-spartan">Patient</h2>
-              <p className="mt-4 text-base text-white/75">
+              <p className="mt-4 text-base text-off-white/75">
                 Use the Spoonfull communication cards with persistent state, pairing, and mobile-friendly controls.
               </p>
             </button>
@@ -81,20 +81,20 @@ export default function SignupScreen({
             >
               <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Find out what they need</p>
               <h2 className="mt-3 text-3xl font-bold font-league-spartan">Helper</h2>
-              <p className="mt-4 text-base text-white/75">
+              <p className="mt-4 text-base text-off-white/75">
                 Pair to a patient, follow the latest status, and enable reminders once notifications are configured.
               </p>
             </button>
           </div>
 
-          <p className="mt-10 text-center text-sm text-white/60">Choose a role to continue.</p>
+          <p className="mt-10 text-center text-sm text-off-white/60">Choose a role to continue.</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-midnight-black px-4 py-8 text-white sm:px-6">
+    <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
       <div className="mx-auto max-w-xl rounded-[2rem] border border-dark-blue bg-dark-blue/25 p-6 shadow-xl shadow-black/20">
         <button onClick={handleBack} className="text-sm font-semibold text-periwinkle underline">
           Back
@@ -104,12 +104,12 @@ export default function SignupScreen({
           {selectedRole === 'patient' ? 'Patient' : 'Helper'}
         </p>
         <h1 className="mt-3 text-4xl font-bold font-league-spartan">Create your account</h1>
-        <p className="mt-4 text-base text-white/75">
+        <p className="mt-4 text-base text-off-white/75">
           Set up your {selectedRole === 'patient' ? 'patient' : 'helper'} account to get started.
         </p>
 
         <form onSubmit={handleSignUp} className="mt-8 space-y-4">
-          <label className="block text-sm font-semibold text-white/90" htmlFor="signup-email">
+          <label className="block text-sm font-semibold text-off-white/90" htmlFor="signup-email">
             Email
           </label>
           <input
@@ -120,10 +120,10 @@ export default function SignupScreen({
             placeholder="name@example.com"
             autoCapitalize="none"
             autoCorrect="off"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-white outline-none transition-colors focus:border-periwinkle"
+            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
           />
 
-          <label className="block text-sm font-semibold text-white/90" htmlFor="signup-password">
+          <label className="block text-sm font-semibold text-off-white/90" htmlFor="signup-password">
             Password
           </label>
           <input
@@ -132,7 +132,7 @@ export default function SignupScreen({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="At least 6 characters"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-white outline-none transition-colors focus:border-periwinkle"
+            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
           />
 
           <Button
@@ -145,7 +145,7 @@ export default function SignupScreen({
         </form>
 
         {statusMessage || localStatusMessage ? (
-          <div className="mt-4 rounded-2xl border border-periwinkle/40 bg-periwinkle/10 px-4 py-3 text-sm text-white/85">
+          <div className="mt-4 rounded-2xl border border-periwinkle/40 bg-periwinkle/10 px-4 py-3 text-sm text-off-white/85">
             {statusMessage || localStatusMessage}
           </div>
         ) : null}

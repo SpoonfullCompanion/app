@@ -22,7 +22,7 @@ export default function Step2Away({ selectedNeeds, onToggleNeed, onNext, onBack 
       headerAction={
         <button
           onClick={onNext}
-          className="px-6 py-2 text-white/80 hover:text-white font-semibold underline transition-colors"
+          className="px-6 py-2 text-off-white/80 hover:text-off-white font-semibold underline transition-colors"
         >
           Skip
         </button>
@@ -30,7 +30,7 @@ export default function Step2Away({ selectedNeeds, onToggleNeed, onNext, onBack 
       footer={
         <button
           onClick={onNext}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-off-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
         >
           Next
           <ArrowRight className="w-6 h-6" aria-hidden="true" />

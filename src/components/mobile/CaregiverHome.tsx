@@ -69,7 +69,7 @@ export default function CaregiverHome({
   };
 
   return (
-    <main className="min-h-screen bg-midnight-black px-4 py-6 text-white sm:px-6">
+    <main className="min-h-screen bg-midnight-black px-4 py-6 text-off-white sm:px-6">
       {showHeaderChrome ? (
         <ConnectionStatus session={session} pairing={pairing} isConnectedMode={isConnectedMode} />
       ) : null}
@@ -79,7 +79,7 @@ export default function CaregiverHome({
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Caregiver mode</p>
               <h1 className="mt-3 text-4xl font-bold font-league-spartan">Latest patient update</h1>
-              <p className="mt-3 max-w-2xl text-white/75">
+              <p className="mt-3 max-w-2xl text-off-white/75">
                 Pair to a patient with an invite code, keep the last update visible offline, and enable reminders in context.
               </p>
             </div>
@@ -92,11 +92,11 @@ export default function CaregiverHome({
 
           <div className="mt-6 grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
             <div className="rounded-3xl border border-dark-blue bg-midnight-black/40 p-5">
-              <p className="text-xs uppercase tracking-[0.25em] text-white/60">Pair to patient</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Pair to patient</p>
               {pairing ? (
                 <div className="mt-3 space-y-3">
                   <p className="text-3xl font-bold tracking-[0.25em] text-periwinkle">{pairing.code}</p>
-                  <p className="text-sm text-white/70">You are paired and will receive the latest status here.</p>
+                  <p className="text-sm text-off-white/70">You are paired and will receive the latest status here.</p>
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <Button variant="outline" className="w-full sm:w-auto" onClick={() => void handleEnableReminders()}>
                       Enable reminders
@@ -113,7 +113,7 @@ export default function CaregiverHome({
                     value={code}
                     onChange={(event) => setCode(event.target.value.toUpperCase())}
                     placeholder="Invite code"
-                    className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-center text-2xl tracking-[0.35em] text-white outline-none transition-colors focus:border-periwinkle"
+                    className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-center text-2xl tracking-[0.35em] text-off-white outline-none transition-colors focus:border-periwinkle"
                   />
                   <Button type="submit" className="w-full">
                     Join patient
@@ -121,8 +121,8 @@ export default function CaregiverHome({
                 </form>
               )}
 
-              {message ? <p className="mt-3 text-sm text-white/70">{message}</p> : null}
-              {notificationMessage ? <p className="mt-3 text-sm text-white/70">{notificationMessage}</p> : null}
+              {message ? <p className="mt-3 text-sm text-off-white/70">{message}</p> : null}
+              {notificationMessage ? <p className="mt-3 text-sm text-off-white/70">{notificationMessage}</p> : null}
             </div>
 
             <StatusSummaryCard

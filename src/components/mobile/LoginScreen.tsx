@@ -81,7 +81,7 @@ export default function LoginScreen({
   };
 
   return (
-    <main className="min-h-screen bg-midnight-black px-4 py-8 text-white sm:px-6">
+    <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col justify-center rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
         <div className="flex flex-col items-center mb-6">
           <img
@@ -92,7 +92,7 @@ export default function LoginScreen({
         </div>
         <div>
          <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">Sign in</h1>
-         <p className="mt-.5 text-sm text-white/70">
+         <p className="mt-.5 text-sm text-off-white/70">
            First time?{' '}
            <button
              type="button"
@@ -105,7 +105,7 @@ export default function LoginScreen({
         </div>
 
         <form onSubmit={handleSignIn} className="mt-5 space-y-4">
-          <label className="block text-sm font-semibold text-white/90" htmlFor="email">
+          <label className="block text-sm font-semibold text-off-white/90" htmlFor="email">
             Email
           </label>
           <input
@@ -116,10 +116,10 @@ export default function LoginScreen({
             placeholder="name@example.com"
             autoCapitalize="none"
             autoCorrect="off"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-white outline-none transition-colors focus:border-periwinkle"
+            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
           />
 
-          <label className="block text-sm font-semibold text-white/90" htmlFor="password">
+          <label className="block text-sm font-semibold text-off-white/90" htmlFor="password">
             Password
           </label>
           <input
@@ -128,7 +128,7 @@ export default function LoginScreen({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Your password"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-white outline-none transition-colors focus:border-periwinkle"
+            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
           />
 
           <Button
@@ -149,7 +149,7 @@ export default function LoginScreen({
 
           {showForgotPassword && (
             <div className="rounded-2xl border border-periwinkle/40 bg-periwinkle/10 p-4">
-              <p className="text-sm text-white/85 mb-3">
+              <p className="text-sm text-off-white/85 mb-3">
                 We'll send you a password reset link to your email address.
               </p>
               <Button
@@ -166,12 +166,12 @@ export default function LoginScreen({
         </form>
 
         <div className="mt-8 border-t border-dark-blue/40 pt-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-white/60 mb-4">
+          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
             Quick link to email
           </p>
 
           <form onSubmit={handleMagicLink} className="space-y-4">
-            <label className="block text-sm font-semibold text-white/90" htmlFor="magic-email">
+            <label className="block text-sm font-semibold text-off-white/90" htmlFor="magic-email">
               Send me a magic link
             </label>
             <input
@@ -182,7 +182,7 @@ export default function LoginScreen({
               placeholder="name@example.com"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-white outline-none transition-colors focus:border-periwinkle"
+              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
             />
             <Button
               type="submit"
@@ -196,7 +196,7 @@ export default function LoginScreen({
         </div>
 
         {statusMessage || localStatusMessage ? (
-          <div className="mt-4 rounded-2xl border border-periwinkle/40 bg-periwinkle/10 px-4 py-3 text-sm text-white/85">
+          <div className="mt-4 rounded-2xl border border-periwinkle/40 bg-periwinkle/10 px-4 py-3 text-sm text-off-white/85">
             {statusMessage || localStatusMessage}
           </div>
         ) : null}
@@ -205,7 +205,7 @@ export default function LoginScreen({
           <button
             type="button"
             onClick={onContinueDemo}
-            className="text-xs text-white/50 underline"
+            className="text-xs text-off-white/50 underline"
           >
             Continue in demo mode
           </button>

@@ -11,14 +11,14 @@ function getStatus(session: AppSession | null, pairing: Pairing | null, isConnec
   if (!isConnectedMode) {
     return {
       label: 'Demo mode',
-      className: 'border-dark-blue text-white/75',
+      className: 'border-dark-blue text-off-white/75',
     };
   }
 
   if (!session) {
     return {
       label: 'Signed out',
-      className: 'border-dark-blue text-white/75',
+      className: 'border-dark-blue text-off-white/75',
     };
   }
 
