@@ -113,7 +113,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-electric-blue hover:text-electric-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
@@ -133,7 +133,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
               {displayNeeds.map((need) => {
                 const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
-                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-electric-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
+                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
                     {Icon && <Icon className="h-4 w-4" />}
                     {need.label}
                   </div>
@@ -153,7 +153,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
                 onClick={() => handleNeedClick(need.id)}
                 className={`group rounded-xl border-2 p-4 text-center transition-all ${
                   isSelected
-                    ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                    ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.02]'
                     : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
                 }`}
               >
@@ -192,7 +192,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
               <button
                 onClick={() => void handleSendNeeds()}
                 disabled={isSending}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-electric-blue px-6 py-4 font-semibold text-white shadow-xl shadow-electric-blue/30 transition-all hover:bg-electric-blue/90 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
               >
                 <Send className="h-5 w-5" />
                 {isSending ? 'Sending...' : `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}`}

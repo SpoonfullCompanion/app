@@ -42,7 +42,7 @@ export default function AccountScreen({ session, onSignOut, onOpenPairing }: Acc
 
           <button
             onClick={onOpenPairing}
-            className="w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-electric-blue hover:bg-electric-blue/10"
+            className="w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-bold-blue hover:bg-bold-blue/10"
           >
             <div className="flex items-center gap-3">
               <Link2 className="h-5 w-5 text-periwinkle" />

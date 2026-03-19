@@ -17,7 +17,7 @@ export default function HospitalScreen({ ttsEnabled, onToggleTTS }: HospitalScre
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-electric-blue hover:text-electric-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>

@@ -86,7 +86,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               onClick={() => handlePlay(message)}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
                 selectedMessages.has(message.id)
-                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                  ? 'bg-bold-blue border-bold-blue text-white shadow-lg shadow-bold-blue/30 scale-[1.02]'
                   : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
               }`}
             >
@@ -114,7 +114,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               onClick={() => handlePlay(message)}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
                 selectedMessages.has(message.id)
-                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                  ? 'bg-bold-blue border-bold-blue text-white shadow-lg shadow-bold-blue/30 scale-[1.02]'
                   : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
               }`}
             >
@@ -141,12 +141,12 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
             onChange={(e) => setCustomText(e.target.value)}
             placeholder="Type your message here..."
             rows={4}
-            className="w-full px-4 py-3 rounded-xl bg-midnight-black/50 border-2 border-dark-blue text-periwinkle placeholder-periwinkle/40 focus:outline-none focus:border-electric-blue transition-colors resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-midnight-black/50 border-2 border-dark-blue text-periwinkle placeholder-periwinkle/40 focus:outline-none focus:border-bold-blue transition-colors resize-none"
           />
           <button
             onClick={handleCustomSpeak}
             disabled={!customText.trim() || !ttsEnabled}
-            className="self-end px-6 py-3 rounded-xl bg-electric-blue hover:bg-electric-blue/90 disabled:bg-dark-blue/50 disabled:cursor-not-allowed text-white disabled:text-periwinkle/50 font-medium transition-colors flex items-center gap-2"
+            className="self-end px-6 py-3 rounded-xl bg-bold-blue hover:bg-bold-blue/90 disabled:bg-dark-blue/50 disabled:cursor-not-allowed text-white disabled:text-periwinkle/50 font-medium transition-colors flex items-center gap-2"
           >
             <Volume2 size={20} />
             Speak

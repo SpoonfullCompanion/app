@@ -94,7 +94,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-electric-blue hover:text-electric-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
@@ -112,7 +112,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {currentEnergy && (
-                <div className="flex items-center gap-1.5 rounded-lg bg-electric-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
+                <div className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
                   {(() => {
                     const Icon = LucideIcons[currentEnergy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                     return Icon && <Icon className="h-4 w-4" />;
@@ -150,7 +150,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                   onClick={() => handleEnergySelect(energy.id)}
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
-                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.02]'
                       : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
                   }`}
                 >
@@ -189,7 +189,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                   onClick={() => toggleSymptom(symptom.id)}
                   className={`rounded-xl border-2 p-3 text-left transition-all ${
                     isSelected
-                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.02]'
                       : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
                   }`}
                 >
@@ -215,7 +215,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
               <button
                 onClick={() => void handleSendStatus()}
                 disabled={isSending}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-electric-blue px-6 py-4 font-semibold text-white shadow-xl shadow-electric-blue/30 transition-all hover:bg-electric-blue/90 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
               >
                 <RefreshCw className="h-5 w-5" />
                 {isSending ? 'Updating...' : 'Update Status'}

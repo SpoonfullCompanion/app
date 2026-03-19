@@ -42,7 +42,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             <button
               key={id}
               onClick={() => onNavigate(id)}
-              className="group w-full rounded-2xl border-2 border-electric-blue bg-electric-blue p-6 text-left transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-electric-blue/30 active:scale-[0.98]"
+              className="group w-full rounded-2xl border-2 border-bold-blue bg-bold-blue p-6 text-left transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-bold-blue/30 active:scale-[0.98]"
             >
               <div className="flex items-start gap-4">
                 <div className="rounded-xl bg-white/10 p-3">

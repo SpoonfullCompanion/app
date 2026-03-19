@@ -6,7 +6,6 @@ export default {
       colors: {
         'dark-blue': '#243576',
         'bold-blue': '#425FCC',
-        'electric-blue': '#425FCC',
         'periwinkle': '#7894FF',
         'midnight-black': '#1D1D1D',
         'off-white': '#E8E8E8',
