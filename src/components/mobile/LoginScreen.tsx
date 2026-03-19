@@ -92,7 +92,7 @@ export default function LoginScreen({
         </div>
         <div>
            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
-            Sign In to Spoonfull.app
+            Sign In 
           </p>
         </div>
 
