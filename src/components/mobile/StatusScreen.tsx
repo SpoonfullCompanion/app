@@ -99,17 +99,17 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   onClick={() => handleEnergySelect(energy.id)}
                   className={`rounded-xl border p-4 text-left transition-all ${
                     isSelected
-                      ? 'border-electric-blue bg-electric-blue/20 shadow-lg shadow-electric-blue/20'
+                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/20'
                       : 'border-dark-blue/50 bg-midnight-black/50 hover:border-dark-blue hover:bg-midnight-black/70'
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className={`h-5 w-5 ${isSelected ? 'text-electric-blue' : 'text-periwinkle'}`} />}
-                    <span className={`font-semibold ${isSelected ? 'text-electric-blue' : 'text-periwinkle'}`}>
+                    {Icon && <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
+                    <span className={`font-semibold ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
                       {energy.label}
                     </span>
                   </div>
-                  <p className={`text-xs ${isSelected ? 'text-electric-blue/80' : 'text-periwinkle/60'}`}>
+                  <p className={`text-xs ${isSelected ? 'text-white/90' : 'text-periwinkle/60'}`}>
                     {energy.description}
                   </p>
                 </button>
@@ -132,13 +132,13 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   onClick={() => toggleSymptom(symptom.id)}
                   className={`rounded-xl border p-3 text-left transition-all ${
                     isSelected
-                      ? 'border-seafoam-green bg-seafoam-green/20 shadow-lg shadow-seafoam-green/20'
+                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/20'
                       : 'border-dark-blue/50 bg-midnight-black/50 hover:border-dark-blue hover:bg-midnight-black/70'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {Icon && <Icon className={`h-4 w-4 ${isSelected ? 'text-seafoam-green' : 'text-periwinkle'}`} />}
-                    <span className={`text-sm font-medium ${isSelected ? 'text-seafoam-green' : 'text-periwinkle'}`}>
+                    {Icon && <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
+                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
                       {symptom.label}
                     </span>
                   </div>
@@ -154,7 +154,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
               <button
                 onClick={() => void handleSendStatus()}
                 disabled={isSending}
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-electric-blue bg-electric-blue px-6 py-4 font-semibold text-midnight-black shadow-xl shadow-electric-blue/30 transition-all hover:bg-electric-blue/90 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-electric-blue px-6 py-4 font-semibold text-white shadow-xl shadow-electric-blue/30 transition-all hover:bg-electric-blue/90 disabled:opacity-50"
               >
                 <Send className="h-5 w-5" />
                 {isSending ? 'Sending...' : 'Send Status Update'}

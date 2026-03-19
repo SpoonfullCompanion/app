@@ -86,7 +86,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               onClick={() => handlePlay(message)}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
                 selectedMessages.has(message.id)
-                  ? 'bg-electric-blue border-electric-blue text-midnight-black shadow-lg scale-[1.02]'
+                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg scale-[1.02]'
                   : 'bg-midnight-black/50 border-dark-blue text-periwinkle hover:border-periwinkle hover:bg-midnight-black/70'
               }`}
             >
@@ -110,7 +110,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
               onClick={() => handlePlay(message)}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
                 selectedMessages.has(message.id)
-                  ? 'bg-electric-blue border-electric-blue text-midnight-black shadow-lg scale-[1.02]'
+                  ? 'bg-electric-blue border-electric-blue text-white shadow-lg scale-[1.02]'
                   : 'bg-midnight-black/50 border-dark-blue text-periwinkle hover:border-periwinkle hover:bg-midnight-black/70'
               }`}
             >
@@ -138,7 +138,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
           <button
             onClick={handleCustomSpeak}
             disabled={!customText.trim() || !ttsEnabled}
-            className="self-end px-6 py-3 rounded-xl bg-electric-blue hover:bg-electric-blue/90 disabled:bg-dark-blue/50 disabled:cursor-not-allowed text-midnight-black disabled:text-periwinkle/50 font-medium transition-colors flex items-center gap-2"
+            className="self-end px-6 py-3 rounded-xl bg-electric-blue hover:bg-electric-blue/90 disabled:bg-dark-blue/50 disabled:cursor-not-allowed text-white disabled:text-periwinkle/50 font-medium transition-colors flex items-center gap-2"
           >
             <Volume2 size={20} />
             Speak

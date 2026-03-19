@@ -49,14 +49,14 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: N
               <button
                 key={need.id}
                 onClick={() => void handleNeedClick(need.id)}
-                className="group rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-center transition-all hover:scale-[1.02] hover:border-electric-blue hover:bg-electric-blue/10 hover:shadow-lg hover:shadow-electric-blue/20 active:scale-95"
+                className="group rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-center transition-all hover:scale-[1.02] hover:border-electric-blue hover:bg-electric-blue hover:shadow-lg hover:shadow-electric-blue/20 active:scale-95"
               >
                 <div className="mb-2 flex justify-center">
                   {Icon && (
-                    <Icon className="h-8 w-8 text-periwinkle transition-colors group-hover:text-electric-blue" />
+                    <Icon className="h-8 w-8 text-periwinkle transition-colors group-hover:text-white" />
                   )}
                 </div>
-                <span className="text-sm font-medium text-periwinkle transition-colors group-hover:text-electric-blue">
+                <span className="text-sm font-medium text-periwinkle transition-colors group-hover:text-white">
                   {need.label}
                 </span>
               </button>
