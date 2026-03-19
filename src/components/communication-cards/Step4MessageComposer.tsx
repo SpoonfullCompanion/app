@@ -51,7 +51,7 @@ export default function Step4MessageComposer({
         <div className="space-y-4">
           <button
             onClick={() => void handleSendUpdate()}
-            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-bold-blue text-off-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-b from-bold-blue/80 to-bold-blue text-off-white text-lg font-semibold rounded-lg hover:bg-periwinkle transition-colors duration-200 min-h-[64px]"
           >
             <MessageSquare className="w-6 h-6" aria-hidden="true" />
             Send update

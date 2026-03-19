@@ -99,7 +99,7 @@ export default function Step2InRoom({ onBack }: Step2InRoomProps) {
             <button
               onClick={handleCustomSpeak}
               disabled={!customText.trim()}
-              className="self-end px-6 py-3 rounded-xl bg-bold-blue hover:bg-periwinkle disabled:bg-gray-600 disabled:cursor-not-allowed text-off-white font-medium transition-colors flex items-center gap-2"
+              className="self-end px-6 py-3 rounded-xl bg-gradient-to-b from-bold-blue/80 to-bold-blue hover:bg-periwinkle disabled:bg-gray-600 disabled:cursor-not-allowed text-off-white font-medium transition-colors flex items-center gap-2"
             >
               <Volume2 size={20} />
               Speak
