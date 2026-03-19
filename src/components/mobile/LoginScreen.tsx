@@ -92,7 +92,7 @@ export default function LoginScreen({
         </div>
         <div>
          <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">Sign in</h1>
-         <p className="mt-3 text-sm text-off-white/70">
+         <p className="mt-1.5 text-sm text-off-white/70">
            First time?{' '}
            <button
              type="button"
