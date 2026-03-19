@@ -30,7 +30,6 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
       .from('status_updates')
       .select('*')
       .eq('patient_id', profileId)
-      .not('selected_needs', 'eq', '[]')
       .order('sent_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -95,6 +94,8 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
     .map(id => NEEDS.find(n => n.id === id))
     .filter(Boolean);
 
+  const hasNeeds = lastCommunicatedNeeds.length > 0;
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
       <div className="mx-auto max-w-2xl px-4 py-6">
@@ -111,7 +112,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           </button>
         </div>
 
-        {lastCommunication && lastCommunicatedNeeds.length > 0 && (
+        {lastCommunication && hasNeeds && (
           <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-periwinkle/60">
