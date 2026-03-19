@@ -91,7 +91,9 @@ export default function LoginScreen({
           />
         </div>
         <div>
-         <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">Sign in</h1>
+           <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
+            Sign In
+          </p>
          <p className="mt-.5 text-sm text-off-white/70">
            First time?{' '}
            <button
