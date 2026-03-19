@@ -60,8 +60,7 @@ export default function LoginScreen({
   };
 
   const handleForgotPassword = async () => {
-    const emailToUse = email || magicLinkEmail;
-    if (!emailToUse) {
+    if (!email) {
       setLocalStatusMessage('Enter your email address first.');
       return;
     }
@@ -70,7 +69,7 @@ export default function LoginScreen({
     setLocalStatusMessage('');
 
     try {
-      const message = await onSendMagicLink(emailToUse);
+      const message = await onSendMagicLink(email);
       setLocalStatusMessage('Password reset link sent to your email.');
       setShowForgotPassword(false);
     } catch (error) {
@@ -142,12 +141,7 @@ export default function LoginScreen({
 
           <button
             type="button"
-            onClick={() => {
-              setShowForgotPassword(!showForgotPassword);
-              if (!showForgotPassword && email) {
-                setMagicLinkEmail(email);
-              }
-            }}
+            onClick={() => setShowForgotPassword(!showForgotPassword)}
             className="text-sm text-periwinkle underline font-bold"
           >
             Forgot password?
@@ -156,7 +150,7 @@ export default function LoginScreen({
           {showForgotPassword && (
             <div className="rounded-2xl border border-periwinkle/40 bg-periwinkle/10 p-4">
               <p className="text-sm text-off-white/85 mb-3">
-                We'll send you a password reset link to {email || 'your email address'}.
+                We'll send you a password reset link to your email address.
               </p>
               <Button
                 type="button"
