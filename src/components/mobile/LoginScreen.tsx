@@ -186,7 +186,6 @@ export default function LoginScreen({
             />
             <Button
               type="submit"
-              variant="outline"
               className="w-full"
               disabled={!magicLinkEmail || isBusy || !appConfig.hasSupabase}
             >
