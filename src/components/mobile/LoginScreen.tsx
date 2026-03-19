@@ -104,7 +104,7 @@ export default function LoginScreen({
          </p>
         </div>
 
-        <form onSubmit={handleSignIn} className="mt-10 space-y-4">
+        <form onSubmit={handleSignIn} className="mt-5 space-y-4">
           <label className="block text-sm font-semibold text-off-white/90" htmlFor="email">
             Email
           </label>
