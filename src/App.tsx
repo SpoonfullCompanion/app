@@ -1,10 +1,11 @@
 import React from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
-import AuthScreen from './components/mobile/AuthScreen';
+import LoginScreen from './components/mobile/LoginScreen';
+import SignupScreen from './components/mobile/SignupScreen';
+import DemoRoleScreen from './components/mobile/DemoRoleScreen';
 import CaregiverHome from './components/mobile/CaregiverHome';
 import PatientHome from './components/mobile/PatientHome';
 import PatientPairingScreen from './components/mobile/PatientPairingScreen';
-import RoleSelectionScreen from './components/mobile/RoleSelectionScreen';
 import { appConfig } from './lib/appConfig';
 import { isNativeApp } from './lib/nativeAuth';
 import { supabase } from './lib/supabaseClient';
@@ -29,7 +30,8 @@ import {
 } from './services/backend';
 
 function App() {
-  const [selectedRole, setSelectedRole] = React.useState<UserRole | null>(null);
+  const [showSignup, setShowSignup] = React.useState(false);
+  const [showDemoRoleSelection, setShowDemoRoleSelection] = React.useState(false);
   const [session, setSession] = React.useState<AppSession | null>(null);
   const [pairing, setPairing] = React.useState<Pairing | null>(null);
   const [latestStatus, setLatestStatus] = React.useState<StatusUpdate | null>(null);
@@ -77,7 +79,6 @@ function App() {
         }
 
         setSession(restoredSession);
-        setSelectedRole(restoredSession?.role ?? null);
       } catch (error) {
         console.error('Initial session load failed', error);
       } finally {
@@ -106,7 +107,6 @@ function App() {
 
       void restoreSessionFromAuthUser(authSession.user).then((restoredSession) => {
         setSession(restoredSession);
-        setSelectedRole(restoredSession.role);
         setAuthMessage('');
       });
     });
@@ -129,7 +129,6 @@ function App() {
       }
 
       setSession(result.session);
-      setSelectedRole(result.session.role);
       setAuthMessage('');
     };
 
@@ -175,39 +174,25 @@ function App() {
     };
   }, [session, pairing, pairingSubscriptionKey, updatePairingState]);
 
-  const handleSelectRole = (role: UserRole) => {
-    setSelectedRole(role);
-    if (session && session.role !== role) {
-      void signOut();
-      setSession(null);
-      setPairing(null);
-      setLatestStatus(null);
-    }
-  };
-
   const handleSendMagicLink = async (email: string) => {
-    if (!selectedRole) {
-      return 'Choose a role before signing in.';
-    }
-
-    const result = await sendMagicLink(email, selectedRole);
+    const result = await sendMagicLink(email);
     return result.message;
   };
 
-  const handleContinueDemo = async () => {
-    if (!selectedRole) {
-      return;
-    }
-
-    const nextSession = await continueInDemo(selectedRole);
+  const handleContinueDemo = async (role: UserRole) => {
+    const nextSession = await continueInDemo(role);
     setSession(nextSession);
+    setShowDemoRoleSelection(false);
     setPairing(getActivePairing(nextSession));
     setLatestStatus(await getLatestStatus(nextSession, getActivePairing(nextSession)));
   };
 
+  const handleContinueDemoFromLogin = () => {
+    setShowDemoRoleSelection(true);
+  };
+
   const finalizeConnectedAuth = (nextSession: AppSession) => {
     setSession(nextSession);
-    setSelectedRole(nextSession.role);
     setAuthMessage('');
 
     if (appConfig.enablePasswordAuth && typeof window !== 'undefined') {
@@ -225,17 +210,12 @@ function App() {
     }
 
     setSession(restoredSession);
-    setSelectedRole(restoredSession.role);
     setAuthMessage('');
     return restoredSession;
   };
 
   const handleSignInWithPassword = async (email: string, password: string) => {
-    if (!selectedRole) {
-      return 'Choose a role before signing in.';
-    }
-
-    const result = await signInWithPassword(email, password, selectedRole);
+    const result = await signInWithPassword(email, password);
     if (result.ok) {
       if (result.session) {
         finalizeConnectedAuth(result.session);
@@ -253,15 +233,12 @@ function App() {
     return result.message;
   };
 
-  const handleSignUpWithPassword = async (email: string, password: string) => {
-    if (!selectedRole) {
-      return 'Choose a role before creating an account.';
-    }
-
-    const result = await signUpWithPassword(email, password, selectedRole);
+  const handleSignUpWithPassword = async (email: string, password: string, role: UserRole) => {
+    const result = await signUpWithPassword(email, password, role);
     if (result.ok) {
       if (result.session) {
         finalizeConnectedAuth(result.session);
+        setShowSignup(false);
         return appConfig.enablePasswordAuth ? 'Account created. Reloading...' : result.message;
       }
 
@@ -271,6 +248,7 @@ function App() {
       }
 
       finalizeConnectedAuth(restoredSession);
+      setShowSignup(false);
       return appConfig.enablePasswordAuth ? 'Account created. Reloading...' : result.message;
     }
     return result.message;
@@ -289,7 +267,8 @@ function App() {
   const handleReturnToMain = async () => {
     await signOut();
     setSession(null);
-    setSelectedRole(null);
+    setShowSignup(false);
+    setShowDemoRoleSelection(false);
     setPairing(null);
     setLatestStatus(null);
     setDidDismissPairingSetup(false);
@@ -364,19 +343,33 @@ function App() {
     );
   }
 
-  if (!selectedRole) {
-    return <RoleSelectionScreen mode={appConfig.mode} onSelectRole={handleSelectRole} />;
-  }
-
   if (!session) {
+    if (showDemoRoleSelection) {
+      return (
+        <DemoRoleScreen
+          onSelectRole={handleContinueDemo}
+          onBack={() => setShowDemoRoleSelection(false)}
+        />
+      );
+    }
+
+    if (showSignup) {
+      return (
+        <SignupScreen
+          onSignUpWithPassword={handleSignUpWithPassword}
+          onBack={() => setShowSignup(false)}
+          statusMessage={authMessage}
+        />
+      );
+    }
+
     return (
-      <AuthScreen
-        role={selectedRole}
-        onBack={() => setSelectedRole(null)}
-        onSendMagicLink={handleSendMagicLink}
+      <LoginScreen
+        mode={appConfig.mode}
         onSignInWithPassword={handleSignInWithPassword}
-        onSignUpWithPassword={handleSignUpWithPassword}
-        onContinueDemo={handleContinueDemo}
+        onSendMagicLink={handleSendMagicLink}
+        onContinueDemo={handleContinueDemoFromLogin}
+        onShowSignup={() => setShowSignup(true)}
         statusMessage={authMessage}
       />
     );

@@ -221,7 +221,8 @@ export async function restoreSession() {
     }
 
     const metadataRole = data.session.user.user_metadata.role as UserRole | undefined;
-    const role = resolveRoleForAuthUser(metadataRole, storedSession, pendingRole);
+    const roleFromProfile = await fetchRoleFromProfile(data.session.user.id);
+    const role = pendingRole ?? roleFromProfile ?? metadataRole ?? storedSession?.role ?? 'patient';
     const authMode = resolveAuthMode(storedSession, pendingAuthMode);
     const session = buildConnectedSession({
       profileId: data.session.user.id,
@@ -245,7 +246,7 @@ export async function restoreSession() {
   }
 }
 
-export async function sendMagicLink(email: string, role: UserRole) {
+export async function sendMagicLink(email: string, role?: UserRole) {
   if (!supabase) {
     return {
       ok: false,
@@ -254,13 +255,15 @@ export async function sendMagicLink(email: string, role: UserRole) {
   }
 
   const redirectTo = getAuthRedirectUrl();
-  writeStorage(STORAGE_KEYS.pendingRole, role);
+  if (role) {
+    writeStorage(STORAGE_KEYS.pendingRole, role);
+  }
   writeStorage(STORAGE_KEYS.pendingAuthMode, 'magic_link');
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       emailRedirectTo: redirectTo,
-      data: { role },
+      data: role ? { role } : {},
     },
   });
 
@@ -313,7 +316,30 @@ export async function signUpWithPassword(email: string, password: string, role: 
   };
 }
 
-export async function signInWithPassword(email: string, password: string, role: UserRole) {
+async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
+  if (!supabase) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data.role as UserRole;
+  } catch (error) {
+    console.error('Failed to fetch role from profile', error);
+    return null;
+  }
+}
+
+export async function signInWithPassword(email: string, password: string, role?: UserRole) {
   if (!supabase) {
     return { ok: false, message: 'Supabase is not configured.' };
   }
@@ -323,7 +349,9 @@ export async function signInWithPassword(email: string, password: string, role: 
     return { ok: false, message: 'Enter a username or email address.' };
   }
 
-  writeStorage(STORAGE_KEYS.pendingRole, role);
+  if (role) {
+    writeStorage(STORAGE_KEYS.pendingRole, role);
+  }
   writeStorage(STORAGE_KEYS.pendingAuthMode, 'password');
   const { data, error } = await supabase.auth.signInWithPassword({
     email: resolvedEmail,
@@ -334,9 +362,14 @@ export async function signInWithPassword(email: string, password: string, role: 
     return { ok: false, message: error.message };
   }
 
+  const roleFromMetadata = data.user.user_metadata.role as UserRole | undefined;
+  const roleFromProfile = await fetchRoleFromProfile(data.user.id);
+  const storedSession = readStorage<AppSession | null>(STORAGE_KEYS.session, null);
+  const finalRole = role ?? roleFromProfile ?? roleFromMetadata ?? storedSession?.role ?? 'patient';
+
   const session = buildConnectedSession({
     profileId: data.user.id,
-    role,
+    role: finalRole,
     email: data.user.email ?? resolvedEmail,
     authMode: 'password',
   });
@@ -379,7 +412,8 @@ export async function restoreSessionFromAuthUser(user: {
   const storedSession = readStorage<AppSession | null>(STORAGE_KEYS.session, null);
   const pendingRole = readStorage<UserRole | null>(STORAGE_KEYS.pendingRole, null);
   const pendingAuthMode = readStorage<AppSession['authMode'] | null>(STORAGE_KEYS.pendingAuthMode, null);
-  const role = resolveRoleForAuthUser(user.user_metadata?.role, storedSession, pendingRole);
+  const roleFromProfile = await fetchRoleFromProfile(user.id);
+  const role = pendingRole ?? roleFromProfile ?? user.user_metadata?.role ?? storedSession?.role ?? 'patient';
   const authMode = resolveAuthMode(storedSession, pendingAuthMode);
   const session = buildConnectedSession({
     profileId: user.id,

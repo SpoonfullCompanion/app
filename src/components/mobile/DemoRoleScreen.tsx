@@ -1,23 +1,23 @@
-import type { DemoMode, UserRole } from '../../types/app';
+import type { UserRole } from '../../types/app';
 
-interface RoleSelectionScreenProps {
-  mode: DemoMode;
+interface DemoRoleScreenProps {
   onSelectRole: (role: UserRole) => void;
+  onBack: () => void;
 }
 
-export default function RoleSelectionScreen({ mode, onSelectRole }: RoleSelectionScreenProps) {
+export default function DemoRoleScreen({ onSelectRole, onBack }: DemoRoleScreenProps) {
   return (
     <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col justify-between rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Spoonfull mobile</p>
-          <h1 className="mt-4 text-5xl font-bold font-league-spartan leading-none">Crash Companion</h1>
-          <p className="mt-4 max-w-xl text-lg text-off-white/80">
-            Tools that connect us.
+          <button onClick={onBack} className="text-sm font-semibold text-periwinkle underline">
+            Back to Login
+          </button>
+          <p className="mt-8 text-xs uppercase tracking-[0.3em] text-periwinkle">Demo mode</p>
+          <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-none">Choose your role</h1>
+          <p className="mt-4 max-w-xl text-base text-off-white/80">
+            Select how you'll use Spoonfull in demo mode.
           </p>
-          <div className="mt-6 inline-flex rounded-full border border-periwinkle/40 bg-periwinkle/10 px-4 py-2 text-sm text-periwinkle">
-            {mode === 'demo' ? 'Demo mode is active until backend credentials are added.' : 'Connected mode is available.'}
-          </div>
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
