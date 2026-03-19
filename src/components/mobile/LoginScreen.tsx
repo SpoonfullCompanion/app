@@ -167,12 +167,12 @@ export default function LoginScreen({
 
         <div className="mt-8 border-t border-dark-blue/40 pt-6">
           <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
-            Alternative sign-in
+            Quick link to email
           </p>
 
           <form onSubmit={handleMagicLink} className="space-y-4">
             <label className="block text-sm font-semibold text-off-white/90" htmlFor="magic-email">
-              Email for magic link
+              Send me a magic link
             </label>
             <input
               id="magic-email"
