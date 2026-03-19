@@ -27,7 +27,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: N
   };
 
   return (
-    <div className="min-h-screen bg-midnight-black pb-24">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
