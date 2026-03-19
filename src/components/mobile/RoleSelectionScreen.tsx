@@ -13,7 +13,7 @@ export default function RoleSelectionScreen({ mode, onSelectRole }: RoleSelectio
           <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Spoonfull mobile</p>
           <h1 className="mt-4 text-5xl font-bold font-league-spartan leading-none">Crash Companion</h1>
           <p className="mt-4 max-w-xl text-lg text-off-white/80">
-            A focused mobile app for low-effort status updates and caregiver visibility.
+            Tools that connect us.
           </p>
           <div className="mt-6 inline-flex rounded-full border border-periwinkle/40 bg-periwinkle/10 px-4 py-2 text-sm text-periwinkle">
             {mode === 'demo' ? 'Demo mode is active until backend credentials are added.' : 'Connected mode is available.'}
