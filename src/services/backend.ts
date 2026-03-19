@@ -1,0 +1,747 @@
+import type { EmailOtpType, RealtimeChannel } from '@supabase/supabase-js';
+import { appConfig } from '../lib/appConfig';
+import { getAuthRedirectUrl } from '../lib/nativeAuth';
+import { supabase } from '../lib/supabaseClient';
+import type {
+  AppSession,
+  Pairing,
+  CommunicationSubmission,
+  StatusUpdate,
+  UserRole,
+} from '../types/app';
+import { clearStorage, readStorage, storageKey, writeStorage } from '../utils/storage';
+
+const STORAGE_KEYS = {
+  session: 'session',
+  pendingRole: 'pending-role',
+  pendingAuthMode: 'pending-auth-mode',
+  pairings: 'pairings',
+  statusUpdates: 'status-updates',
+};
+
+const DEMO_PATIENT_ID = 'demo-patient';
+const DEMO_CAREGIVER_ID = 'demo-caregiver';
+const LOCAL_AUTH_EMAIL_DOMAIN = 'local.spoonfull.test';
+
+function formatDisplayName(role: UserRole) {
+  return role === 'patient' ? 'Patient' : 'Caregiver';
+}
+
+function buildConnectedSession(params: {
+  profileId: string;
+  role: UserRole;
+  email: string | null;
+  authMode: 'magic_link' | 'password';
+}) {
+  return {
+    profileId: params.profileId,
+    role: params.role,
+    email: params.email,
+    authMode: params.authMode,
+    displayName: params.email?.split('@')[0] || formatDisplayName(params.role),
+  } satisfies AppSession;
+}
+
+function resolveRoleForAuthUser(
+  roleFromMetadata: UserRole | undefined,
+  storedSession: AppSession | null,
+  pendingRole: UserRole | null,
+) {
+  return pendingRole ?? roleFromMetadata ?? storedSession?.role ?? 'patient';
+}
+
+function resolveAuthMode(
+  storedSession: AppSession | null,
+  pendingAuthMode: AppSession['authMode'] | null,
+) {
+  if (pendingAuthMode === 'password' || pendingAuthMode === 'magic_link') {
+    return pendingAuthMode;
+  }
+
+  return storedSession?.authMode === 'password' ? 'password' : 'magic_link';
+}
+
+function normalizeLocalUsername(identifier: string) {
+  return identifier
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9._-]/g, '');
+}
+
+function resolvePasswordEmail(identifier: string) {
+  const trimmed = identifier.trim().toLowerCase();
+
+  if (!appConfig.enablePasswordAuth) {
+    return trimmed;
+  }
+
+  if (trimmed.includes('@')) {
+    return trimmed;
+  }
+
+  const username = normalizeLocalUsername(trimmed);
+  if (!username) {
+    return '';
+  }
+
+  return `${username}@${LOCAL_AUTH_EMAIL_DOMAIN}`;
+}
+
+function loadPairings() {
+  return readStorage<Pairing[]>(STORAGE_KEYS.pairings, []);
+}
+
+function savePairings(pairings: Pairing[]) {
+  writeStorage(STORAGE_KEYS.pairings, pairings);
+}
+
+function removePairing(pairingId: string) {
+  const next = loadPairings().filter((entry) => entry.id !== pairingId);
+  savePairings(next);
+  broadcastStoragePulse();
+}
+
+function loadStatusUpdates() {
+  return readStorage<StatusUpdate[]>(STORAGE_KEYS.statusUpdates, []);
+}
+
+function saveStatusUpdates(updates: StatusUpdate[]) {
+  writeStorage(STORAGE_KEYS.statusUpdates, updates);
+}
+
+function broadcastStoragePulse() {
+  writeStorage('sync-pulse', { at: new Date().toISOString() });
+}
+
+function upsertPairing(pairing: Pairing) {
+  const next = loadPairings().filter((entry) => entry.id !== pairing.id);
+  next.unshift(pairing);
+  savePairings(next);
+  broadcastStoragePulse();
+  return pairing;
+}
+
+function addStatusUpdate(update: StatusUpdate) {
+  const next = loadStatusUpdates().filter((entry) => entry.id !== update.id);
+  next.unshift(update);
+  saveStatusUpdates(next);
+  broadcastStoragePulse();
+  return update;
+}
+
+function mapPairingRecord(data: {
+  id: string;
+  code: string;
+  patient_id: string;
+  caregiver_id: string | null;
+  status: 'pending' | 'paired';
+  created_at: string;
+}) {
+  return {
+    id: data.id,
+    code: data.code,
+    patientId: data.patient_id,
+    caregiverId: data.caregiver_id,
+    status: data.status,
+    createdAt: data.created_at,
+  } satisfies Pairing;
+}
+
+function resolveDemoProfileId(role: UserRole) {
+  return role === 'patient' ? DEMO_PATIENT_ID : DEMO_CAREGIVER_ID;
+}
+
+function seedDemoState() {
+  const existingPairing = loadPairings().find((entry) => entry.id === 'pairing-demo');
+  if (!existingPairing) {
+    savePairings([
+      {
+        id: 'pairing-demo',
+        code: 'DEMO42',
+        patientId: DEMO_PATIENT_ID,
+        caregiverId: DEMO_CAREGIVER_ID,
+        status: 'paired',
+        createdAt: new Date().toISOString(),
+      },
+      ...loadPairings(),
+    ]);
+  }
+
+  const existingStatus = loadStatusUpdates().find((entry) => entry.id === 'status-demo');
+  if (!existingStatus) {
+    saveStatusUpdates([
+      {
+        id: 'status-demo',
+        patientId: DEMO_PATIENT_ID,
+        caregiverId: DEMO_CAREGIVER_ID,
+        helperLocation: 'away',
+        selectedNeeds: ['help', 'bright'],
+        energyStatus: 'low',
+        selectedSymptoms: ['pain', 'sensory'],
+        messageText: 'Hi, thanks for being here.\n\nLow Energy - I\'m below baseline.\n\nI need:\n• I need help\n• It is too bright\n\nCurrent Symptoms: Pain, Sensory Sensitive\n\nThank you, I appreciate you.\nSent with Spoonfull.app',
+        sentAt: new Date(Date.now() - 15 * 60_000).toISOString(),
+        delivery: 'sent',
+      },
+      ...loadStatusUpdates(),
+    ]);
+  }
+}
+
+async function upsertProfile(session: AppSession) {
+  if (!supabase) {
+    return;
+  }
+
+  const { error } = await supabase.from('profiles').upsert({
+    id: session.profileId,
+    role: session.role,
+    email: session.email,
+    display_name: session.displayName,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function restoreSession() {
+  const storedSession = readStorage<AppSession | null>(STORAGE_KEYS.session, null);
+  const pendingRole = readStorage<UserRole | null>(STORAGE_KEYS.pendingRole, null);
+  const pendingAuthMode = readStorage<AppSession['authMode'] | null>(STORAGE_KEYS.pendingAuthMode, null);
+
+  if (!supabase) {
+    return storedSession;
+  }
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) {
+      return storedSession;
+    }
+
+    const metadataRole = data.session.user.user_metadata.role as UserRole | undefined;
+    const role = resolveRoleForAuthUser(metadataRole, storedSession, pendingRole);
+    const authMode = resolveAuthMode(storedSession, pendingAuthMode);
+    const session = buildConnectedSession({
+      profileId: data.session.user.id,
+      role,
+      email: data.session.user.email ?? null,
+      authMode,
+    });
+
+    writeStorage(STORAGE_KEYS.session, session);
+    clearStorage(STORAGE_KEYS.pendingRole);
+    clearStorage(STORAGE_KEYS.pendingAuthMode);
+
+    void upsertProfile(session).catch((error) => {
+      console.error('Failed to upsert profile during session restore', error);
+    });
+
+    return session;
+  } catch (error) {
+    console.error('Failed to restore Supabase session', error);
+    return storedSession;
+  }
+}
+
+export async function sendMagicLink(email: string, role: UserRole) {
+  if (!supabase) {
+    return {
+      ok: false,
+      message: 'Supabase is not configured. Use demo mode or add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+    };
+  }
+
+  const redirectTo = getAuthRedirectUrl();
+  writeStorage(STORAGE_KEYS.pendingRole, role);
+  writeStorage(STORAGE_KEYS.pendingAuthMode, 'magic_link');
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: redirectTo,
+      data: { role },
+    },
+  });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: 'Magic link sent. Open the link on this device to complete sign-in.' };
+}
+
+export async function signUpWithPassword(email: string, password: string, role: UserRole) {
+  if (!supabase) {
+    return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  const resolvedEmail = resolvePasswordEmail(email);
+  if (!resolvedEmail) {
+    return { ok: false, message: 'Enter a username or email address.' };
+  }
+
+  writeStorage(STORAGE_KEYS.pendingRole, role);
+  writeStorage(STORAGE_KEYS.pendingAuthMode, 'password');
+  const { data, error } = await supabase.auth.signUp({
+    email: resolvedEmail,
+    password,
+    options: {
+      data: { role },
+    },
+  });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  if (data.session) {
+    const session = buildConnectedSession({
+      profileId: data.user?.id ?? data.session.user.id,
+      role,
+      email: data.user?.email ?? data.session.user.email ?? resolvedEmail,
+      authMode: 'password',
+    });
+    writeStorage(STORAGE_KEYS.session, session);
+    return { ok: true, message: 'Account created and signed in.', session };
+  }
+
+  return {
+    ok: true,
+    message:
+      'Account created. If Supabase email confirmation is enabled, disable it for local testing or confirm the account before signing in.',
+  };
+}
+
+export async function signInWithPassword(email: string, password: string, role: UserRole) {
+  if (!supabase) {
+    return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  const resolvedEmail = resolvePasswordEmail(email);
+  if (!resolvedEmail) {
+    return { ok: false, message: 'Enter a username or email address.' };
+  }
+
+  writeStorage(STORAGE_KEYS.pendingRole, role);
+  writeStorage(STORAGE_KEYS.pendingAuthMode, 'password');
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: resolvedEmail,
+    password,
+  });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  const session = buildConnectedSession({
+    profileId: data.user.id,
+    role,
+    email: data.user.email ?? resolvedEmail,
+    authMode: 'password',
+  });
+  writeStorage(STORAGE_KEYS.session, session);
+
+  return { ok: true, message: 'Signed in.', session };
+}
+
+export async function continueInDemo(role: UserRole) {
+  seedDemoState();
+  const session: AppSession = {
+    profileId: resolveDemoProfileId(role),
+    role,
+    email: null,
+    authMode: 'demo',
+    displayName: role === 'patient' ? 'Demo patient' : 'Demo caregiver',
+  };
+
+  writeStorage(STORAGE_KEYS.session, session);
+  return session;
+}
+
+export async function signOut() {
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
+
+  clearStorage(STORAGE_KEYS.session);
+  clearStorage(STORAGE_KEYS.pendingRole);
+  clearStorage(STORAGE_KEYS.pendingAuthMode);
+}
+
+export async function restoreSessionFromAuthUser(user: {
+  id: string;
+  email?: string | null;
+  user_metadata?: {
+    role?: UserRole;
+  };
+}) {
+  const storedSession = readStorage<AppSession | null>(STORAGE_KEYS.session, null);
+  const pendingRole = readStorage<UserRole | null>(STORAGE_KEYS.pendingRole, null);
+  const pendingAuthMode = readStorage<AppSession['authMode'] | null>(STORAGE_KEYS.pendingAuthMode, null);
+  const role = resolveRoleForAuthUser(user.user_metadata?.role, storedSession, pendingRole);
+  const authMode = resolveAuthMode(storedSession, pendingAuthMode);
+  const session = buildConnectedSession({
+    profileId: user.id,
+    role,
+    email: user.email ?? null,
+    authMode,
+  });
+
+  writeStorage(STORAGE_KEYS.session, session);
+  clearStorage(STORAGE_KEYS.pendingRole);
+  clearStorage(STORAGE_KEYS.pendingAuthMode);
+
+  void upsertProfile(session).catch((error) => {
+    console.error('Failed to upsert profile after auth state change', error);
+  });
+
+  return session;
+}
+
+function parseAuthUrl(url: string) {
+  const parsedUrl = new URL(url);
+  const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+  const param = (name: string) => parsedUrl.searchParams.get(name) ?? hashParams.get(name);
+
+  return {
+    accessToken: param('access_token'),
+    refreshToken: param('refresh_token'),
+    code: param('code'),
+    tokenHash: param('token_hash'),
+    type: param('type') as EmailOtpType | null,
+  };
+}
+
+export async function completeAuthFromUrl(url: string) {
+  if (!supabase) {
+    return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  const { accessToken, refreshToken, code, tokenHash, type } = parseAuthUrl(url);
+
+  if (accessToken && refreshToken) {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+  } else if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+  } else if (tokenHash && type) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+  } else {
+    return { ok: false, message: 'Auth callback did not include a session payload.' };
+  }
+
+  const session = await restoreSession();
+  if (!session) {
+    return { ok: false, message: 'Supabase callback succeeded but no session was restored.' };
+  }
+
+  return { ok: true, session };
+}
+
+export async function createInviteCode(session: AppSession) {
+  const pairing: Pairing = {
+    id: crypto.randomUUID(),
+    code: crypto.randomUUID().slice(0, 6).toUpperCase(),
+    patientId: session.profileId,
+    caregiverId: null,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+
+  upsertPairing(pairing);
+
+  if (supabase) {
+    await upsertProfile(session);
+    const { error } = await supabase.from('pairings').upsert({
+      id: pairing.id,
+      code: pairing.code,
+      patient_id: pairing.patientId,
+      caregiver_id: pairing.caregiverId,
+      status: pairing.status,
+      created_at: pairing.createdAt,
+    });
+
+    if (error) {
+      console.error('Failed to save pairing', error);
+      return { ok: false, message: error.message };
+    }
+  }
+
+  return { ok: true, pairing };
+}
+
+export async function joinInviteCode(session: AppSession, code: string) {
+  const normalizedCode = code.trim().toUpperCase();
+  if (!normalizedCode) {
+    return { ok: false, message: 'Enter an invite code.' };
+  }
+
+  let pairing = loadPairings().find((entry) => entry.code === normalizedCode) ?? null;
+
+  if (!pairing && supabase) {
+    const { data, error } = await supabase
+      .from('pairings')
+      .select('*')
+      .eq('code', normalizedCode)
+      .maybeSingle();
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    if (data) {
+      pairing = mapPairingRecord(data);
+    }
+  }
+
+  if (!pairing) {
+    return { ok: false, message: 'Invite code not found.' };
+  }
+
+  const updatedPairing: Pairing = {
+    ...pairing,
+    caregiverId: session.profileId,
+    status: 'paired',
+  };
+
+  if (supabase) {
+    await upsertProfile(session);
+    const { error } = await supabase
+      .from('pairings')
+      .update({
+        caregiver_id: updatedPairing.caregiverId,
+        status: updatedPairing.status,
+      })
+      .eq('id', updatedPairing.id);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+  }
+
+  upsertPairing(updatedPairing);
+
+  return { ok: true, pairing: updatedPairing };
+}
+
+export async function leavePairing(session: AppSession, pairing: Pairing | null) {
+  if (!pairing) {
+    return { ok: true };
+  }
+
+  if (supabase && session.role === 'caregiver') {
+    const { error } = await supabase
+      .from('pairings')
+      .update({
+        caregiver_id: null,
+        status: 'pending',
+      })
+      .eq('id', pairing.id);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+  }
+
+  removePairing(pairing.id);
+  return { ok: true };
+}
+
+export function getActivePairing(session: AppSession | null) {
+  if (!session) {
+    return null;
+  }
+
+  return loadPairings().find((pairing) =>
+    pairing.patientId === session.profileId || pairing.caregiverId === session.profileId
+  ) ?? null;
+}
+
+export async function syncActivePairing(session: AppSession | null) {
+  const localPairing = getActivePairing(session);
+
+  if (!session || !supabase) {
+    return localPairing;
+  }
+
+  let query = supabase
+    .from('pairings')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (session.role === 'patient') {
+    query = query.eq('patient_id', session.profileId);
+  } else {
+    query = query.eq('caregiver_id', session.profileId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error || !data) {
+    return localPairing;
+  }
+
+  const pairing = upsertPairing(mapPairingRecord(data));
+  return pairing;
+}
+
+export async function sendStatusUpdate(session: AppSession, pairing: Pairing | null, submission: CommunicationSubmission) {
+  const resolvedPairing = await syncActivePairing(session) ?? pairing;
+  const update: StatusUpdate = {
+    id: crypto.randomUUID(),
+    patientId: session.profileId,
+    caregiverId: resolvedPairing?.caregiverId ?? null,
+    helperLocation: submission.helperLocation,
+    selectedNeeds: submission.selectedNeeds,
+    energyStatus: submission.energyStatus,
+    selectedSymptoms: submission.selectedSymptoms,
+    messageText: submission.messageText,
+    sentAt: new Date().toISOString(),
+    delivery: 'sent',
+  };
+
+  addStatusUpdate(update);
+
+  if (supabase) {
+    const { error } = await supabase.from('status_updates').insert({
+      id: update.id,
+      patient_id: update.patientId,
+      caregiver_id: update.caregiverId,
+      pairing_id: resolvedPairing?.id ?? null,
+      helper_location: update.helperLocation,
+      selected_needs: update.selectedNeeds,
+      energy_status: update.energyStatus,
+      selected_symptoms: update.selectedSymptoms,
+      message_text: update.messageText,
+      sent_at: update.sentAt,
+      delivery: update.delivery,
+    });
+
+    if (error) {
+      console.error('Failed to insert status update', error);
+    }
+  }
+
+  return update;
+}
+
+export async function getLatestStatus(session: AppSession, pairing: Pairing | null) {
+  const localUpdate = loadStatusUpdates().find((update) => {
+    if (session.role === 'patient') {
+      return update.patientId === session.profileId;
+    }
+
+    if (!pairing) {
+      return update.caregiverId === session.profileId;
+    }
+
+    return update.patientId === pairing.patientId;
+  }) ?? null;
+
+  if (!supabase) {
+    return localUpdate;
+  }
+
+  let query = supabase
+    .from('status_updates')
+    .select('*')
+    .order('sent_at', { ascending: false })
+    .limit(1);
+
+  if (session.role === 'patient') {
+    query = query.eq('patient_id', session.profileId);
+  } else if (pairing) {
+    query = query.eq('patient_id', pairing.patientId);
+  } else {
+    query = query.eq('caregiver_id', session.profileId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error || !data) {
+    return localUpdate;
+  }
+
+  const remoteUpdate: StatusUpdate = {
+    id: data.id,
+    patientId: data.patient_id,
+    caregiverId: data.caregiver_id,
+    helperLocation: data.helper_location,
+    selectedNeeds: data.selected_needs ?? [],
+    energyStatus: data.energy_status,
+    selectedSymptoms: data.selected_symptoms ?? [],
+    messageText: data.message_text,
+    sentAt: data.sent_at,
+    delivery: data.delivery,
+  };
+
+  addStatusUpdate(remoteUpdate);
+  return remoteUpdate;
+}
+
+export function subscribeToStatusUpdates(
+  session: AppSession,
+  pairing: Pairing | null,
+  onChange: (update: StatusUpdate | null) => void,
+) {
+  const localListener = () => {
+    getLatestStatus(session, pairing).then(onChange).catch((error) => {
+      console.error('Failed to refresh local status updates', error);
+    });
+  };
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === storageKey('sync-pulse')) {
+      localListener();
+    }
+  };
+
+  window.addEventListener('storage', handleStorage);
+  const pollId = window.setInterval(() => {
+    localListener();
+  }, 3000);
+
+  let channel: RealtimeChannel | null = null;
+  if (supabase) {
+    channel = supabase
+      .channel(`status-updates-${session.profileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'status_updates',
+        },
+        () => {
+          localListener();
+        },
+      )
+      .subscribe();
+  }
+
+  localListener();
+
+  return () => {
+    window.removeEventListener('storage', handleStorage);
+    window.clearInterval(pollId);
+    if (channel) {
+      void supabase?.removeChannel(channel);
+    }
+  };
+}

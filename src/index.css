@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: #1D1D1D;
+  }
+
+  body {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    line-height: 1.6;
+    background-color: #1D1D1D;
+  }
+  
+  /* High contrast focus indicators for accessibility */
+  *:focus {
+    outline: 2px solid #425FCC;
+    outline-offset: 2px;
+  }
+  
+  /* Ensure minimum touch target size for accessibility */
+  button, a, input, textarea, select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

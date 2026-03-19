@@ -1,0 +1,13 @@
+This is the Spoonfull mobile app, a Capacitor-based iOS/Android app built with React, TypeScript, Tailwind CSS, and Supabase.
+
+For all designs I ask you to make, have them be beautiful, not cookie cutter. Make screens that are fully featured and worthy for production.
+
+Mobile screens live in src/components/mobile/. The communication card flow components live in src/components/communication-cards/.
+
+By default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.
+
+Use icons from lucide-react for logos.
+
+When making changes, ensure they work within the Capacitor webview context for iOS and Android.
+
+IMPORTANT: When I ask to "publish the app", "deploy to testflight", "push to testflight", or similar publish/deploy requests, include the word "testflight" in the git commit message. This triggers the automated TestFlight build pipeline.
