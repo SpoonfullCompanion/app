@@ -94,16 +94,6 @@ export default function LoginScreen({
            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
             Sign In
           </p>
-         <p className="mt-.5 text-sm text-off-white/70">
-           First time?{' '}
-           <button
-             type="button"
-             onClick={onShowSignup}
-             className="text-periwinkle underline"
-           >
-             Create an account.
-           </button>
-         </p>
         </div>
 
         <form onSubmit={handleSignIn} className="mt-5 space-y-4">
