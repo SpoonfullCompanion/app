@@ -25,8 +25,8 @@ export default function RoleSelectionScreen({ mode, onSelectRole }: RoleSelectio
             onClick={() => onSelectRole('patient')}
             className="rounded-[1.75rem] border border-dark-blue bg-dark-blue/40 p-6 text-left transition-transform duration-200 hover:-translate-y-1 hover:border-periwinkle"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Patient</p>
-            <h2 className="mt-3 text-3xl font-bold font-league-spartan">Send your status</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Send your status</p>
+            <h2 className="mt-3 text-3xl font-bold font-league-spartan">Patient</h2>
             <p className="mt-4 text-base text-off-white/75">
               Use the Spoonfull communication cards with persistent state, pairing, and mobile-friendly controls.
             </p>
@@ -36,8 +36,8 @@ export default function RoleSelectionScreen({ mode, onSelectRole }: RoleSelectio
             onClick={() => onSelectRole('caregiver')}
             className="rounded-[1.75rem] border border-dark-blue bg-dark-blue/40 p-6 text-left transition-transform duration-200 hover:-translate-y-1 hover:border-periwinkle"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Caregiver</p>
-            <h2 className="mt-3 text-3xl font-bold font-league-spartan">See updates fast</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Find out what they need</p>
+            <h2 className="mt-3 text-3xl font-bold font-league-spartan">Helper</h2>
             <p className="mt-4 text-base text-off-white/75">
               Pair to a patient, follow the latest status, and enable reminders once notifications are configured.
             </p>
