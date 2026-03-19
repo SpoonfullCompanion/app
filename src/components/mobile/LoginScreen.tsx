@@ -165,7 +165,18 @@ export default function LoginScreen({
           </Button>
         </form>
 
-        <div className="mt-8 border-t border-dark-blue/40 pt-6">
+        <div className="relative my-12">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-dark-blue/40"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] px-4 text-sm text-off-white/60 uppercase tracking-[0.15em]">
+              Or
+            </span>
+          </div>
+        </div>
+
+        <div>
           <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
             Quick link to email
           </p>
