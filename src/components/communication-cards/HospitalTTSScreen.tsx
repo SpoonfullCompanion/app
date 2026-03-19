@@ -1,11 +1,9 @@
 import React from 'react';
 import { Volume2, Phone, Brain, Zap, AlertTriangle, Moon, FileText, Shield, Pill } from 'lucide-react';
 import { speak } from '../../utils/textToSpeech';
-import StepLayout from './StepLayout';
 
 interface HospitalTTSScreenProps {
-  onBack: () => void;
-  onMessagePlayed: (message: string) => void;
+  ttsEnabled: boolean;
 }
 
 interface MessageButton {
@@ -34,20 +32,17 @@ const urgentMessage: MessageButton = {
   icon: Phone
 };
 
-export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalTTSScreenProps) {
+export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps) {
   const [selectedMessages, setSelectedMessages] = React.useState<Set<string>>(new Set());
   const [customText, setCustomText] = React.useState('');
-
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   const handlePlay = (message: MessageButton) => {
     const wasSelected = selectedMessages.has(message.id);
 
     if (!wasSelected) {
-      speak(message.text);
-      onMessagePlayed(message.text);
+      if (ttsEnabled) {
+        speak(message.text);
+      }
       setSelectedMessages(prev => new Set(prev).add(message.id));
     } else {
       setSelectedMessages(prev => {
@@ -59,105 +54,97 @@ export default function HospitalTTSScreen({ onBack, onMessagePlayed }: HospitalT
   };
 
   const handleCustomSpeak = () => {
-    if (customText.trim()) {
+    if (customText.trim() && ttsEnabled) {
       speak(customText);
-      onMessagePlayed(customText);
     }
   };
 
   return (
-    <StepLayout
-      heading="Tap to speak out loud"
-      currentStep={1}
-      totalSteps={2}
-      onBack={onBack}
-    >
-      <div className="space-y-6">
-        <button
-          onClick={() => handlePlay(urgentMessage)}
-          className={`w-full flex items-center justify-center gap-4 p-6 rounded-xl border-3 transition-all duration-200 ${
-            selectedMessages.has(urgentMessage.id)
-              ? 'bg-red-600 border-red-500 text-white shadow-2xl scale-[1.02]'
-              : 'bg-red-500/90 border-red-400 text-white hover:bg-red-600 hover:border-red-300 shadow-lg'
-          }`}
-        >
-          <urgentMessage.icon
-            className="flex-shrink-0"
-            size={32}
-            aria-hidden="true"
-          />
-          <span className="text-xl font-bold leading-tight">{urgentMessage.text}</span>
-        </button>
+    <div className="space-y-6">
+      <button
+        onClick={() => handlePlay(urgentMessage)}
+        className={`w-full flex items-center justify-center gap-4 p-6 rounded-xl border-3 transition-all duration-200 ${
+          selectedMessages.has(urgentMessage.id)
+            ? 'bg-red-600 border-red-500 text-white shadow-2xl scale-[1.02]'
+            : 'bg-red-500/90 border-red-400 text-white hover:bg-red-600 hover:border-red-300 shadow-lg'
+        }`}
+      >
+        <urgentMessage.icon
+          className="flex-shrink-0"
+          size={32}
+          aria-hidden="true"
+        />
+        <span className="text-xl font-bold leading-tight">{urgentMessage.text}</span>
+      </button>
 
-        <div>
-          <h3 className="text-xl font-semibold text-off-white mb-4">How I feel</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {bodySymptomMessages.map((message) => (
-              <button
-                key={message.id}
-                onClick={() => handlePlay(message)}
-                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
-                  selectedMessages.has(message.id)
-                    ? 'bg-bold-blue border-bold-blue text-off-white shadow-lg scale-[1.02]'
-                    : 'bg-dark-blue/40 border-dark-blue text-off-white hover:border-periwinkle hover:bg-midnight-black/70'
-                }`}
-              >
-                <message.icon
-                  className="flex-shrink-0"
-                  size={24}
-                  aria-hidden="true"
-                />
-                <span className="text-left font-medium leading-tight">{message.text}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xl font-semibold text-off-white mb-4">What I need</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {actionRequestMessages.map((message) => (
-              <button
-                key={message.id}
-                onClick={() => handlePlay(message)}
-                className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
-                  selectedMessages.has(message.id)
-                    ? 'bg-bold-blue border-bold-blue text-off-white shadow-lg scale-[1.02]'
-                    : 'bg-dark-blue/40 border-dark-blue text-off-white hover:border-periwinkle hover:bg-midnight-black/70'
-                }`}
-              >
-                <message.icon
-                  className="flex-shrink-0"
-                  size={24}
-                  aria-hidden="true"
-                />
-                <span className="text-left font-medium leading-tight">{message.text}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-dark-blue/50">
-          <h3 className="text-xl font-semibold text-off-white mb-2">Type here to speak out loud</h3>
-          <div className="flex flex-col gap-3">
-            <textarea
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-              placeholder="Type your message here..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-xl bg-dark-blue/40 border-2 border-dark-blue text-off-white placeholder-gray-400 focus:outline-none focus:border-periwinkle transition-colors resize-none"
-            />
+      <div>
+        <h3 className="text-xl font-semibold text-periwinkle mb-4">How I feel</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {bodySymptomMessages.map((message) => (
             <button
-              onClick={handleCustomSpeak}
-              disabled={!customText.trim()}
-              className="self-end px-6 py-3 rounded-xl bg-bold-blue hover:bg-periwinkle disabled:bg-gray-600 disabled:cursor-not-allowed text-off-white font-medium transition-colors flex items-center gap-2"
+              key={message.id}
+              onClick={() => handlePlay(message)}
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
+                selectedMessages.has(message.id)
+                  ? 'bg-electric-blue border-electric-blue text-midnight-black shadow-lg scale-[1.02]'
+                  : 'bg-midnight-black/50 border-dark-blue text-periwinkle hover:border-periwinkle hover:bg-midnight-black/70'
+              }`}
             >
-              <Volume2 size={20} />
-              Speak
+              <message.icon
+                className="flex-shrink-0"
+                size={24}
+                aria-hidden="true"
+              />
+              <span className="text-left font-medium leading-tight">{message.text}</span>
             </button>
-          </div>
+          ))}
         </div>
       </div>
-    </StepLayout>
+
+      <div>
+        <h3 className="text-xl font-semibold text-periwinkle mb-4">What I need</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {actionRequestMessages.map((message) => (
+            <button
+              key={message.id}
+              onClick={() => handlePlay(message)}
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 min-h-[80px] ${
+                selectedMessages.has(message.id)
+                  ? 'bg-electric-blue border-electric-blue text-midnight-black shadow-lg scale-[1.02]'
+                  : 'bg-midnight-black/50 border-dark-blue text-periwinkle hover:border-periwinkle hover:bg-midnight-black/70'
+              }`}
+            >
+              <message.icon
+                className="flex-shrink-0"
+                size={24}
+                aria-hidden="true"
+              />
+              <span className="text-left font-medium leading-tight">{message.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-dark-blue/50">
+        <h3 className="text-xl font-semibold text-periwinkle mb-2">Type here to speak out loud</h3>
+        <div className="flex flex-col gap-3">
+          <textarea
+            value={customText}
+            onChange={(e) => setCustomText(e.target.value)}
+            placeholder="Type your message here..."
+            rows={4}
+            className="w-full px-4 py-3 rounded-xl bg-midnight-black/50 border-2 border-dark-blue text-periwinkle placeholder-periwinkle/40 focus:outline-none focus:border-electric-blue transition-colors resize-none"
+          />
+          <button
+            onClick={handleCustomSpeak}
+            disabled={!customText.trim() || !ttsEnabled}
+            className="self-end px-6 py-3 rounded-xl bg-electric-blue hover:bg-electric-blue/90 disabled:bg-dark-blue/50 disabled:cursor-not-allowed text-midnight-black disabled:text-periwinkle/50 font-medium transition-colors flex items-center gap-2"
+          >
+            <Volume2 size={20} />
+            Speak
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

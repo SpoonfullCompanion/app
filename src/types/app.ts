@@ -55,9 +55,14 @@ export interface NotificationPreference {
 }
 
 export interface CommunicationSubmission {
-  helperLocation: HelperLocation;
-  selectedNeeds: string[];
-  energyStatus: string | null;
-  selectedSymptoms: string[];
-  messageText: string;
+  type?: 'status' | 'need' | 'message';
+  helperLocation?: HelperLocation;
+  selectedNeeds?: string[];
+  need?: string;
+  energy?: string;
+  energyStatus?: string | null;
+  selectedSymptoms?: string[];
+  symptoms?: string[];
+  message?: string;
+  messageText?: string;
 }
