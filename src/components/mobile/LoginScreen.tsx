@@ -96,40 +96,46 @@ export default function LoginScreen({
           </p>
         </div>
 
-        <form onSubmit={handleSignIn} className="mt-5 space-y-4">
-          <label className="block text-sm font-semibold text-off-white/90" htmlFor="email">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="name@example.com"
-            autoCapitalize="none"
-            autoCorrect="off"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
-          />
+        <form onSubmit={handleSignIn} className="mt-5 space-y-2">
+          <div>
+            <label className="block text-sm font-semibold text-off-white/90 mb-1" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@example.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
+            />
+          </div>
 
-          <label className="block text-sm font-semibold text-off-white/90" htmlFor="password">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Your password"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
-          />
+          <div>
+            <label className="block text-sm font-semibold text-off-white/90 mb-1" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Your password"
+              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
+            />
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setShowForgotPassword(!showForgotPassword)}
-            className="text-sm text-periwinkle underline font-bold"
-          >
-            Forgot password?
-          </button>
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(!showForgotPassword)}
+              className="text-sm text-periwinkle underline font-bold"
+            >
+              Forgot password?
+            </button>
+          </div>
 
           {showForgotPassword && (
             <div className="rounded-2xl border border-periwinkle/40 bg-periwinkle/10 p-4">
@@ -148,13 +154,15 @@ export default function LoginScreen({
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
-          >
-            Sign in
-          </Button>
+          <div className="pt-2">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!email || !password || isBusy || !appConfig.hasSupabase}
+            >
+              Sign in
+            </Button>
+          </div>
         </form>
 
          <p className="mt-.5 text-sm text-off-white/70">
