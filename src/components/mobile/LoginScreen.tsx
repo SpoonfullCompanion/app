@@ -169,7 +169,7 @@ export default function LoginScreen({
            <button
              type="button"
              onClick={onShowSignup}
-             className="text-periwinkle underline"
+             className="text-periwinkle underline font-bold"
            >
              Create an account.
            </button>
