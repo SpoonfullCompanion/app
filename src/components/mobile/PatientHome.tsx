@@ -5,11 +5,12 @@ import StatusScreen from './StatusScreen';
 import NeedsScreen from './NeedsScreen';
 import HospitalScreen from './HospitalScreen';
 import AccountScreen from './AccountScreen';
-import type { AppSession, Pairing, CommunicationSubmission } from '../../types/app';
+import type { AppSession, Pairing, CommunicationSubmission, StatusUpdate } from '../../types/app';
 
 interface PatientHomeProps {
   session: AppSession | null;
   pairing: Pairing | null;
+  latestStatus: StatusUpdate | null;
   isConnectedMode: boolean;
   showHeaderChrome: boolean;
   showReturnToMain: boolean;
@@ -22,6 +23,7 @@ interface PatientHomeProps {
 export default function PatientHome({
   session,
   pairing,
+  latestStatus,
   isConnectedMode,
   showHeaderChrome,
   showReturnToMain,
@@ -48,6 +50,7 @@ export default function PatientHome({
       )}
       {activeRoute === 'status' && (
         <StatusScreen
+          latestStatus={latestStatus}
           ttsEnabled={ttsEnabled}
           onToggleTTS={handleToggleTTS}
           onSendUpdate={onSendUpdate}

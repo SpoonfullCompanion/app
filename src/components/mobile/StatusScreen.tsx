@@ -1,20 +1,32 @@
-import { useState } from 'react';
-import { Volume2, VolumeX, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { ENERGY_STATUSES, SYMPTOMS } from '../../utils/communicationData';
 import { speak } from '../../utils/textToSpeech';
-import type { CommunicationSubmission } from '../../types/app';
+import type { CommunicationSubmission, StatusUpdate } from '../../types/app';
+import { formatDistanceToNow } from './time';
 
 interface StatusScreenProps {
+  latestStatus: StatusUpdate | null;
   ttsEnabled: boolean;
   onToggleTTS: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
 }
 
-export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: StatusScreenProps) {
-  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
-  const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
+export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, onSendUpdate }: StatusScreenProps) {
+  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(latestStatus?.energyStatus ?? null);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set(latestStatus?.selectedSymptoms ?? []));
   const [isSending, setIsSending] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Only initialize from latestStatus once, on mount
+  useEffect(() => {
+    if (!hasInitialized && latestStatus) {
+      setSelectedEnergy(latestStatus.energyStatus);
+      setSelectedSymptoms(new Set(latestStatus.selectedSymptoms ?? []));
+      setHasInitialized(true);
+    }
+  }, [latestStatus, hasInitialized]);
 
   const handleEnergySelect = (energyId: string) => {
     setSelectedEnergy(energyId);
@@ -59,15 +71,17 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
         symptoms: Array.from(selectedSymptoms),
         message,
       });
-
-      setSelectedEnergy(null);
-      setSelectedSymptoms(new Set());
     } finally {
       setIsSending(false);
     }
   };
 
   const canSend = selectedEnergy !== null;
+
+  const currentEnergy = latestStatus?.energyStatus ? ENERGY_STATUSES.find(e => e.id === latestStatus.energyStatus) : null;
+  const currentSymptoms = (latestStatus?.selectedSymptoms ?? [])
+    .map(id => SYMPTOMS.find(s => s.id === id))
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
@@ -85,6 +99,42 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
           </button>
         </div>
 
+        {latestStatus && (
+          <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-periwinkle/60">
+                Current Status
+              </h2>
+              <p className="text-xs text-periwinkle/50">
+                {formatDistanceToNow(latestStatus.sentAt)}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {currentEnergy && (
+                <div className="flex items-center gap-1.5 rounded-lg bg-electric-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
+                  {(() => {
+                    const Icon = LucideIcons[currentEnergy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+                    return Icon && <Icon className="h-4 w-4" />;
+                  })()}
+                  {currentEnergy.label}
+                </div>
+              )}
+              {currentSymptoms.map((symptom) => {
+                const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+                return (
+                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-3 py-1.5 text-sm text-periwinkle/80">
+                    {Icon && <Icon className="h-3.5 w-3.5" />}
+                    {symptom.label}
+                  </div>
+                );
+              })}
+              {!currentEnergy && currentSymptoms.length === 0 && (
+                <p className="text-sm text-periwinkle/50">No status set</p>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-periwinkle/80">
             Energy Level
@@ -99,17 +149,17 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   onClick={() => handleEnergySelect(energy.id)}
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
-                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/20'
-                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:shadow-electric-blue/20'
+                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                      : 'border-periwinkle/30 bg-midnight-black/50 hover:border-electric-blue/50 hover:bg-midnight-black/70'
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className="h-5 w-5 text-white" />}
-                    <span className="font-semibold text-white">
+                    {Icon && <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
+                    <span className={`font-semibold ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
                       {energy.label}
                     </span>
                   </div>
-                  <p className="text-xs text-white/90">
+                  <p className={`text-xs ${isSelected ? 'text-white/90' : 'text-periwinkle/70'}`}>
                     {energy.description}
                   </p>
                 </button>
@@ -132,13 +182,13 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   onClick={() => toggleSymptom(symptom.id)}
                   className={`rounded-xl border-2 p-3 text-left transition-all ${
                     isSelected
-                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/20'
-                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:shadow-electric-blue/20'
+                      ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
+                      : 'border-periwinkle/30 bg-midnight-black/50 hover:border-electric-blue/50 hover:bg-midnight-black/70'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {Icon && <Icon className="h-4 w-4 text-white" />}
-                    <span className="text-sm font-medium text-white">
+                    {Icon && <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-periwinkle'}`} />}
+                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-periwinkle'}`}>
                       {symptom.label}
                     </span>
                   </div>
@@ -156,8 +206,8 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                 disabled={isSending}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-electric-blue px-6 py-4 font-semibold text-white shadow-xl shadow-electric-blue/30 transition-all hover:bg-electric-blue/90 disabled:opacity-50"
               >
-                <Send className="h-5 w-5" />
-                {isSending ? 'Sending...' : 'Send Status Update'}
+                <RefreshCw className="h-5 w-5" />
+                {isSending ? 'Updating...' : 'Update Status'}
               </button>
             </div>
           </div>
