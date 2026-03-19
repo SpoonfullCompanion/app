@@ -91,7 +91,7 @@ export default function LoginScreen({
           />
         </div>
         <div>
-         <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">SignIn to your account</h1>
+         <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">Signin to your account</h1>
         </div>
 
         <form onSubmit={handleSignIn} className="mt-10 space-y-4">
