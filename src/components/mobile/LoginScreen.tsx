@@ -165,8 +165,7 @@ export default function LoginScreen({
           </div>
         </form>
 
-         <p className="mt-.5 text-sm text-off-white/70">
-           First time?{' '}
+         <className="text-sm text-periwinkle underline font-bold"
            <button
              type="button"
              onClick={onShowSignup}
