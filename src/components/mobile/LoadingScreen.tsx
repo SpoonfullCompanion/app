@@ -6,9 +6,9 @@ export function LoadingScreen() {
       <div className="flex flex-col items-center gap-8">
         <div className="glow-animation">
           <img
-            src="/Spoonfull-Logo-DarkBG copy.svg"
-            alt="Spoonfull Logo"
-            className="pulse-animation w-64 h-auto md:w-80 lg:w-96"
+            src="/spoonfull-icon.SVG"
+            alt="Spoonfull"
+            className="pulse-animation w-24 h-auto md:w-28 lg:w-32"
           />
         </div>
 

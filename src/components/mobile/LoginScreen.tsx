@@ -83,6 +83,13 @@ export default function LoginScreen({
   return (
     <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col justify-center rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src="/Spoonfull-Logo-DarkBG copy.svg"
+            alt="Spoonfull"
+            className="w-40 h-auto md:w-48"
+          />
+        </div>
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Spoonfull mobile</p>
           <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-tight">Crash Companion</h1>
