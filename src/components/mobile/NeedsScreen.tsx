@@ -83,7 +83,6 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
         message: messages,
       });
 
-      setSelectedNeeds(new Set());
       await fetchLastCommunication();
     } finally {
       setIsSending(false);
