@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { ENERGY_STATUSES, SYMPTOMS } from '../../utils/communicationData';
@@ -17,13 +17,6 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
   const [selectedEnergy, setSelectedEnergy] = useState<string | null>(latestStatus?.energyStatus ?? null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set(latestStatus?.selectedSymptoms ?? []));
   const [isSending, setIsSending] = useState(false);
-
-  useEffect(() => {
-    if (latestStatus) {
-      setSelectedEnergy(latestStatus.energyStatus);
-      setSelectedSymptoms(new Set(latestStatus.selectedSymptoms ?? []));
-    }
-  }, [latestStatus]);
 
   const handleEnergySelect = (energyId: string) => {
     if (selectedEnergy === energyId) {
