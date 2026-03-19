@@ -151,16 +151,22 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
                       ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:scale-[1.02]'
+                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className="h-5 w-5 text-white" />}
-                    <span className="font-semibold text-white">
+                    {Icon && <Icon className={`h-5 w-5 transition-colors ${
+                      isSelected ? 'text-white' : 'text-periwinkle'
+                    }`} />}
+                    <span className={`font-semibold transition-colors ${
+                      isSelected ? 'text-white' : 'text-periwinkle'
+                    }`}>
                       {energy.label}
                     </span>
                   </div>
-                  <p className="text-xs text-white/90">
+                  <p className={`text-xs transition-colors ${
+                    isSelected ? 'text-white/90' : 'text-periwinkle/70'
+                  }`}>
                     {energy.description}
                   </p>
                 </button>
@@ -184,12 +190,16 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                   className={`rounded-xl border-2 p-3 text-left transition-all ${
                     isSelected
                       ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                      : 'border-electric-blue bg-electric-blue hover:shadow-lg hover:scale-[1.02]'
+                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {Icon && <Icon className="h-4 w-4 text-white" />}
-                    <span className="text-sm font-medium text-white">
+                    {Icon && <Icon className={`h-4 w-4 transition-colors ${
+                      isSelected ? 'text-white' : 'text-periwinkle'
+                    }`} />}
+                    <span className={`text-sm font-medium transition-colors ${
+                      isSelected ? 'text-white' : 'text-periwinkle'
+                    }`}>
                       {symptom.label}
                     </span>
                   </div>

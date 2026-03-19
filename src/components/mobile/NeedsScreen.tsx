@@ -146,15 +146,19 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
                 className={`group rounded-xl border-2 p-4 text-center transition-all ${
                   isSelected
                     ? 'border-electric-blue bg-electric-blue shadow-lg shadow-electric-blue/30 scale-[1.02]'
-                    : 'border-electric-blue bg-electric-blue hover:scale-[1.02] hover:shadow-lg'
+                    : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
                 }`}
               >
                 <div className="mb-2 flex justify-center">
                   {Icon && (
-                    <Icon className="h-8 w-8 text-white" />
+                    <Icon className={`h-8 w-8 transition-colors ${
+                      isSelected ? 'text-white' : 'text-periwinkle'
+                    }`} />
                   )}
                 </div>
-                <span className="text-sm font-medium text-white">
+                <span className={`text-sm font-medium transition-colors ${
+                  isSelected ? 'text-white' : 'text-periwinkle'
+                }`}>
                   {need.label}
                 </span>
               </button>
