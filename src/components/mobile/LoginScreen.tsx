@@ -92,7 +92,7 @@ export default function LoginScreen({
         </div>
         <div>
            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
-            Sign In
+            Sign In to Spoonfull.app
           </p>
         </div>
 
@@ -156,6 +156,17 @@ export default function LoginScreen({
             Sign in
           </Button>
         </form>
+
+         <p className="mt-.5 text-sm text-off-white/70">
+           First time?{' '}
+           <button
+             type="button"
+             onClick={onShowSignup}
+             className="text-periwinkle underline"
+           >
+             Create an account.
+           </button>
+         </p>
 
         <div className="relative my-12">
           <div className="absolute inset-0 flex items-center">
