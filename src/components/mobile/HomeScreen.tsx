@@ -10,7 +10,7 @@ const navigationCards = [
     id: 'status' as NavRoute,
     icon: Activity,
     title: 'Status',
-    description: 'Share your energy level and how you are feeling',
+    description: 'Update your energy level and how you are feeling',
   },
   {
     id: 'needs' as NavRoute,
