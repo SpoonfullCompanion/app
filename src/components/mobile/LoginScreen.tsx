@@ -131,10 +131,18 @@ export default function LoginScreen({
             className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
           />
 
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
+          >
+            Sign in
+          </Button>
+
           <button
             type="button"
             onClick={() => setShowForgotPassword(!showForgotPassword)}
-            className="text-sm text-periwinkle underline"
+            className="text-sm text-periwinkle underline font-bold"
           >
             Forgot password?
           </button>
@@ -155,14 +163,6 @@ export default function LoginScreen({
               </Button>
             </div>
           )}
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
-          >
-            Sign in
-          </Button>
         </form>
 
         <div className="mt-8 border-t border-dark-blue/40 pt-6">
