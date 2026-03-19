@@ -96,6 +96,13 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
 
   const hasNeeds = lastCommunicatedNeeds.length > 0;
 
+  // Mock data for UI preview when no real data exists
+  const mockNeeds = ['help', 'thirsty'];
+  const mockDate = new Date(Date.now() - 15 * 60 * 1000); // 15 minutes ago
+  const displayNeeds = hasNeeds ? lastCommunicatedNeeds : mockNeeds.map(id => NEEDS.find(n => n.id === id)).filter(Boolean);
+  const displayTime = lastCommunication?.sentAt ?? mockDate.toISOString();
+  const shouldShowSection = hasNeeds || !lastCommunication; // Show if has real data OR no data yet (mock mode)
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
       <div className="mx-auto max-w-2xl px-4 py-6">
@@ -112,18 +119,18 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           </button>
         </div>
 
-        {lastCommunication && hasNeeds && (
+        {shouldShowSection && (
           <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-periwinkle/60">
                 Last Communication
               </h2>
               <p className="text-xs text-periwinkle/50">
-                {formatDistanceToNow(lastCommunication.sentAt)}
+                {formatDistanceToNow(displayTime)}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {lastCommunicatedNeeds.map((need) => {
+              {displayNeeds.map((need) => {
                 const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
                   <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-electric-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
