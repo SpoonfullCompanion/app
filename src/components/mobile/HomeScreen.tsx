@@ -23,18 +23,21 @@ const navigationCards = [
     icon: Activity,
     title: 'Status',
     description: 'Update your energy level and how you are feeling',
+    isHospitalMode: false,
   },
   {
     id: 'needs' as NavRoute,
     icon: MessageSquare,
     title: 'Needs',
     description: 'Let caregivers know what you need right now',
+    isHospitalMode: false,
   },
   {
     id: 'hospital' as NavRoute,
     icon: Stethoscope,
-    title: 'Hospital',
+    title: 'Hospital Mode',
     description: 'Quick phrases for hospital staff and visitors',
+    isHospitalMode: true,
   },
 ];
 
@@ -80,14 +83,18 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         </div>
 
         <div className="space-y-3">
-          {navigationCards.map(({ id, icon: Icon, title, description }) => (
+          {navigationCards.map(({ id, icon: Icon, title, description, isHospitalMode }) => (
             <button
               key={id}
               onClick={() => onNavigate(id)}
-              className="group w-full rounded-xl border border-bold-blue/40 bg-bold-blue/20 p-4 text-left transition-all hover:bg-bold-blue/30 hover:border-bold-blue/60 active:scale-[0.98]"
+              className={`group w-full rounded-xl border p-4 text-left transition-all active:scale-[0.98] ${
+                isHospitalMode
+                  ? 'border-periwinkle/30 bg-periwinkle/10 hover:bg-periwinkle/15 hover:border-periwinkle/50'
+                  : 'border-bold-blue/40 bg-bold-blue/20 hover:bg-bold-blue/30 hover:border-bold-blue/60'
+              }`}
             >
               <div className="flex items-start gap-3">
-                <div className="rounded-lg bg-white/10 p-2">
+                <div className={`rounded-lg p-2 ${isHospitalMode ? 'bg-white/5' : 'bg-white/10'}`}>
                   <Icon className="h-5 w-5 text-white" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
