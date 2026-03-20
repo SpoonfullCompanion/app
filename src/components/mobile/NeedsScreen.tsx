@@ -183,28 +183,27 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           })}
         </div>
 
-        <div className="mt-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <label htmlFor="customNote" className="text-xs font-semibold uppercase tracking-wide text-zinc-100/60">
-              Type to Speak or Add Notes
-            </label>
-            {customNote.trim() && ttsEnabled && (
-              <button
-                onClick={handleSpeakNote}
-                className="rounded-lg bg-bold-blue/20 p-2 text-zinc-100 transition-colors hover:bg-bold-blue/30"
-              >
-                <Volume2 className="h-4 w-4" />
-              </button>
-            )}
+        <div className="mt-6">
+          <label htmlFor="customNote" className="mb-2 block text-sm font-medium text-white">
+            Type to Speak or Add Notes
+          </label>
+          <div className="flex gap-2">
+            <textarea
+              id="customNote"
+              value={customNote}
+              onChange={(e) => setCustomNote(e.target.value)}
+              placeholder="Type a custom message or note here..."
+              rows={3}
+              className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-zinc-100/40 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30"
+            />
+            <button
+              onClick={handleSpeakNote}
+              disabled={!customNote.trim() || !ttsEnabled}
+              className="rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 text-zinc-100 transition-colors hover:border-bold-blue hover:bg-midnight-black/80 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <Volume2 className="h-5 w-5" />
+            </button>
           </div>
-          <textarea
-            id="customNote"
-            value={customNote}
-            onChange={(e) => setCustomNote(e.target.value)}
-            placeholder="Type a custom message or note here..."
-            rows={3}
-            className="w-full rounded-lg border border-periwinkle/30 bg-midnight-black/80 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-100/40 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30"
-          />
         </div>
 
         {(selectedNeeds.size > 0 || customNote.trim()) && (
