@@ -108,15 +108,23 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {currentEnergy && (
-                <div className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-white">
-                  {(() => {
-                    const Icon = LucideIcons[currentEnergy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-                    return Icon && <Icon className="h-4 w-4" />;
-                  })()}
-                  {currentEnergy.label}
-                </div>
-              )}
+              {currentEnergy && (() => {
+                const Icon = LucideIcons[currentEnergy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+                const pillColors = {
+                  crashing: 'bg-red-800/40 border border-red-700/50',
+                  low: 'bg-orange-800/40 border border-orange-700/50',
+                  resting: 'bg-yellow-700/40 border border-yellow-600/50',
+                  available: 'bg-green-800/40 border border-green-700/50'
+                };
+                const colorClass = pillColors[currentEnergy.id as keyof typeof pillColors] || 'bg-bold-blue/20';
+
+                return (
+                  <div className={`flex items-center gap-1.5 rounded-lg ${colorClass} px-3 py-1.5 text-sm font-medium text-white`}>
+                    {Icon && <Icon className="h-4 w-4" />}
+                    {currentEnergy.label}
+                  </div>
+                );
+              })()}
               {currentSymptoms.map((symptom) => {
                 const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
@@ -141,29 +149,61 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
             {ENERGY_STATUSES.map((energy) => {
               const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
               const isSelected = selectedEnergy === energy.id;
+
+              const colorClasses = {
+                crashing: {
+                  border: 'border-red-800/50',
+                  bg: 'bg-red-900/30',
+                  hover: 'hover:border-red-700/60 hover:bg-red-900/40',
+                  selectedBorder: 'border-red-700',
+                  selectedBg: 'bg-red-800',
+                  selectedShadow: 'shadow-red-800/30'
+                },
+                low: {
+                  border: 'border-orange-800/50',
+                  bg: 'bg-orange-900/30',
+                  hover: 'hover:border-orange-700/60 hover:bg-orange-900/40',
+                  selectedBorder: 'border-orange-700',
+                  selectedBg: 'bg-orange-800',
+                  selectedShadow: 'shadow-orange-800/30'
+                },
+                resting: {
+                  border: 'border-yellow-700/50',
+                  bg: 'bg-yellow-900/30',
+                  hover: 'hover:border-yellow-600/60 hover:bg-yellow-900/40',
+                  selectedBorder: 'border-yellow-600',
+                  selectedBg: 'bg-yellow-700',
+                  selectedShadow: 'shadow-yellow-700/30'
+                },
+                available: {
+                  border: 'border-green-800/50',
+                  bg: 'bg-green-900/30',
+                  hover: 'hover:border-green-700/60 hover:bg-green-900/40',
+                  selectedBorder: 'border-green-700',
+                  selectedBg: 'bg-green-800',
+                  selectedShadow: 'shadow-green-800/30'
+                }
+              };
+
+              const colors = colorClasses[energy.id as keyof typeof colorClasses];
+
               return (
                 <button
                   key={energy.id}
                   onClick={() => handleEnergySelect(energy.id)}
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
-                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.02]'
-                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
+                      ? `${colors.selectedBorder} ${colors.selectedBg} shadow-lg ${colors.selectedShadow} scale-[1.02]`
+                      : `${colors.border} ${colors.bg} ${colors.hover} hover:scale-[1.02]`
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className={`h-5 w-5 transition-colors ${
-                      isSelected ? 'text-white' : 'text-off-white'
-                    }`} />}
-                    <span className={`font-semibold transition-colors ${
-                      isSelected ? 'text-white' : 'text-off-white'
-                    }`}>
+                    {Icon && <Icon className="h-5 w-5 text-white transition-colors" />}
+                    <span className="font-semibold text-white transition-colors">
                       {energy.label}
                     </span>
                   </div>
-                  <p className={`text-xs transition-colors ${
-                    isSelected ? 'text-white/90' : 'text-off-white/70'
-                  }`}>
+                  <p className="text-xs text-white/90 transition-colors">
                     {energy.description}
                   </p>
                 </button>
