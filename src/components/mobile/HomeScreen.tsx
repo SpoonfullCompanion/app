@@ -34,7 +34,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-6">
             Communicate
           </p>
-          <p className="text-sm text-periwinkle/70">
+          <p className="text-sm text-white">
             What would you like to share?
           </p>
         </div>
