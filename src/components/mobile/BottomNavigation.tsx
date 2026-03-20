@@ -31,7 +31,7 @@ export default function BottomNavigation({ activeRoute, onNavigate }: BottomNavi
               className={`flex flex-1 flex-col items-center gap-1 rounded-lg px-3 py-2 transition-colors ${
                 isActive
                   ? 'text-bold-blue'
-                  : 'text-periwinkle/60 hover:text-periwinkle'
+                  : 'text-off-white/60 hover:text-off-white/80'
               }`}
             >
               <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
