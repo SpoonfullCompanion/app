@@ -107,12 +107,12 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
       <div className="mx-auto max-w-2xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-periwinkle">Needs</h1>
-            <p className="text-sm text-periwinkle/70">Tap to select, then send to notify your helper.</p>
+            <h1 className="text-2xl font-bold text-zinc-100">Needs</h1>
+            <p className="text-sm text-zinc-100/70">Tap to select, then send to notify your helper.</p>
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-zinc-100 shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
@@ -121,10 +121,10 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
         {shouldShowSection && (
           <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-periwinkle/60">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-100/60">
                 Last Communication
               </h2>
-              <p className="text-xs text-periwinkle/50">
+              <p className="text-xs text-zinc-100/50">
                 {formatDistanceToNow(displayTime)}
               </p>
             </div>
@@ -132,7 +132,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
               {displayNeeds.map((need) => {
                 const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
-                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
+                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-zinc-100">
                     {Icon && <Icon className="h-4 w-4" />}
                     {need.label}
                   </div>
@@ -159,12 +159,12 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
                 <div className="mb-2 flex justify-center">
                   {Icon && (
                     <Icon className={`h-8 w-8 transition-colors ${
-                      isSelected ? 'text-white' : 'text-periwinkle'
+                      isSelected ? 'text-white' : 'text-zinc-100'
                     }`} />
                   )}
                 </div>
                 <span className={`text-sm font-medium transition-colors ${
-                  isSelected ? 'text-white' : 'text-periwinkle'
+                  isSelected ? 'text-white' : 'text-zinc-100'
                 }`}>
                   {need.label}
                 </span>
@@ -175,10 +175,10 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
 
         <div className="mt-8 rounded-xl border border-dark-blue/30 bg-midnight-black/50 p-4">
           <div className="flex items-start gap-3">
-            <Send className="mt-0.5 h-5 w-5 shrink-0 text-periwinkle/60" />
+            <Send className="mt-0.5 h-5 w-5 shrink-0 text-zinc-100/60" />
             <div>
-              <p className="mb-1 text-sm font-medium text-periwinkle">Quick Communication</p>
-              <p className="text-xs leading-relaxed text-periwinkle/60">
+              <p className="mb-1 text-sm font-medium text-zinc-100">Quick Communication</p>
+              <p className="text-xs leading-relaxed text-zinc-100/60">
                 Select one or more needs, then tap Send to notify your caregiver. Sound plays when you select.
               </p>
             </div>
