@@ -79,11 +79,15 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
-      <div className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-periwinkle">Status</h1>
-            <p className="text-sm text-periwinkle/70">Update your status for your helper.</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-2">
+              Status
+            </p>
+            <p className="text-sm text-white">
+              Update your status for your helper.
+            </p>
           </div>
           <button
             onClick={onToggleTTS}
