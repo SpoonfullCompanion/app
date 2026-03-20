@@ -18,6 +18,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
   const [selectedNeeds, setSelectedNeeds] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
   const [lastCommunication, setLastCommunication] = useState<StatusUpdate | null>(null);
+  const [customNote, setCustomNote] = useState('');
 
   useEffect(() => {
     fetchLastCommunication();
@@ -67,7 +68,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
   };
 
   const handleSendNeeds = async () => {
-    if (selectedNeeds.size === 0) return;
+    if (selectedNeeds.size === 0 && !customNote.trim()) return;
 
     setIsSending(true);
     try {
@@ -77,15 +78,27 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
         .filter(Boolean)
         .join('. ');
 
+      const finalMessage = customNote.trim()
+        ? (messages ? `${messages}. ${customNote}` : customNote)
+        : messages;
+
       await onSendUpdate({
         type: 'need',
         selectedNeeds: needsArray,
-        message: messages,
+        message: finalMessage,
       });
 
       await fetchLastCommunication();
+      setSelectedNeeds(new Set());
+      setCustomNote('');
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSpeakNote = () => {
+    if (customNote.trim() && ttsEnabled) {
+      speak(customNote);
     }
   };
 
@@ -170,7 +183,31 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           })}
         </div>
 
-        {selectedNeeds.size > 0 && (
+        <div className="mt-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <label htmlFor="customNote" className="text-xs font-semibold uppercase tracking-wide text-zinc-100/60">
+              Type to Speak or Add Notes
+            </label>
+            {customNote.trim() && ttsEnabled && (
+              <button
+                onClick={handleSpeakNote}
+                className="rounded-lg bg-bold-blue/20 p-2 text-zinc-100 transition-colors hover:bg-bold-blue/30"
+              >
+                <Volume2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <textarea
+            id="customNote"
+            value={customNote}
+            onChange={(e) => setCustomNote(e.target.value)}
+            placeholder="Type a custom message or note here..."
+            rows={3}
+            className="w-full rounded-lg border border-periwinkle/30 bg-midnight-black/80 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-100/40 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30"
+          />
+        </div>
+
+        {(selectedNeeds.size > 0 || customNote.trim()) && (
           <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="mx-auto max-w-2xl">
               <button
@@ -179,7 +216,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
               >
                 <Send className="h-5 w-5" />
-                {isSending ? 'Sending...' : `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}`}
+                {isSending ? 'Sending...' : selectedNeeds.size > 0 ? `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}` : 'Send Message'}
               </button>
             </div>
           </div>
