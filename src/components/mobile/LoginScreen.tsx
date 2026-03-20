@@ -24,6 +24,7 @@ export default function LoginScreen({
   const [password, setPassword] = React.useState('');
   const [magicLinkEmail, setMagicLinkEmail] = React.useState('');
   const [localStatusMessage, setLocalStatusMessage] = React.useState('');
+  const [isError, setIsError] = React.useState(false);
   const [isBusy, setIsBusy] = React.useState(false);
   const [showForgotPassword, setShowForgotPassword] = React.useState(false);
 
@@ -31,12 +32,16 @@ export default function LoginScreen({
     event.preventDefault();
     setIsBusy(true);
     setLocalStatusMessage('');
+    setIsError(false);
 
     try {
       const message = await onSignInWithPassword(email, password);
+      const isSuccessMessage = message.toLowerCase().includes('signed in') || message.toLowerCase().includes('reloading');
+      setIsError(!isSuccessMessage);
       setLocalStatusMessage(message);
     } catch (error) {
       console.error('Sign in failed', error);
+      setIsError(true);
       setLocalStatusMessage('Sign in failed. Please try again.');
     } finally {
       setIsBusy(false);
@@ -47,13 +52,17 @@ export default function LoginScreen({
     event.preventDefault();
     setIsBusy(true);
     setLocalStatusMessage('');
+    setIsError(false);
 
     try {
       const message = await onSendMagicLink(magicLinkEmail);
+      const isSuccessMessage = message.toLowerCase().includes('sent') || message.toLowerCase().includes('check');
+      setIsError(!isSuccessMessage);
       setLocalStatusMessage(message);
     } catch (error) {
       console.error('Magic link request failed', error);
-      setLocalStatusMessage('Sign-in failed. Please try again.');
+      setIsError(true);
+      setLocalStatusMessage('Failed to send magic link. Please try again.');
     } finally {
       setIsBusy(false);
     }
@@ -61,19 +70,23 @@ export default function LoginScreen({
 
   const handleForgotPassword = async () => {
     if (!email) {
+      setIsError(true);
       setLocalStatusMessage('Enter your email address first.');
       return;
     }
 
     setIsBusy(true);
     setLocalStatusMessage('');
+    setIsError(false);
 
     try {
       const message = await onSendMagicLink(email);
+      setIsError(false);
       setLocalStatusMessage('Password reset link sent to your email.');
       setShowForgotPassword(false);
     } catch (error) {
       console.error('Password reset failed', error);
+      setIsError(true);
       setLocalStatusMessage('Failed to send reset link. Please try again.');
     } finally {
       setIsBusy(false);
@@ -216,7 +229,13 @@ export default function LoginScreen({
         </div>
 
         {statusMessage || localStatusMessage ? (
-          <div className="mt-4 rounded-2xl border border-periwinkle/40 bg-periwinkle/10 px-4 py-3 text-sm text-off-white/85">
+          <div
+            className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+              isError
+                ? 'border-red-500/60 bg-red-500/20 text-red-100'
+                : 'border-periwinkle/40 bg-periwinkle/10 text-off-white/85'
+            }`}
+          >
             {statusMessage || localStatusMessage}
           </div>
         ) : null}

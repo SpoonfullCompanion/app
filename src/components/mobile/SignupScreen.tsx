@@ -18,6 +18,7 @@ export default function SignupScreen({
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [localStatusMessage, setLocalStatusMessage] = React.useState('');
+  const [isError, setIsError] = React.useState(false);
   const [isBusy, setIsBusy] = React.useState(false);
 
   const handleSignUp = async (event: React.FormEvent) => {
@@ -28,12 +29,16 @@ export default function SignupScreen({
 
     setIsBusy(true);
     setLocalStatusMessage('');
+    setIsError(false);
 
     try {
       const message = await onSignUpWithPassword(email, password, selectedRole);
+      const isSuccessMessage = message.toLowerCase().includes('signed up') || message.toLowerCase().includes('reloading') || message.toLowerCase().includes('created');
+      setIsError(!isSuccessMessage);
       setLocalStatusMessage(message);
     } catch (error) {
       console.error('Sign up failed', error);
+      setIsError(true);
       setLocalStatusMessage('Sign up failed. Please try again.');
     } finally {
       setIsBusy(false);
@@ -145,7 +150,13 @@ export default function SignupScreen({
         </form>
 
         {statusMessage || localStatusMessage ? (
-          <div className="mt-4 rounded-2xl border border-periwinkle/40 bg-periwinkle/10 px-4 py-3 text-sm text-off-white/85">
+          <div
+            className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+              isError
+                ? 'border-red-500/60 bg-red-500/20 text-red-100'
+                : 'border-periwinkle/40 bg-periwinkle/10 text-off-white/85'
+            }`}
+          >
             {statusMessage || localStatusMessage}
           </div>
         ) : null}
