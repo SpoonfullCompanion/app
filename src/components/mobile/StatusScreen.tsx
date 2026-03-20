@@ -91,7 +91,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-periwinkle shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
@@ -100,16 +100,16 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
         {latestStatus && (
           <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-periwinkle/60">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-off-white/60">
                 Current Status
               </h2>
-              <p className="text-xs text-periwinkle/50">
+              <p className="text-xs text-off-white/50">
                 {formatDistanceToNow(latestStatus.sentAt)}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {currentEnergy && (
-                <div className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-periwinkle">
+                <div className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-white">
                   {(() => {
                     const Icon = LucideIcons[currentEnergy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                     return Icon && <Icon className="h-4 w-4" />;
@@ -120,21 +120,21 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
               {currentSymptoms.map((symptom) => {
                 const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
-                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-3 py-1.5 text-sm text-periwinkle/80">
+                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-3 py-1.5 text-sm text-off-white/80">
                     {Icon && <Icon className="h-3.5 w-3.5" />}
                     {symptom.label}
                   </div>
                 );
               })}
               {!currentEnergy && currentSymptoms.length === 0 && (
-                <p className="text-sm text-periwinkle/50">No status set</p>
+                <p className="text-sm text-off-white/50">No status set</p>
               )}
             </div>
           </div>
         )}
 
         <div className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-periwinkle/80">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
             Energy Level
           </h2>
           <div className="grid grid-cols-2 gap-3">
@@ -153,16 +153,16 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                 >
                   <div className="mb-2 flex items-center gap-2">
                     {Icon && <Icon className={`h-5 w-5 transition-colors ${
-                      isSelected ? 'text-white' : 'text-periwinkle'
+                      isSelected ? 'text-white' : 'text-off-white'
                     }`} />}
                     <span className={`font-semibold transition-colors ${
-                      isSelected ? 'text-white' : 'text-periwinkle'
+                      isSelected ? 'text-white' : 'text-off-white'
                     }`}>
                       {energy.label}
                     </span>
                   </div>
                   <p className={`text-xs transition-colors ${
-                    isSelected ? 'text-white/90' : 'text-periwinkle/70'
+                    isSelected ? 'text-white/90' : 'text-off-white/70'
                   }`}>
                     {energy.description}
                   </p>
@@ -173,7 +173,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
         </div>
 
         <div className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-periwinkle/80">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
             Symptoms (Optional)
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -192,10 +192,10 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
                 >
                   <div className="flex items-center gap-2">
                     {Icon && <Icon className={`h-4 w-4 transition-colors ${
-                      isSelected ? 'text-white' : 'text-periwinkle'
+                      isSelected ? 'text-white' : 'text-off-white'
                     }`} />}
                     <span className={`text-sm font-medium transition-colors ${
-                      isSelected ? 'text-white' : 'text-periwinkle'
+                      isSelected ? 'text-white' : 'text-off-white'
                     }`}>
                       {symptom.label}
                     </span>
