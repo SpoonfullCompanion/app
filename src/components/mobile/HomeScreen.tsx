@@ -103,26 +103,34 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           ))}
         </div>
 
-        {!loading && recentUpdates.length > 0 && (
+        {!loading && (
           <div className="mt-12">
             <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
               Previous
             </p>
-            <div className="space-y-2">
-              {recentUpdates.map((update) => (
-                <div
-                  key={update.id}
-                  className="rounded-lg border border-dark-blue/30 bg-midnight-black/30 p-3"
-                >
-                  <p className="text-sm text-white/90 mb-1 line-clamp-2">
-                    {update.message_text}
-                  </p>
-                  <p className="text-xs text-periwinkle/60">
-                    {formatDistanceToNow(update.sent_at)}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {recentUpdates.length > 0 ? (
+              <div className="space-y-2">
+                {recentUpdates.map((update) => (
+                  <div
+                    key={update.id}
+                    className="rounded-lg border border-dark-blue/30 bg-midnight-black/30 p-3"
+                  >
+                    <p className="text-sm text-white/90 mb-1 line-clamp-2">
+                      {update.message_text}
+                    </p>
+                    <p className="text-xs text-periwinkle/60">
+                      {formatDistanceToNow(update.sent_at)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dark-blue/30 bg-midnight-black/30 p-4 text-center">
+                <p className="text-sm text-periwinkle/60">
+                  No recent communications
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
