@@ -1,8 +1,20 @@
 import { Activity, MessageSquare, Stethoscope } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 import type { NavRoute } from './BottomNavigation';
+import { formatDistanceToNow } from './time';
 
 interface HomeScreenProps {
   onNavigate: (route: NavRoute) => void;
+}
+
+interface StatusUpdate {
+  id: string;
+  message_text: string;
+  sent_at: string;
+  helper_location: string | null;
+  selected_needs: string[];
+  energy_status: string | null;
 }
 
 const navigationCards = [
@@ -27,6 +39,34 @@ const navigationCards = [
 ];
 
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
+  const [recentUpdates, setRecentUpdates] = useState<StatusUpdate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRecentUpdates() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('status_updates')
+          .select('id, message_text, sent_at, helper_location, selected_needs, energy_status')
+          .eq('patient_id', user.id)
+          .order('sent_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setRecentUpdates(data || []);
+      } catch (error) {
+        console.error('Error fetching recent updates:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRecentUpdates();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
@@ -63,11 +103,28 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           ))}
         </div>
 
-        <div className="mt-12 rounded-xl border border-dark-blue/30 bg-midnight-black/50 p-4 text-center">
-          <p className="text-xs text-periwinkle/60">
-            All actions can be spoken aloud with text-to-speech
-          </p>
-        </div>
+        {!loading && recentUpdates.length > 0 && (
+          <div className="mt-12">
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
+              Previous
+            </p>
+            <div className="space-y-2">
+              {recentUpdates.map((update) => (
+                <div
+                  key={update.id}
+                  className="rounded-lg border border-dark-blue/30 bg-midnight-black/30 p-3"
+                >
+                  <p className="text-sm text-white/90 mb-1 line-clamp-2">
+                    {update.message_text}
+                  </p>
+                  <p className="text-xs text-periwinkle/60">
+                    {formatDistanceToNow(update.sent_at)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
