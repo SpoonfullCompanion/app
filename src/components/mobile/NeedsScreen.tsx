@@ -114,7 +114,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-100">Needs</h1>
-            <p className="text-sm text-zinc-100/70">Tap to select, then send to notify your helper.</p>
+            <p className="text-sm text-zinc-100/70">Tap to speak, or select your needs to send to your helper.</p>
           </div>
           <button
             onClick={onToggleTTS}
