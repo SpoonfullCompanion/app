@@ -173,18 +173,6 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           })}
         </div>
 
-        <div className="mt-8 rounded-xl border border-dark-blue/30 bg-midnight-black/50 p-4">
-          <div className="flex items-start gap-3">
-            <Send className="mt-0.5 h-5 w-5 shrink-0 text-zinc-100/60" />
-            <div>
-              <p className="mb-1 text-sm font-medium text-zinc-100">Quick Communication</p>
-              <p className="text-xs leading-relaxed text-zinc-100/60">
-                Select one or more needs, then tap Send to notify your caregiver. Sound plays when you select.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {selectedNeeds.size > 0 && (
           <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="mx-auto max-w-2xl">
