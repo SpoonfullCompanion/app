@@ -111,14 +111,18 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
       <div className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Needs</h1>
-            <p className="text-sm text-zinc-100/70">Tap to speak, or select your needs to send to your helper.</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-2">
+              Needs
+            </p>
+            <p className="text-sm text-white">
+              Tap to speak, or select your needs to send to your helper.
+            </p>
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-zinc-100 shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
