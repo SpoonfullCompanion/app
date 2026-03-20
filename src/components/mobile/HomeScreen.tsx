@@ -39,22 +39,22 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {navigationCards.map(({ id, icon: Icon, title, description }) => (
             <button
               key={id}
               onClick={() => onNavigate(id)}
-              className="group w-full rounded-2xl border-2 border-bold-blue bg-bold-blue p-6 text-left transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-bold-blue/30 active:scale-[0.98]"
+              className="group w-full rounded-xl border border-bold-blue/40 bg-bold-blue/20 p-4 text-left transition-all hover:bg-bold-blue/30 hover:border-bold-blue/60 active:scale-[0.98]"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-xl bg-white/10 p-3">
-                  <Icon className="h-8 w-8 text-white" strokeWidth={2} />
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-white/10 p-2">
+                  <Icon className="h-5 w-5 text-white" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
-                  <h2 className="mb-1 text-xl font-semibold text-white">
+                  <h2 className="mb-0.5 text-base font-semibold text-white">
                     {title}
                   </h2>
-                  <p className="text-sm leading-relaxed text-white/90">
+                  <p className="text-xs leading-relaxed text-white/80">
                     {description}
                   </p>
                 </div>
