@@ -16,7 +16,7 @@ export default function HospitalScreen({ ttsEnabled, onToggleTTS }: HospitalScre
               Hospital
             </p>
             <p className="text-sm text-white">
-              Quick phrases for staff.
+              Common communication needs for those in the hospital.
             </p>
           </div>
           <button
