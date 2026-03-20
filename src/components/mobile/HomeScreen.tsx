@@ -30,8 +30,10 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-periwinkle">Communicate</h1>
+        <div className="mb-8">
+          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-6">
+            Communicate
+          </p>
           <p className="text-sm text-periwinkle/70">
             What would you like to share?
           </p>
