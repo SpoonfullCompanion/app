@@ -10,10 +10,14 @@ export default function HospitalScreen({ ttsEnabled, onToggleTTS }: HospitalScre
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Hospital</h1>
-            <p className="text-sm text-zinc-100/70">Quick phrases for staff</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-2">
+              Hospital
+            </p>
+            <p className="text-sm text-white">
+              Quick phrases for staff.
+            </p>
           </div>
           <button
             onClick={onToggleTTS}
