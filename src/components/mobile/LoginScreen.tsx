@@ -109,6 +109,18 @@ export default function LoginScreen({
           </p>
         </div>
 
+        {statusMessage || localStatusMessage ? (
+          <div
+            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+              isError
+                ? 'border-red-500/60 bg-red-500/20 text-red-100'
+                : 'border-periwinkle/40 bg-periwinkle/10 text-off-white/85'
+            }`}
+          >
+            {statusMessage || localStatusMessage}
+          </div>
+        ) : null}
+
         <form onSubmit={handleSignIn} className="mt-5 space-y-2">
           <div>
             <label className="block text-sm font-semibold text-off-white/90 mb-1" htmlFor="email">
@@ -227,18 +239,6 @@ export default function LoginScreen({
             </Button>
           </form>
         </div>
-
-        {statusMessage || localStatusMessage ? (
-          <div
-            className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
-              isError
-                ? 'border-red-500/60 bg-red-500/20 text-red-100'
-                : 'border-periwinkle/40 bg-periwinkle/10 text-off-white/85'
-            }`}
-          >
-            {statusMessage || localStatusMessage}
-          </div>
-        ) : null}
 
         <div className="mt-8 text-center">
           <button
