@@ -33,12 +33,18 @@ def build_options
     export_method: "app-store"
   }
 
+  xcargs = []
+
   if ENV["APPLE_TEAM_ID"]
     options[:export_team_id] = ENV["APPLE_TEAM_ID"]
-    options[:xcargs] = "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}"
+    xcargs << "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}"
   end
 
   if provisioning_profile_name
+    xcargs << "CODE_SIGN_STYLE=Manual"
+    xcargs << "CODE_SIGN_IDENTITY=\"iPhone Distribution\""
+    xcargs << "PROVISIONING_PROFILE_SPECIFIER=\"#{provisioning_profile_name}\""
+
     options[:export_options] = {
       signingStyle: "manual",
       provisioningProfiles: {
@@ -46,6 +52,8 @@ def build_options
       }
     }
   end
+
+  options[:xcargs] = xcargs.join(" ") unless xcargs.empty?
 
   options
 end
