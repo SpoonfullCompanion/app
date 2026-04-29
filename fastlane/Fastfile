@@ -1,5 +1,7 @@
 default_platform(:ios)
 
+PROJECT_ROOT = File.expand_path("..", __dir__)
+
 def ios_app_identifier
   ENV["IOS_APP_IDENTIFIER"] || "com.spoonfull.app"
 end
@@ -25,18 +27,24 @@ end
 
 def build_options
   options = {
-    project: "ios/App/App.xcodeproj",
+    project: File.join(PROJECT_ROOT, "ios/App/App.xcodeproj"),
     scheme: "App",
     clean: true,
     export_method: "app-store"
   }
 
+  xcargs = []
+
   if ENV["APPLE_TEAM_ID"]
     options[:export_team_id] = ENV["APPLE_TEAM_ID"]
-    options[:xcargs] = "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}"
+    xcargs << "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}"
   end
 
   if provisioning_profile_name
+    xcargs << "CODE_SIGN_STYLE=Manual"
+    xcargs << "CODE_SIGN_IDENTITY=\"iPhone Distribution\""
+    xcargs << "PROVISIONING_PROFILE_SPECIFIER=\"#{provisioning_profile_name}\""
+
     options[:export_options] = {
       signingStyle: "manual",
       provisioningProfiles: {
@@ -45,19 +53,23 @@ def build_options
     }
   end
 
+  options[:xcargs] = xcargs.join(" ") unless xcargs.empty?
+
   options
 end
 
 platform :ios do
   desc "Build fresh web assets and sync the Capacitor iOS project"
   lane :prepare do
-    if File.exist?("package-lock.json")
-      sh("npm ci")
-    else
-      sh("npm install")
+    Dir.chdir(PROJECT_ROOT) do
+      if File.exist?("package-lock.json")
+        sh("npm ci")
+      else
+        sh("npm install")
+      end
+      sh("npm run build")
+      sh("npx cap sync ios")
     end
-    sh("npm run build")
-    sh("npx cap sync ios")
   end
 
   desc "Build and upload a TestFlight build"
