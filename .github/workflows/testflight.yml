@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   upload:
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 60
     # DISABLED: Remove 'false &&' once iOS certificates and GitHub secrets
     # are configured (see GITHUB_SECRETS.md)
