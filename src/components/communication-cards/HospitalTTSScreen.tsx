@@ -78,13 +78,13 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
       </button>
 
       <div>
-        <h3 className="text-xl font-semibold text-periwinkle mb-4">How I feel</h3>
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">How I feel</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {bodySymptomMessages.map((message) => (
             <button
               key={message.id}
               onClick={() => handlePlay(message)}
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
+              className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
                 selectedMessages.has(message.id)
                   ? 'bg-bold-blue border-bold-blue text-white shadow-lg shadow-bold-blue/30 scale-[1.02]'
                   : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
@@ -92,13 +92,13 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
             >
               <message.icon
                 className={`flex-shrink-0 transition-colors ${
-                  selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+                  selectedMessages.has(message.id) ? 'text-white' : 'text-off-white'
                 }`}
-                size={24}
+                size={16}
                 aria-hidden="true"
               />
-              <span className={`text-left font-medium leading-tight transition-colors ${
-                selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+              <span className={`text-left text-sm font-medium leading-tight transition-colors ${
+                selectedMessages.has(message.id) ? 'text-white' : 'text-off-white'
               }`}>{message.text}</span>
             </button>
           ))}
@@ -106,13 +106,13 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold text-periwinkle mb-4">What I need</h3>
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">What I need</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {actionRequestMessages.map((message) => (
             <button
               key={message.id}
               onClick={() => handlePlay(message)}
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all min-h-[80px] ${
+              className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
                 selectedMessages.has(message.id)
                   ? 'bg-bold-blue border-bold-blue text-white shadow-lg shadow-bold-blue/30 scale-[1.02]'
                   : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
@@ -120,13 +120,13 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
             >
               <message.icon
                 className={`flex-shrink-0 transition-colors ${
-                  selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+                  selectedMessages.has(message.id) ? 'text-white' : 'text-off-white'
                 }`}
-                size={24}
+                size={16}
                 aria-hidden="true"
               />
-              <span className={`text-left font-medium leading-tight transition-colors ${
-                selectedMessages.has(message.id) ? 'text-white' : 'text-periwinkle'
+              <span className={`text-left text-sm font-medium leading-tight transition-colors ${
+                selectedMessages.has(message.id) ? 'text-white' : 'text-off-white'
               }`}>{message.text}</span>
             </button>
           ))}
@@ -134,7 +134,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
       </div>
 
       <div className="pt-4 border-t border-dark-blue/50">
-        <h3 className="text-xl font-semibold text-periwinkle mb-2">Type here to speak out loud</h3>
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">Type here to speak out loud</h3>
         <div className="flex flex-col gap-3">
           <textarea
             value={customText}

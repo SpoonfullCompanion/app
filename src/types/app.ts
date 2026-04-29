@@ -35,6 +35,8 @@ export interface Pairing {
   createdAt: string;
 }
 
+export type NeedPriority = 'when_you_can' | 'soon' | 'asap';
+
 export interface StatusUpdate {
   id: string;
   patientId: string;
@@ -46,6 +48,16 @@ export interface StatusUpdate {
   messageText: string;
   sentAt: string;
   delivery: 'sent' | 'draft';
+  needPriority?: NeedPriority | null;
+}
+
+export interface CaregiverResponse {
+  id: string;
+  statusUpdateId: string;
+  caregiverId: string;
+  message: string;
+  seenAt: string | null;
+  createdAt: string;
 }
 
 export interface NotificationPreference {
@@ -65,4 +77,5 @@ export interface CommunicationSubmission {
   symptoms?: string[];
   message?: string;
   messageText?: string;
+  needPriority?: NeedPriority | null;
 }

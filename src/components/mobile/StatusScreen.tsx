@@ -1,22 +1,27 @@
-import { useState } from 'react';
-import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Volume2, VolumeX, RefreshCw, CheckCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { ENERGY_STATUSES, SYMPTOMS } from '../../utils/communicationData';
 import { speak } from '../../utils/textToSpeech';
-import type { CommunicationSubmission, StatusUpdate } from '../../types/app';
-import { formatDistanceToNow } from './time';
+import type { CommunicationSubmission } from '../../types/app';
 
 interface StatusScreenProps {
-  latestStatus: StatusUpdate | null;
   ttsEnabled: boolean;
   onToggleTTS: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
 }
 
-export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, onSendUpdate }: StatusScreenProps) {
-  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(latestStatus?.energyStatus ?? null);
-  const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set(latestStatus?.selectedSymptoms ?? []));
+export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: StatusScreenProps) {
+  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (!sent) return;
+    const t = window.setTimeout(() => setSent(false), 3000);
+    return () => window.clearTimeout(t);
+  }, [sent]);
 
   const handleEnergySelect = (energyId: string) => {
     if (selectedEnergy === energyId) {
@@ -45,7 +50,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
   };
 
   const handleSendStatus = async () => {
-    if (!selectedEnergy) return;
+    if (!selectedEnergy && selectedSymptoms.size === 0) return;
 
     setIsSending(true);
     try {
@@ -56,26 +61,24 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
 
       let message = energy?.speech || '';
       if (symptoms.length > 0) {
-        message += '. ' + symptoms.map(s => s?.text).join('. ');
+        message += (message ? '. ' : '') + symptoms.map(s => s?.text).join('. ');
       }
 
       await onSendUpdate({
         type: 'status',
-        energy: selectedEnergy,
+        energy: selectedEnergy ?? undefined,
         symptoms: Array.from(selectedSymptoms),
         message,
       });
+      setSelectedEnergy(null);
+      setSelectedSymptoms(new Set());
+      setSent(true);
     } finally {
       setIsSending(false);
     }
   };
 
-  const canSend = selectedEnergy !== null;
-
-  const currentEnergy = latestStatus?.energyStatus ? ENERGY_STATUSES.find(e => e.id === latestStatus.energyStatus) : null;
-  const currentSymptoms = (latestStatus?.selectedSymptoms ?? [])
-    .map(id => SYMPTOMS.find(s => s.id === id))
-    .filter(Boolean);
+  const canSend = selectedEnergy !== null || selectedSymptoms.size > 0;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
@@ -86,7 +89,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
               Status
             </p>
             <p className="text-sm text-white">
-              Update your status for your helper.
+              Update your status for your helper. <br />This will not send a notification.
             </p>
           </div>
           <button
@@ -97,53 +100,9 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
           </button>
         </div>
 
-        {latestStatus && (
-          <div className="mb-6 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-off-white/60">
-                Current Status
-              </h2>
-              <p className="text-xs text-off-white/50">
-                {formatDistanceToNow(latestStatus.sentAt)}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {currentEnergy && (() => {
-                const Icon = LucideIcons[currentEnergy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-                const pillColors = {
-                  crashing: 'bg-red-800/40 border border-red-700/50',
-                  low: 'bg-orange-800/40 border border-orange-700/50',
-                  resting: 'bg-yellow-700/40 border border-yellow-600/50',
-                  available: 'bg-green-800/40 border border-green-700/50'
-                };
-                const colorClass = pillColors[currentEnergy.id as keyof typeof pillColors] || 'bg-bold-blue/20';
-
-                return (
-                  <div className={`flex items-center gap-1.5 rounded-lg ${colorClass} px-3 py-1.5 text-sm font-medium text-white`}>
-                    {Icon && <Icon className="h-4 w-4" />}
-                    {currentEnergy.label}
-                  </div>
-                );
-              })()}
-              {currentSymptoms.map((symptom) => {
-                const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-                return (
-                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-3 py-1.5 text-sm text-off-white/80">
-                    {Icon && <Icon className="h-3.5 w-3.5" />}
-                    {symptom.label}
-                  </div>
-                );
-              })}
-              {!currentEnergy && currentSymptoms.length === 0 && (
-                <p className="text-sm text-off-white/50">No status set</p>
-              )}
-            </div>
-          </div>
-        )}
-
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            Energy Level
+            Energy Level <span className="text-off-white/40 normal-case font-normal">(optional)</span>
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {ENERGY_STATUSES.map((energy) => {
@@ -214,7 +173,7 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
 
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            Symptoms (Optional)
+            Symptoms <span className="text-off-white/40 normal-case font-normal">(optional)</span>
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {SYMPTOMS.map((symptom) => {
@@ -246,17 +205,24 @@ export default function StatusScreen({ latestStatus, ttsEnabled, onToggleTTS, on
           </div>
         </div>
 
-        {canSend && (
+        {(canSend || sent) && (
           <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="mx-auto max-w-2xl">
-              <button
-                onClick={() => void handleSendStatus()}
-                disabled={isSending}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
-              >
-                <RefreshCw className="h-5 w-5" />
-                {isSending ? 'Updating...' : 'Update Status'}
-              </button>
+              {sent ? (
+                <div className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
+                  <CheckCircle className="h-5 w-5" />
+                  Status updated
+                </div>
+              ) : (
+                <button
+                  onClick={() => void handleSendStatus()}
+                  disabled={isSending}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                  {isSending ? 'Updating...' : 'Update Status'}
+                </button>
+              )}
             </div>
           </div>
         )}

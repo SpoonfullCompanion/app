@@ -55,7 +55,7 @@ export const SYMPTOMS: Symptom[] = [
   { id: 'resting', label: 'Fatigue', icon: 'Bed', text: 'I am fatigued' },
   { id: 'sensory', label: 'Sensory Sensitive', icon: 'Ear', text: "I'm having sensory sensitivity" },
   { id: 'weakness', label: 'Weakness', icon: 'BatteryWarning', text: 'I am feeling weak' },
-  { id: 'confused', label: 'Confused', icon: 'MessageSquareQuestion', text: 'I am confused' },
+  { id: 'confused', label: 'Confused', icon: 'HelpCircle', text: 'I am confused' },
   { id: 'no_think', label: "Difficulty Thinking", icon: 'Cloud', text: "It's hard to think" },
   { id: 'no_speak', label: "Difficulty Speaking", icon: 'VolumeX', text: "It's hard to speak" },
   { id: 'no_move', label: "Difficulty Moving", icon: 'UserX', text: "It's hard to move" },

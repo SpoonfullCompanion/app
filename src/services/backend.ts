@@ -4,6 +4,7 @@ import { getAuthRedirectUrl } from '../lib/nativeAuth';
 import { supabase } from '../lib/supabaseClient';
 import type {
   AppSession,
+  CaregiverResponse,
   Pairing,
   CommunicationSubmission,
   StatusUpdate,
@@ -611,7 +612,7 @@ export function getActivePairing(session: AppSession | null) {
 export async function syncActivePairing(session: AppSession | null) {
   const localPairing = getActivePairing(session);
 
-  if (!session || !supabase) {
+  if (!session || !supabase || session.authMode === 'demo') {
     return localPairing;
   }
 
@@ -643,12 +644,13 @@ export async function sendStatusUpdate(session: AppSession, pairing: Pairing | n
     patientId: session.profileId,
     caregiverId: resolvedPairing?.caregiverId ?? null,
     helperLocation: submission.helperLocation,
-    selectedNeeds: submission.selectedNeeds,
-    energyStatus: submission.energyStatus,
-    selectedSymptoms: submission.selectedSymptoms,
-    messageText: submission.messageText,
+    selectedNeeds: submission.selectedNeeds ?? [],
+    energyStatus: submission.energyStatus ?? submission.energy ?? null,
+    selectedSymptoms: submission.selectedSymptoms ?? submission.symptoms ?? [],
+    messageText: submission.messageText ?? submission.message ?? '',
     sentAt: new Date().toISOString(),
     delivery: 'sent',
+    needPriority: submission.needPriority ?? null,
   };
 
   addStatusUpdate(update);
@@ -666,6 +668,7 @@ export async function sendStatusUpdate(session: AppSession, pairing: Pairing | n
       message_text: update.messageText,
       sent_at: update.sentAt,
       delivery: update.delivery,
+      need_priority: update.needPriority ?? null,
     });
 
     if (error) {
@@ -676,28 +679,45 @@ export async function sendStatusUpdate(session: AppSession, pairing: Pairing | n
   return update;
 }
 
+function mapStatusRecord(data: Record<string, unknown>): StatusUpdate {
+  return {
+    id: data.id as string,
+    patientId: data.patient_id as string,
+    caregiverId: data.caregiver_id as string | null,
+    helperLocation: data.helper_location as StatusUpdate['helperLocation'],
+    selectedNeeds: (data.selected_needs as string[]) ?? [],
+    energyStatus: (data.energy_status as string | null) ?? null,
+    selectedSymptoms: (data.selected_symptoms as string[]) ?? [],
+    messageText: data.message_text as string,
+    sentAt: data.sent_at as string,
+    delivery: data.delivery as 'sent' | 'draft',
+    needPriority: (data.need_priority as StatusUpdate['needPriority']) ?? null,
+  };
+}
+
 export async function getLatestStatus(session: AppSession, pairing: Pairing | null) {
-  const localUpdate = loadStatusUpdates().find((update) => {
-    if (session.role === 'patient') {
-      return update.patientId === session.profileId;
-    }
+  const updates = await getRecentUpdates(session, pairing);
+  return updates[0] ?? null;
+}
 
-    if (!pairing) {
-      return update.caregiverId === session.profileId;
-    }
-
+export async function getRecentUpdates(session: AppSession, pairing: Pairing | null, limit = 10): Promise<StatusUpdate[]> {
+  const matchesSession = (update: StatusUpdate) => {
+    if (session.role === 'patient') return update.patientId === session.profileId;
+    if (!pairing) return update.caregiverId === session.profileId;
     return update.patientId === pairing.patientId;
-  }) ?? null;
+  };
 
-  if (!supabase) {
-    return localUpdate;
+  const localUpdates = loadStatusUpdates().filter(matchesSession).slice(0, limit);
+
+  if (!supabase || session.authMode === 'demo') {
+    return localUpdates;
   }
 
   let query = supabase
     .from('status_updates')
     .select('*')
     .order('sent_at', { ascending: false })
-    .limit(1);
+    .limit(limit);
 
   if (session.role === 'patient') {
     query = query.eq('patient_id', session.profileId);
@@ -707,35 +727,23 @@ export async function getLatestStatus(session: AppSession, pairing: Pairing | nu
     query = query.eq('caregiver_id', session.profileId);
   }
 
-  const { data, error } = await query.maybeSingle();
-  if (error || !data) {
-    return localUpdate;
+  const { data, error } = await query;
+  if (error || !data?.length) {
+    return localUpdates;
   }
 
-  const remoteUpdate: StatusUpdate = {
-    id: data.id,
-    patientId: data.patient_id,
-    caregiverId: data.caregiver_id,
-    helperLocation: data.helper_location,
-    selectedNeeds: data.selected_needs ?? [],
-    energyStatus: data.energy_status,
-    selectedSymptoms: data.selected_symptoms ?? [],
-    messageText: data.message_text,
-    sentAt: data.sent_at,
-    delivery: data.delivery,
-  };
-
-  addStatusUpdate(remoteUpdate);
-  return remoteUpdate;
+  const remoteUpdates = data.map(mapStatusRecord);
+  remoteUpdates.forEach(addStatusUpdate);
+  return remoteUpdates;
 }
 
 export function subscribeToStatusUpdates(
   session: AppSession,
   pairing: Pairing | null,
-  onChange: (update: StatusUpdate | null) => void,
+  onChange: (updates: StatusUpdate[]) => void,
 ) {
   const localListener = () => {
-    getLatestStatus(session, pairing).then(onChange).catch((error) => {
+    getRecentUpdates(session, pairing).then(onChange).catch((error) => {
       console.error('Failed to refresh local status updates', error);
     });
   };
@@ -778,4 +786,109 @@ export function subscribeToStatusUpdates(
       void supabase?.removeChannel(channel);
     }
   };
+}
+
+export async function markUpdatesSeen(caregiverId: string, statusUpdateIds: string[]): Promise<void> {
+  if (!supabase || !statusUpdateIds.length) return;
+
+  const now = new Date().toISOString();
+  const rows = statusUpdateIds.map((id) => ({
+    status_update_id: id,
+    caregiver_id: caregiverId,
+    message: '',
+    seen_at: now,
+  }));
+
+  await supabase
+    .from('caregiver_responses')
+    .upsert(rows, { onConflict: 'status_update_id,caregiver_id', ignoreDuplicates: true });
+}
+
+export async function sendCaregiverResponse(
+  caregiverId: string,
+  statusUpdateId: string,
+  message: string,
+): Promise<CaregiverResponse | null> {
+  if (!supabase) return null;
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('caregiver_responses')
+    .upsert(
+      { status_update_id: statusUpdateId, caregiver_id: caregiverId, message, seen_at: now },
+      { onConflict: 'status_update_id,caregiver_id' },
+    )
+    .select()
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('Failed to send caregiver response', error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    statusUpdateId: data.status_update_id,
+    caregiverId: data.caregiver_id,
+    message: data.message,
+    seenAt: data.seen_at,
+    createdAt: data.created_at,
+  };
+}
+
+export async function getResponsesForUpdates(
+  caregiverId: string,
+  statusUpdateIds: string[],
+): Promise<Record<string, CaregiverResponse>> {
+  if (!supabase || !statusUpdateIds.length) return {};
+
+  const { data, error } = await supabase
+    .from('caregiver_responses')
+    .select('*')
+    .eq('caregiver_id', caregiverId)
+    .in('status_update_id', statusUpdateIds);
+
+  if (error || !data) return {};
+
+  const map: Record<string, CaregiverResponse> = {};
+  for (const row of data) {
+    map[row.status_update_id] = {
+      id: row.id,
+      statusUpdateId: row.status_update_id,
+      caregiverId: row.caregiver_id,
+      message: row.message,
+      seenAt: row.seen_at,
+      createdAt: row.created_at,
+    };
+  }
+  return map;
+}
+
+export async function getResponsesForPatient(
+  statusUpdateIds: string[],
+): Promise<Record<string, CaregiverResponse>> {
+  if (!supabase || !statusUpdateIds.length) return {};
+
+  const { data, error } = await supabase
+    .from('caregiver_responses')
+    .select('*')
+    .in('status_update_id', statusUpdateIds)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return {};
+
+  const map: Record<string, CaregiverResponse> = {};
+  for (const row of data) {
+    if (!map[row.status_update_id]) {
+      map[row.status_update_id] = {
+        id: row.id,
+        statusUpdateId: row.status_update_id,
+        caregiverId: row.caregiver_id,
+        message: row.message,
+        seenAt: row.seen_at,
+        createdAt: row.created_at,
+      };
+    }
+  }
+  return map;
 }

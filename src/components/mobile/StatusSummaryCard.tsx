@@ -1,64 +1,107 @@
+import * as LucideIcons from 'lucide-react';
+import { Clock, Hourglass, Zap } from 'lucide-react';
 import { formatDistanceToNow } from './time';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
-import type { StatusUpdate } from '../../types/app';
+import type { NeedPriority, StatusUpdate } from '../../types/app';
+
+const PRIORITY_CONFIG: Record<NeedPriority, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
+  when_you_can: { label: 'When you can', icon: Clock, className: 'bg-teal-700 border-teal-500' },
+  soon: { label: 'Soon', icon: Hourglass, className: 'bg-amber-700 border-amber-500' },
+  asap: { label: 'Need ASAP', icon: Zap, className: 'bg-red-700 border-red-500' },
+};
 
 interface StatusSummaryCardProps {
   update: StatusUpdate | null;
   emptyMessage: string;
 }
 
-function resolveLabels(ids: string[], collection: { id: string; label: string }[]) {
-  return ids
-    .map((id) => collection.find((item) => item.id === id)?.label)
-    .filter((value): value is string => Boolean(value));
-}
+const energyPillColors: Record<string, string> = {
+  crashing: 'bg-red-800/40 border border-red-700/50',
+  low: 'bg-orange-800/40 border border-orange-700/50',
+  resting: 'bg-yellow-700/40 border border-yellow-600/50',
+  available: 'bg-green-800/40 border border-green-700/50',
+};
 
 export default function StatusSummaryCard({ update, emptyMessage }: StatusSummaryCardProps) {
   if (!update) {
     return (
-      <div className="rounded-3xl border border-dark-blue bg-dark-blue/30 p-5 text-off-white/80">
+      <div className="rounded-xl border border-dark-blue/40 bg-midnight-black/50 p-4 text-sm text-off-white/60">
         {emptyMessage}
       </div>
     );
   }
 
-  const needs = resolveLabels(update.selectedNeeds, NEEDS);
-  const symptoms = resolveLabels(update.selectedSymptoms, SYMPTOMS);
-  const energyLabel = ENERGY_STATUSES.find((item) => item.id === update.energyStatus)?.label ?? 'Not set';
+  const energy = ENERGY_STATUSES.find((item) => item.id === update.energyStatus);
+  const needs = (update.selectedNeeds ?? [])
+    .map((id) => NEEDS.find((n) => n.id === id))
+    .filter(Boolean) as typeof NEEDS;
+  const symptoms = (update.selectedSymptoms ?? [])
+    .map((id) => SYMPTOMS.find((s) => s.id === id))
+    .filter(Boolean) as typeof SYMPTOMS;
 
   return (
-    <div className="rounded-3xl border border-periwinkle/40 bg-dark-blue/30 p-5 shadow-lg shadow-black/20">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-periwinkle">Latest status</p>
-          <h3 className="mt-2 text-2xl font-bold text-off-white">{energyLabel}</h3>
-        </div>
-        <p className="text-sm text-off-white/70">{formatDistanceToNow(update.sentAt)}</p>
+    <div className="rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-off-white/60">
+          Latest Status
+        </h2>
+        <p className="text-xs text-off-white/50">{formatDistanceToNow(update.sentAt)}</p>
       </div>
 
-      <div className="mt-5 space-y-4 text-off-white">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Helper location</p>
-          <p className="mt-1 text-lg font-semibold">{update.helperLocation ?? 'Not set'}</p>
-        </div>
-
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Needs</p>
-          <p className="mt-1 text-base">{needs.length > 0 ? needs.join(', ') : 'No needs selected'}</p>
-        </div>
-
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Symptoms</p>
-          <p className="mt-1 text-base">{symptoms.length > 0 ? symptoms.join(', ') : 'No symptoms selected'}</p>
-        </div>
-
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Message</p>
-          <p className="mt-1 whitespace-pre-wrap text-base leading-relaxed text-off-white/90">
-            {update.messageText}
-          </p>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {update.needPriority && PRIORITY_CONFIG[update.needPriority] && (() => {
+          const cfg = PRIORITY_CONFIG[update.needPriority!];
+          return (
+            <div className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold text-white ${cfg.className} shadow-md`}>
+              <cfg.icon className="h-3.5 w-3.5" />
+              {cfg.label}
+            </div>
+          );
+        })()}
+        {energy && (() => {
+          const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+          const colorClass = energyPillColors[energy.id] ?? 'bg-bold-blue/20';
+          return (
+            <div className={`flex items-center gap-1.5 rounded-lg ${colorClass} px-3 py-1.5 text-sm font-medium text-white`}>
+              {Icon && <Icon className="h-4 w-4" />}
+              {energy.label}
+            </div>
+          );
+        })()}
+        {needs.map((need) => {
+          const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+          return (
+            <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue/20 px-3 py-1.5 text-sm font-medium text-off-white/90">
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {need.label}
+            </div>
+          );
+        })}
+        {symptoms.map((symptom) => {
+          const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+          return (
+            <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-3 py-1.5 text-sm text-off-white/80">
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {symptom.label}
+            </div>
+          );
+        })}
+        {!energy && needs.length === 0 && symptoms.length === 0 && (
+          <p className="text-sm text-off-white/50">No details</p>
+        )}
       </div>
+
+      {update.helperLocation && (
+        <p className="mt-3 text-xs text-off-white/50">
+          Helper is <span className="text-off-white/70">{update.helperLocation}</span>
+        </p>
+      )}
+
+      {update.messageText && (
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-off-white/80">
+          {update.messageText}
+        </p>
+      )}
     </div>
   );
 }

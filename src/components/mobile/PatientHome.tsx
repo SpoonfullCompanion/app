@@ -10,7 +10,7 @@ import type { AppSession, Pairing, CommunicationSubmission, StatusUpdate } from 
 interface PatientHomeProps {
   session: AppSession | null;
   pairing: Pairing | null;
-  latestStatus: StatusUpdate | null;
+  recentUpdates: StatusUpdate[];
   isConnectedMode: boolean;
   showHeaderChrome: boolean;
   showReturnToMain: boolean;
@@ -23,7 +23,7 @@ interface PatientHomeProps {
 export default function PatientHome({
   session,
   pairing,
-  latestStatus,
+  recentUpdates,
   isConnectedMode,
   showHeaderChrome,
   showReturnToMain,
@@ -46,11 +46,13 @@ export default function PatientHome({
   return (
     <div className="bg-midnight-black">
       {activeRoute === 'home' && (
-        <HomeScreen onNavigate={handleNavigate} />
+        <HomeScreen
+          recentUpdates={recentUpdates}
+          onNavigate={handleNavigate}
+        />
       )}
       {activeRoute === 'status' && (
         <StatusScreen
-          latestStatus={latestStatus}
           ttsEnabled={ttsEnabled}
           onToggleTTS={handleToggleTTS}
           onSendUpdate={onSendUpdate}
