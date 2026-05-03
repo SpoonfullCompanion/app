@@ -46,7 +46,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
   return (
     <div className="flex overflow-hidden rounded-2xl border border-periwinkle/20 bg-midnight-black/60 shadow-lg">
       {/* Left color stripe keyed to energy level */}
-      <div className={`w-1 shrink-0 ${energyStyle?.stripe ?? 'bg-white/25'}`} />
+      <div className={`w-1 shrink-0 ${energyStyle?.stripe ?? 'bg-white/60'}`} />
 
       <div className="flex-1 min-w-0">
         <div className="p-4">
