@@ -344,8 +344,10 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       ]);
       setConnections(conns);
       setArchivedIds(archived);
-      // Fall back to legacy pairing updates if no connection-based updates
-      setUpdates(freshUpdates.length > 0 ? freshUpdates : legacyUpdates);
+      const archivedSet = new Set(archived);
+      const visibleUpdates = (freshUpdates.length > 0 ? freshUpdates : legacyUpdates)
+        .filter(u => !archivedSet.has(u.id));
+      setUpdates(visibleUpdates);
     } catch {
       setUpdates(legacyUpdates);
     } finally {
