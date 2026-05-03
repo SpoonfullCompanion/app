@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import { Home, Activity, MessageSquare } from 'lucide-react';
+import { Home, Activity, MessageSquare, Users } from 'lucide-react';
 
-export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account';
+export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account' | 'connections';
 
 interface BottomNavigationProps {
   activeRoute: NavRoute;
   onNavigate: (route: NavRoute) => void;
+  pendingConnectionCount?: number;
 }
 
 const navItems = [
-  { id: 'home' as const, label: 'Home', icon: Home },
-  { id: 'status' as const, label: 'Status', icon: Activity },
-  { id: 'needs' as const, label: 'Needs', icon: MessageSquare },
+  { id: 'home' as const,        label: 'Home',       icon: Home },
+  { id: 'status' as const,      label: 'Status',     icon: Activity },
+  { id: 'needs' as const,       label: 'Needs',      icon: MessageSquare },
+  { id: 'connections' as const, label: 'Connections', icon: Users },
 ];
 
-export default function BottomNavigation({ activeRoute, onNavigate }: BottomNavigationProps) {
+export default function BottomNavigation({ activeRoute, onNavigate, pendingConnectionCount = 0 }: BottomNavigationProps) {
   const [justTapped, setJustTapped] = useState<NavRoute | null>(null);
 
   const handleTap = (id: NavRoute) => {
@@ -32,20 +34,28 @@ export default function BottomNavigation({ activeRoute, onNavigate }: BottomNavi
         {navItems.map(({ id, label, icon: Icon }) => {
           const isActive = activeRoute === id;
           const isBouncing = justTapped === id;
+          const hasBadge = id === 'connections' && pendingConnectionCount > 0;
           return (
             <button
               key={id}
               onClick={() => handleTap(id)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all duration-150 active:scale-95 ${
+              className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all duration-150 active:scale-95 ${
                 isActive
                   ? 'bg-bold-blue/20 text-bold-blue'
                   : 'text-off-white/50 hover:text-off-white/80'
               }`}
             >
-              <Icon
-                className={`h-5 w-5 ${isBouncing ? 'animate-nav-bounce' : ''}`}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+              <div className="relative">
+                <Icon
+                  className={`h-5 w-5 ${isBouncing ? 'animate-nav-bounce' : ''}`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                {hasBadge && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-bold-blue text-[10px] font-bold text-white">
+                    {pendingConnectionCount > 9 ? '9+' : pendingConnectionCount}
+                  </span>
+                )}
+              </div>
               <span className={`text-[10px] font-medium leading-none ${isActive ? 'text-bold-blue' : ''}`}>
                 {label}
               </span>

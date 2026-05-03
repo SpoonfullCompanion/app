@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import BottomNavigation, { type NavRoute } from './BottomNavigation';
 import AppHeader from './AppHeader';
 import HomeScreen from './HomeScreen';
@@ -6,7 +6,9 @@ import StatusScreen from './StatusScreen';
 import NeedsScreen from './NeedsScreen';
 import HospitalScreen from './HospitalScreen';
 import AccountScreen from './AccountScreen';
+import ConnectionsScreen from './ConnectionsScreen';
 import type { AppSession, Pairing, CommunicationSubmission, StatusUpdate } from '../../types/app';
+import { getPatientConnections } from '../../services/backend';
 
 interface PatientHomeProps {
   session: AppSession | null;
@@ -43,6 +45,20 @@ export default function PatientHome({
 }: PatientHomeProps) {
   const [activeRoute, setActiveRoute] = useState<NavRoute>('home');
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [pendingConnectionCount, setPendingConnectionCount] = useState(0);
+
+  // Poll for pending connection requests to show badge
+  useEffect(() => {
+    if (!session || session.authMode === 'demo') return;
+    const refresh = () => {
+      getPatientConnections(session).then((conns) => {
+        setPendingConnectionCount(conns.filter((c) => c.status === 'pending').length);
+      }).catch(() => {});
+    };
+    refresh();
+    const id = window.setInterval(refresh, 15_000);
+    return () => window.clearInterval(id);
+  }, [session]);
 
   const handleNavigate = (route: NavRoute) => {
     setActiveRoute(route);
@@ -88,6 +104,9 @@ export default function PatientHome({
             onToggleTTS={handleToggleTTS}
           />
         )}
+        {activeRoute === 'connections' && session && (
+          <ConnectionsScreen session={session} />
+        )}
         {activeRoute === 'account' && (
           <AccountScreen
             session={session}
@@ -100,7 +119,11 @@ export default function PatientHome({
           />
         )}
       </div>
-      <BottomNavigation activeRoute={activeRoute} onNavigate={handleNavigate} />
+      <BottomNavigation
+        activeRoute={activeRoute}
+        onNavigate={handleNavigate}
+        pendingConnectionCount={pendingConnectionCount}
+      />
     </div>
   );
 }
