@@ -71,6 +71,7 @@ export interface CaregiverResponse {
   id: string;
   statusUpdateId: string;
   caregiverId: string;
+  caregiverDisplayName?: string;
   message: string;
   seenAt: string | null;
   createdAt: string;

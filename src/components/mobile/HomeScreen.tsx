@@ -207,14 +207,18 @@ function UpdateCard({ update, response, onArchive, archiving, helperMap }: {
             <div className="flex items-start gap-2.5">
               <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
               <div>
-                <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/70">Helper replied</p>
+                <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/70">
+                  {response!.caregiverDisplayName ?? 'Helper'} replied
+                </p>
                 <p className="text-sm text-off-white italic">{response!.message}</p>
               </div>
             </div>
           ) : isSeen ? (
             <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
               <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
-              <p className="text-xs font-medium text-green-300">Helper saw this</p>
+              <p className="text-xs font-medium text-green-300">
+                {response!.caregiverDisplayName ?? 'Helper'} saw this
+              </p>
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">

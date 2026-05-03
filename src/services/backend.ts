@@ -1300,7 +1300,7 @@ export async function getResponsesForPatient(
 
   const { data, error } = await supabase
     .from('caregiver_responses')
-    .select('*')
+    .select('*, caregiver:profiles!caregiver_responses_caregiver_id_fkey(display_name)')
     .in('status_update_id', statusUpdateIds)
     .order('created_at', { ascending: false });
 
@@ -1309,10 +1309,12 @@ export async function getResponsesForPatient(
   const map: Record<string, CaregiverResponse> = {};
   for (const row of data) {
     if (!map[row.status_update_id]) {
+      const caregiver = row.caregiver as Record<string, unknown> | null;
       map[row.status_update_id] = {
         id: row.id,
         statusUpdateId: row.status_update_id,
         caregiverId: row.caregiver_id,
+        caregiverDisplayName: (caregiver?.display_name as string) ?? undefined,
         message: row.message,
         seenAt: row.seen_at,
         createdAt: row.created_at,
