@@ -30,7 +30,7 @@ export default function CaregiverBottomNavigation({
       className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4"
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
-      <nav className="flex items-center gap-1 rounded-2xl border border-white/10 bg-midnight-black/90 px-2 py-2 shadow-2xl shadow-black/60 backdrop-blur-xl">
+      <nav className="flex w-full max-w-2xl items-center gap-1 rounded-2xl border border-white/10 bg-midnight-black/90 px-2 py-2 shadow-2xl shadow-black/60 backdrop-blur-xl">
         <button
           onClick={() => handleTap('home')}
           className={`relative flex flex-col items-center gap-1 rounded-xl px-6 py-2 transition-all duration-150 active:scale-95 ${
