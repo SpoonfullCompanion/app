@@ -403,9 +403,9 @@ export default function CaregiverFeedScreen({ session, legacyUpdates }: Caregive
 
         {updates.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/20" />
-            <p className="text-sm text-off-white/40">No updates yet</p>
-            <p className="mt-1 text-xs text-off-white/25">
+            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/40" />
+            <p className="text-sm text-off-white/70">No updates yet</p>
+            <p className="mt-1 text-xs text-off-white/50">
               {activeConnections.length === 0
                 ? 'Connect with a patient in Account to see their updates here'
                 : 'Patient updates will appear here once they send one'}
