@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Bookmark } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -121,9 +121,9 @@ function UpdateFeedCard({
                     ? 'text-bold-blue'
                     : 'text-off-white/30 hover:text-off-white/60'
                 }`}
-                title={isArchived ? 'Remove from archive' : 'Save to archive'}
+                title={isArchived ? 'Remove from archive' : 'Archive'}
               >
-                <Bookmark className="h-4 w-4" fill={isArchived ? 'currentColor' : 'none'} />
+                <Archive className="h-4 w-4" />
               </button>
             </div>
           </div>
