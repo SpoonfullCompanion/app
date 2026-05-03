@@ -204,6 +204,13 @@ function UpdateFeedCard({
               })}
             </div>
           )}
+
+          {/* Message / appreciation text */}
+          {update.messageText && (
+            <p className="mt-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
+              {update.messageText}
+            </p>
+          )}
         </div>
 
         {/* Response area */}
