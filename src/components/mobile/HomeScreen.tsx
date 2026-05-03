@@ -18,11 +18,11 @@ const PRIORITY_CONFIG: Record<NeedPriority, { label: string; icon: React.Compone
   asap: { label: 'Need ASAP', icon: Zap, className: 'bg-red-700/80 border-red-500/60 text-white' },
 };
 
-const energyStyles: Record<string, { pill: string; bar: string; stripe: string }> = {
-  crashing:  { pill: 'bg-red-800/50 border-red-700/60 text-white',    bar: 'bg-red-700',    stripe: 'bg-red-600' },
-  low:       { pill: 'bg-orange-800/50 border-orange-700/60 text-white', bar: 'bg-orange-600', stripe: 'bg-orange-500' },
-  resting:   { pill: 'bg-yellow-700/50 border-yellow-600/60 text-white', bar: 'bg-yellow-600', stripe: 'bg-yellow-500' },
-  available: { pill: 'bg-green-800/50 border-green-700/60 text-white',  bar: 'bg-green-600',  stripe: 'bg-green-500' },
+const energyStyles: Record<string, { pill: string; dot: string; bar: string; stripe: string }> = {
+  crashing:  { pill: 'bg-red-950/70 border-red-600/50 text-red-200',      dot: 'bg-red-500',    bar: 'bg-red-700',    stripe: 'bg-red-600' },
+  low:       { pill: 'bg-orange-950/70 border-orange-600/50 text-orange-200', dot: 'bg-orange-400', bar: 'bg-orange-600', stripe: 'bg-orange-500' },
+  resting:   { pill: 'bg-yellow-950/70 border-yellow-600/50 text-yellow-200', dot: 'bg-yellow-400', bar: 'bg-yellow-600', stripe: 'bg-yellow-500' },
+  available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',  dot: 'bg-green-400',  bar: 'bg-green-600',  stripe: 'bg-green-500' },
 };
 
 function UpdateCard({ update, response }: { update: StatusUpdate; response: CaregiverResponse | null }) {
@@ -65,9 +65,10 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
             return (
               <div className="mb-3 flex items-center gap-3">
-                <div className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-base font-bold ${energyStyle.pill}`}>
-                  {Icon && <Icon className="h-5 w-5" />}
-                  {energy.label}
+                <div className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${energyStyle.pill}`}>
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${energyStyle.dot}`} />
+                  {Icon && <Icon className="h-4 w-4" />}
+                  <span className="text-sm font-bold tracking-wide">{energy.label}</span>
                 </div>
                 <div className="flex-1">
                   <div className="h-1.5 w-full rounded-full bg-white/10">
