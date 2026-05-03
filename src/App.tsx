@@ -28,6 +28,7 @@ import {
   sendStatusUpdate,
   signOut,
   subscribeToStatusUpdates,
+  updateDisplayName,
 } from './services/backend';
 
 function App() {
@@ -237,8 +238,8 @@ function App() {
     return result.message;
   };
 
-  const handleSignUpWithPassword = async (email: string, password: string, role: UserRole) => {
-    const result = await signUpWithPassword(email, password, role);
+  const handleSignUpWithPassword = async (email: string, password: string, role: UserRole, displayName: string) => {
+    const result = await signUpWithPassword(email, password, role, displayName);
     if (result.ok) {
       if (result.session) {
         finalizeConnectedAuth(result.session);
@@ -256,6 +257,15 @@ function App() {
       return appConfig.enablePasswordAuth ? 'Account created. Reloading...' : result.message;
     }
     return result.message;
+  };
+
+  const handleUpdateDisplayName = async (newName: string) => {
+    if (!session) return { ok: false, message: 'Not signed in.' };
+    const result = await updateDisplayName(session, newName);
+    if (result.ok && result.session) {
+      setSession(result.session);
+    }
+    return result;
   };
 
   const handleSignOut = async () => {
@@ -400,6 +410,7 @@ function App() {
         onSignOut={handleSignOut}
         onReturnToMain={handleReturnToMain}
         onOpenPairing={() => setShowPairingScreen(true)}
+        onUpdateDisplayName={handleUpdateDisplayName}
       />
     );
   }

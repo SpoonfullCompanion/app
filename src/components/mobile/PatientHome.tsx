@@ -19,6 +19,7 @@ interface PatientHomeProps {
   onSignOut: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
   onOpenPairing: () => void;
+  onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 export default function PatientHome({
@@ -32,6 +33,7 @@ export default function PatientHome({
   onSignOut,
   onReturnToMain,
   onOpenPairing,
+  onUpdateDisplayName,
 }: PatientHomeProps) {
   const [activeRoute, setActiveRoute] = useState<NavRoute>('home');
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -85,6 +87,7 @@ export default function PatientHome({
             session={session}
             onSignOut={onSignOut}
             onOpenPairing={onOpenPairing}
+            onUpdateDisplayName={onUpdateDisplayName}
           />
         )}
       </div>

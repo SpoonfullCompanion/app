@@ -2,9 +2,10 @@ import React from 'react';
 import { appConfig } from '../../lib/appConfig';
 import type { UserRole } from '../../types/app';
 import { UserRound, HeartHandshake, ChevronLeft } from 'lucide-react';
+import { checkDisplayNameAvailable } from '../../services/backend';
 
 interface SignupScreenProps {
-  onSignUpWithPassword: (email: string, password: string, role: UserRole) => Promise<string>;
+  onSignUpWithPassword: (email: string, password: string, role: UserRole, displayName: string) => Promise<string>;
   onBack: () => void;
   statusMessage?: string;
 }
@@ -23,19 +24,34 @@ export default function SignupScreen({
   const [selectedRole, setSelectedRole] = React.useState<UserRole | null>(null);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [displayName, setDisplayName] = React.useState('');
+  const [displayNameError, setDisplayNameError] = React.useState('');
   const [localStatusMessage, setLocalStatusMessage] = React.useState('');
   const [isError, setIsError] = React.useState(false);
   const [isBusy, setIsBusy] = React.useState(false);
+
+  const handleDisplayNameBlur = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed) return;
+    const available = await checkDisplayNameAvailable(trimmed);
+    setDisplayNameError(available ? '' : 'That display name is already taken.');
+  };
 
   const handleSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedRole) return;
 
+    const trimmedName = displayName.trim();
+    if (!trimmedName) {
+      setDisplayNameError('Display name is required.');
+      return;
+    }
+
     setIsBusy(true);
     setLocalStatusMessage('');
     setIsError(false);
     try {
-      const message = await onSignUpWithPassword(email, password, selectedRole);
+      const message = await onSignUpWithPassword(email, password, selectedRole, trimmedName);
       const isSuccessMessage =
         message.toLowerCase().includes('signed up') ||
         message.toLowerCase().includes('reloading') ||
@@ -154,6 +170,26 @@ export default function SignupScreen({
 
         <form onSubmit={handleSignUp} className="space-y-4">
           <div>
+            <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="signup-display-name">
+              Display name
+            </label>
+            <input
+              id="signup-display-name"
+              type="text"
+              value={displayName}
+              onChange={(e) => { setDisplayName(e.target.value); setDisplayNameError(''); }}
+              onBlur={() => void handleDisplayNameBlur()}
+              placeholder="How others will see you"
+              autoCapitalize="words"
+              autoCorrect="off"
+              className={`${inputClass} ${displayNameError ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30' : ''}`}
+            />
+            {displayNameError && (
+              <p className="mt-1.5 text-xs text-red-400">{displayNameError}</p>
+            )}
+          </div>
+
+          <div>
             <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="signup-email">
               Email
             </label>
@@ -185,7 +221,7 @@ export default function SignupScreen({
 
           <button
             type="submit"
-            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
+            disabled={!email || !password || !displayName.trim() || !!displayNameError || isBusy || !appConfig.hasSupabase}
             className={ctaClass}
           >
             {isBusy ? 'Creating account…' : 'Create account'}

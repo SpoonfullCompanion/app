@@ -33,13 +33,14 @@ function buildConnectedSession(params: {
   role: UserRole;
   email: string | null;
   authMode: 'magic_link' | 'password';
+  displayName?: string;
 }) {
   return {
     profileId: params.profileId,
     role: params.role,
     email: params.email,
     authMode: params.authMode,
-    displayName: params.email?.split('@')[0] || formatDisplayName(params.role),
+    displayName: params.displayName || params.email?.split('@')[0] || formatDisplayName(params.role),
   } satisfies AppSession;
 }
 
@@ -222,14 +223,15 @@ export async function restoreSession() {
     }
 
     const metadataRole = data.session.user.user_metadata.role as UserRole | undefined;
-    const roleFromProfile = await fetchRoleFromProfile(data.session.user.id);
-    const role = pendingRole ?? roleFromProfile ?? metadataRole ?? storedSession?.role ?? 'patient';
+    const profile = await fetchProfile(data.session.user.id);
+    const role = pendingRole ?? profile?.role ?? metadataRole ?? storedSession?.role ?? 'patient';
     const authMode = resolveAuthMode(storedSession, pendingAuthMode);
     const session = buildConnectedSession({
       profileId: data.session.user.id,
       role,
       email: data.session.user.email ?? null,
       authMode,
+      displayName: profile?.displayName ?? storedSession?.displayName,
     });
 
     writeStorage(STORAGE_KEYS.session, session);
@@ -275,9 +277,24 @@ export async function sendMagicLink(email: string, role?: UserRole) {
   return { ok: true, message: 'Magic link sent. Open the link on this device to complete sign-in.' };
 }
 
-export async function signUpWithPassword(email: string, password: string, role: UserRole) {
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+  role: UserRole,
+  displayName: string,
+) {
   if (!supabase) {
     return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  const trimmedName = displayName.trim();
+  if (!trimmedName) {
+    return { ok: false, message: 'Enter a display name.' };
+  }
+
+  const nameAvailable = await checkDisplayNameAvailable(trimmedName);
+  if (!nameAvailable) {
+    return { ok: false, message: 'That display name is already taken.' };
   }
 
   const resolvedEmail = resolvePasswordEmail(email);
@@ -305,8 +322,12 @@ export async function signUpWithPassword(email: string, password: string, role: 
       role,
       email: data.user?.email ?? data.session.user.email ?? resolvedEmail,
       authMode: 'password',
+      displayName: trimmedName,
     });
     writeStorage(STORAGE_KEYS.session, session);
+    void upsertProfile(session).catch((err) => {
+      console.error('Failed to upsert profile after signup', err);
+    });
     return { ok: true, message: 'Account created and signed in.', session };
   }
 
@@ -317,7 +338,7 @@ export async function signUpWithPassword(email: string, password: string, role: 
   };
 }
 
-async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
+async function fetchProfile(userId: string): Promise<{ role: UserRole; displayName: string } | null> {
   if (!supabase) {
     return null;
   }
@@ -325,7 +346,7 @@ async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, display_name')
       .eq('id', userId)
       .maybeSingle();
 
@@ -333,11 +354,64 @@ async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
       return null;
     }
 
-    return data.role as UserRole;
+    return { role: data.role as UserRole, displayName: data.display_name as string };
   } catch (error) {
-    console.error('Failed to fetch role from profile', error);
+    console.error('Failed to fetch profile', error);
     return null;
   }
+}
+
+async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
+  const profile = await fetchProfile(userId);
+  return profile?.role ?? null;
+}
+
+export async function checkDisplayNameAvailable(name: string): Promise<boolean> {
+  if (!supabase) {
+    return true;
+  }
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('id')
+    .ilike('display_name', name.trim())
+    .maybeSingle();
+
+  return !data;
+}
+
+export async function updateDisplayName(
+  session: AppSession,
+  newName: string,
+): Promise<{ ok: boolean; message: string; session?: AppSession }> {
+  const trimmed = newName.trim();
+  if (!trimmed) {
+    return { ok: false, message: 'Display name cannot be empty.' };
+  }
+
+  if (!supabase) {
+    const updated: AppSession = { ...session, displayName: trimmed };
+    writeStorage(STORAGE_KEYS.session, updated);
+    return { ok: true, message: 'Display name updated.', session: updated };
+  }
+
+  const available = await checkDisplayNameAvailable(trimmed);
+  if (!available && trimmed.toLowerCase() !== session.displayName.toLowerCase()) {
+    return { ok: false, message: 'That display name is already taken.' };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ display_name: trimmed })
+    .eq('id', session.profileId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  const updated: AppSession = { ...session, displayName: trimmed };
+  writeStorage(STORAGE_KEYS.session, updated);
+  return { ok: true, message: 'Display name updated.', session: updated };
 }
 
 export async function signInWithPassword(email: string, password: string, role?: UserRole) {
@@ -364,15 +438,16 @@ export async function signInWithPassword(email: string, password: string, role?:
   }
 
   const roleFromMetadata = data.user.user_metadata.role as UserRole | undefined;
-  const roleFromProfile = await fetchRoleFromProfile(data.user.id);
+  const profile = await fetchProfile(data.user.id);
   const storedSession = readStorage<AppSession | null>(STORAGE_KEYS.session, null);
-  const finalRole = role ?? roleFromProfile ?? roleFromMetadata ?? storedSession?.role ?? 'patient';
+  const finalRole = role ?? profile?.role ?? roleFromMetadata ?? storedSession?.role ?? 'patient';
 
   const session = buildConnectedSession({
     profileId: data.user.id,
     role: finalRole,
     email: data.user.email ?? resolvedEmail,
     authMode: 'password',
+    displayName: profile?.displayName ?? storedSession?.displayName,
   });
   writeStorage(STORAGE_KEYS.session, session);
 
@@ -413,14 +488,15 @@ export async function restoreSessionFromAuthUser(user: {
   const storedSession = readStorage<AppSession | null>(STORAGE_KEYS.session, null);
   const pendingRole = readStorage<UserRole | null>(STORAGE_KEYS.pendingRole, null);
   const pendingAuthMode = readStorage<AppSession['authMode'] | null>(STORAGE_KEYS.pendingAuthMode, null);
-  const roleFromProfile = await fetchRoleFromProfile(user.id);
-  const role = pendingRole ?? roleFromProfile ?? user.user_metadata?.role ?? storedSession?.role ?? 'patient';
+  const profile = await fetchProfile(user.id);
+  const role = pendingRole ?? profile?.role ?? user.user_metadata?.role ?? storedSession?.role ?? 'patient';
   const authMode = resolveAuthMode(storedSession, pendingAuthMode);
   const session = buildConnectedSession({
     profileId: user.id,
     role,
     email: user.email ?? null,
     authMode,
+    displayName: profile?.displayName ?? storedSession?.displayName,
   });
 
   writeStorage(STORAGE_KEYS.session, session);
