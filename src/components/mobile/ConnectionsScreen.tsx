@@ -317,6 +317,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             <Loader className="h-5 w-5 animate-spin text-periwinkle/60" />
           </div>
         ) : tab === 'caregivers' ? (
+
           <div className="space-y-2">
             {activeConnections.length === 0 ? (
               <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
@@ -414,29 +415,6 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               </div>
             )}
 
-            {/* Friend feed — always visible */}
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-off-white/50 mb-2 px-0.5">Friend Updates</p>
-              {isLoadingFeed ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader className="h-4 w-4 animate-spin text-periwinkle/60" />
-                </div>
-              ) : friendUpdates.length === 0 ? (
-                <div className="rounded-xl border border-dark-blue/30 bg-midnight-black/40 px-4 py-8 text-center">
-                  <p className="text-sm text-off-white/60">
-                    {activeFriends.length === 0
-                      ? 'Add friends to see their latest status here'
-                      : 'No updates from friends yet'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {friendUpdates.map((u) => (
-                    <FriendUpdateCard key={u.id} update={u} />
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
         ) : (
@@ -522,6 +500,31 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             )}
           </div>
         )}
+
+        {/* Friend Status — always visible below connections */}
+        <div className="mt-8">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Friend Status</p>
+            {isLoadingFeed && (
+              <Loader className="h-3.5 w-3.5 animate-spin text-periwinkle/60" />
+            )}
+          </div>
+          {!isLoadingFeed && friendUpdates.length === 0 ? (
+            <div className="rounded-xl border border-dark-blue/30 bg-midnight-black/40 px-4 py-8 text-center">
+              <p className="text-sm text-off-white/60">
+                {activeFriends.length === 0
+                  ? 'Add friends to see their latest status here'
+                  : 'No updates from friends yet'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {friendUpdates.map((u) => (
+                <FriendUpdateCard key={u.id} update={u} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
