@@ -119,7 +119,7 @@ function UpdateFeedCard({
                 className={`rounded-lg p-1.5 transition-all active:scale-90 ${
                   isArchived
                     ? 'text-bold-blue'
-                    : 'text-off-white/30 hover:text-off-white/60'
+                    : 'text-off-white/60 hover:text-off-white'
                 }`}
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
@@ -330,6 +330,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
+  const [removingFromFeed, setRemovingFromFeed] = React.useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [hasLoaded, setHasLoaded] = React.useState(false);
 
@@ -409,6 +410,16 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       return next;
     });
     if (nowArchived) {
+      // Animate out then remove from feed
+      setRemovingFromFeed(prev => new Set(prev).add(updateId));
+      setTimeout(() => {
+        setUpdates(prev => prev.filter(u => u.id !== updateId));
+        setRemovingFromFeed(prev => {
+          const next = new Set(prev);
+          next.delete(updateId);
+          return next;
+        });
+      }, 300);
       void archiveUpdate(session.profileId, updateId).then(() => onArchiveChanged?.());
     } else {
       void unarchiveUpdate(session.profileId, updateId).then(() => onArchiveChanged?.());
@@ -510,8 +521,13 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                     {updateList.map((update, i) => (
                       <div
                         key={update.id}
-                        className="animate-slide-up"
-                        style={{ animationDelay: `${i * 40}ms` }}
+                        className="animate-slide-up overflow-hidden transition-all duration-300"
+                        style={{
+                          animationDelay: `${i * 40}ms`,
+                          opacity: removingFromFeed.has(update.id) ? 0 : 1,
+                          maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
+                          marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
+                        }}
                       >
                         <UpdateFeedCard
                           update={update}
@@ -541,8 +557,13 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
               {updates.map((update, i) => (
                 <div
                   key={update.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${i * 50}ms` }}
+                  className="animate-slide-up overflow-hidden transition-all duration-300"
+                  style={{
+                    animationDelay: `${i * 50}ms`,
+                    opacity: removingFromFeed.has(update.id) ? 0 : 1,
+                    maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
+                    marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
+                  }}
                 >
                   <UpdateFeedCard
                     update={update}
