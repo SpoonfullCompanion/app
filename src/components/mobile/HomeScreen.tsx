@@ -66,7 +66,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
 
   return (
     <div className="flex overflow-hidden rounded-2xl border border-periwinkle/20 bg-midnight-black/60 shadow-lg">
-      {isNeedsOnly && <div className={`w-1 shrink-0 ${energyStyle?.stripe ?? 'bg-white/20'}`} />}
+      {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
       <div className="flex-1 min-w-0">
         <div className="p-4">
