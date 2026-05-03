@@ -60,7 +60,7 @@ export default function CaregiverBottomNavigation({
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-medium leading-none ${isActive ? 'text-bold-blue' : ''}`}>
+              <span className="text-[10px] font-medium leading-none">
                 {label}
               </span>
             </button>
