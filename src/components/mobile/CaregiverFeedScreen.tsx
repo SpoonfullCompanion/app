@@ -278,27 +278,35 @@ export default function CaregiverFeedScreen({ session, updates }: CaregiverFeedS
 
     const ids = updates.map(u => u.id);
 
-    getResponsesForUpdates(session.profileId, ids).then(setResponses).catch(console.error);
+    getResponsesForUpdates(session.profileId, ids).then(fetched => {
+      setResponses(prev => {
+        const next = { ...fetched };
+        // preserve any locally-stamped seenAt that the backend hasn't persisted yet
+        for (const id of ids) {
+          if (prev[id]?.seenAt && !next[id]?.seenAt) {
+            next[id] = { ...next[id], ...prev[id] };
+          }
+        }
+        return next;
+      });
+    }).catch(console.error);
 
-    const unseenIds = updates
-      .filter(u => !responses[u.id]?.seenAt)
-      .map(u => u.id);
+    const unseenIds = ids.filter(id => !responses[id]?.seenAt);
 
     if (unseenIds.length) {
-      void markUpdatesSeen(session.profileId, unseenIds).then(() => {
-        setResponses(prev => {
-          const now = new Date().toISOString();
-          const next = { ...prev };
-          for (const id of unseenIds) {
-            if (!next[id]) {
-              next[id] = { id: '', statusUpdateId: id, caregiverId: session.profileId, message: '', seenAt: now, createdAt: now };
-            } else {
-              next[id] = { ...next[id], seenAt: now };
-            }
+      const now = new Date().toISOString();
+      setResponses(prev => {
+        const next = { ...prev };
+        for (const id of unseenIds) {
+          if (!next[id]) {
+            next[id] = { id: '', statusUpdateId: id, caregiverId: session.profileId, message: '', seenAt: now, createdAt: now };
+          } else {
+            next[id] = { ...next[id], seenAt: now };
           }
-          return next;
-        });
+        }
+        return next;
       });
+      void markUpdatesSeen(session.profileId, unseenIds).catch(console.error);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updates, session.profileId]);
