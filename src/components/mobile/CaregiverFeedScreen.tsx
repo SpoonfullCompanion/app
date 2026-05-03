@@ -37,7 +37,8 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
-const QUICK_REPLIES = ['Do you need anything?', 'Let me know if I can help', 'I am here for you'];
+const QUICK_REPLIES_STATUS = ['Do you need anything?', 'Let me know if I can help', 'I am here for you'];
+const QUICK_REPLIES_NEEDS = ['On it!', 'Be there soon', 'Coming in 10 minutes'];
 
 // ─── Update card ─────────────────────────────────────────────────────────────
 
@@ -200,7 +201,7 @@ function UpdateFeedCard({
               {expanded && (
                 <div className="mt-3 space-y-2">
                   <div className="flex flex-wrap gap-2">
-                    {QUICK_REPLIES.map(msg => (
+                    {(isNeedsOnly ? QUICK_REPLIES_NEEDS : QUICK_REPLIES_STATUS).map(msg => (
                       <button
                         key={msg}
                         onClick={() => void handleQuickReply(msg)}
