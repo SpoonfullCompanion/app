@@ -28,7 +28,7 @@ export default function DemoRoleScreen({ onSelectRole, onBack }: DemoRoleScreenP
             <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Send your status</p>
             <h2 className="mt-3 text-3xl font-bold font-league-spartan">Patient</h2>
             <p className="mt-4 text-base text-off-white/75">
-              Use the Spoonfull communication cards with persistent state, pairing, and mobile-friendly controls.
+              Use the Spoonfull communication cards with persistent state and mobile-friendly controls.
             </p>
           </button>
 
@@ -39,7 +39,7 @@ export default function DemoRoleScreen({ onSelectRole, onBack }: DemoRoleScreenP
             <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Find out what they need</p>
             <h2 className="mt-3 text-3xl font-bold font-league-spartan">Helper</h2>
             <p className="mt-4 text-base text-off-white/75">
-              Pair to a patient, follow the latest status, and enable reminders once notifications are configured.
+              Connect to a patient, follow their latest status, and enable reminders once notifications are configured.
             </p>
           </button>
         </div>

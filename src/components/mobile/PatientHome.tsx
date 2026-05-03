@@ -7,20 +7,17 @@ import NeedsScreen from './NeedsScreen';
 import HospitalScreen from './HospitalScreen';
 import AccountScreen from './AccountScreen';
 import ConnectionsScreen from './ConnectionsScreen';
-import type { AppSession, Pairing, CommunicationSubmission, StatusUpdate } from '../../types/app';
+import type { AppSession, CommunicationSubmission, StatusUpdate } from '../../types/app';
 import { getPatientConnections } from '../../services/backend';
 
 interface PatientHomeProps {
   session: AppSession | null;
-  pairing: Pairing | null;
   recentUpdates: StatusUpdate[];
-  isConnectedMode: boolean;
   showHeaderChrome: boolean;
   showReturnToMain: boolean;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
   onSignOut: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
-  onOpenPairing: () => void;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
@@ -29,15 +26,12 @@ interface PatientHomeProps {
 
 export default function PatientHome({
   session,
-  pairing,
   recentUpdates,
-  isConnectedMode,
   showHeaderChrome,
   showReturnToMain,
   onSendUpdate,
   onSignOut,
   onReturnToMain,
-  onOpenPairing,
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,
@@ -112,7 +106,6 @@ export default function PatientHome({
           <AccountScreen
             session={session}
             onSignOut={onSignOut}
-            onOpenPairing={onOpenPairing}
             onUpdateDisplayName={onUpdateDisplayName}
             onUpdateEmail={onUpdateEmail}
             onUpdatePassword={onUpdatePassword}

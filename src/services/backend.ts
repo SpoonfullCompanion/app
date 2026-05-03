@@ -7,7 +7,6 @@ import type {
   CaregiverResponse,
   Connection,
   ConnectionType,
-  Pairing,
   CommunicationSubmission,
   StatusUpdate,
   UserRole,
@@ -18,7 +17,6 @@ const STORAGE_KEYS = {
   session: 'session',
   pendingRole: 'pending-role',
   pendingAuthMode: 'pending-auth-mode',
-  pairings: 'pairings',
   statusUpdates: 'status-updates',
 };
 
@@ -94,20 +92,6 @@ function resolvePasswordEmail(identifier: string) {
   return `${username}@${LOCAL_AUTH_EMAIL_DOMAIN}`;
 }
 
-function loadPairings() {
-  return readStorage<Pairing[]>(STORAGE_KEYS.pairings, []);
-}
-
-function savePairings(pairings: Pairing[]) {
-  writeStorage(STORAGE_KEYS.pairings, pairings);
-}
-
-function removePairing(pairingId: string) {
-  const next = loadPairings().filter((entry) => entry.id !== pairingId);
-  savePairings(next);
-  broadcastStoragePulse();
-}
-
 function loadStatusUpdates() {
   return readStorage<StatusUpdate[]>(STORAGE_KEYS.statusUpdates, []);
 }
@@ -120,14 +104,6 @@ function broadcastStoragePulse() {
   writeStorage('sync-pulse', { at: new Date().toISOString() });
 }
 
-function upsertPairing(pairing: Pairing) {
-  const next = loadPairings().filter((entry) => entry.id !== pairing.id);
-  next.unshift(pairing);
-  savePairings(next);
-  broadcastStoragePulse();
-  return pairing;
-}
-
 function addStatusUpdate(update: StatusUpdate) {
   const next = loadStatusUpdates().filter((entry) => entry.id !== update.id);
   next.unshift(update);
@@ -136,44 +112,11 @@ function addStatusUpdate(update: StatusUpdate) {
   return update;
 }
 
-function mapPairingRecord(data: {
-  id: string;
-  code: string;
-  patient_id: string;
-  caregiver_id: string | null;
-  status: 'pending' | 'paired';
-  created_at: string;
-}) {
-  return {
-    id: data.id,
-    code: data.code,
-    patientId: data.patient_id,
-    caregiverId: data.caregiver_id,
-    status: data.status,
-    createdAt: data.created_at,
-  } satisfies Pairing;
-}
-
 function resolveDemoProfileId(role: UserRole) {
   return role === 'patient' ? DEMO_PATIENT_ID : DEMO_CAREGIVER_ID;
 }
 
 function seedDemoState() {
-  const existingPairing = loadPairings().find((entry) => entry.id === 'pairing-demo');
-  if (!existingPairing) {
-    savePairings([
-      {
-        id: 'pairing-demo',
-        code: 'DEMO42',
-        patientId: DEMO_PATIENT_ID,
-        caregiverId: DEMO_CAREGIVER_ID,
-        status: 'paired',
-        createdAt: new Date().toISOString(),
-      },
-      ...loadPairings(),
-    ]);
-  }
-
   const existingStatus = loadStatusUpdates().find((entry) => entry.id === 'status-demo');
   if (!existingStatus) {
     saveStatusUpdates([
@@ -651,159 +594,11 @@ export async function completeAuthFromUrl(url: string) {
   return { ok: true, session };
 }
 
-export async function createInviteCode(session: AppSession) {
-  const pairing: Pairing = {
-    id: crypto.randomUUID(),
-    code: crypto.randomUUID().slice(0, 6).toUpperCase(),
-    patientId: session.profileId,
-    caregiverId: null,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-  };
-
-  upsertPairing(pairing);
-
-  if (supabase) {
-    await upsertProfile(session);
-    const { error } = await supabase.from('pairings').upsert({
-      id: pairing.id,
-      code: pairing.code,
-      patient_id: pairing.patientId,
-      caregiver_id: pairing.caregiverId,
-      status: pairing.status,
-      created_at: pairing.createdAt,
-    });
-
-    if (error) {
-      console.error('Failed to save pairing', error);
-      return { ok: false, message: error.message };
-    }
-  }
-
-  return { ok: true, pairing };
-}
-
-export async function joinInviteCode(session: AppSession, code: string) {
-  const normalizedCode = code.trim().toUpperCase();
-  if (!normalizedCode) {
-    return { ok: false, message: 'Enter an invite code.' };
-  }
-
-  let pairing = loadPairings().find((entry) => entry.code === normalizedCode) ?? null;
-
-  if (!pairing && supabase) {
-    const { data, error } = await supabase
-      .from('pairings')
-      .select('*')
-      .eq('code', normalizedCode)
-      .maybeSingle();
-
-    if (error) {
-      return { ok: false, message: error.message };
-    }
-
-    if (data) {
-      pairing = mapPairingRecord(data);
-    }
-  }
-
-  if (!pairing) {
-    return { ok: false, message: 'Invite code not found.' };
-  }
-
-  const updatedPairing: Pairing = {
-    ...pairing,
-    caregiverId: session.profileId,
-    status: 'paired',
-  };
-
-  if (supabase) {
-    await upsertProfile(session);
-    const { error } = await supabase
-      .from('pairings')
-      .update({
-        caregiver_id: updatedPairing.caregiverId,
-        status: updatedPairing.status,
-      })
-      .eq('id', updatedPairing.id);
-
-    if (error) {
-      return { ok: false, message: error.message };
-    }
-  }
-
-  upsertPairing(updatedPairing);
-
-  return { ok: true, pairing: updatedPairing };
-}
-
-export async function leavePairing(session: AppSession, pairing: Pairing | null) {
-  if (!pairing) {
-    return { ok: true };
-  }
-
-  if (supabase && session.role === 'caregiver') {
-    const { error } = await supabase
-      .from('pairings')
-      .update({
-        caregiver_id: null,
-        status: 'pending',
-      })
-      .eq('id', pairing.id);
-
-    if (error) {
-      return { ok: false, message: error.message };
-    }
-  }
-
-  removePairing(pairing.id);
-  return { ok: true };
-}
-
-export function getActivePairing(session: AppSession | null) {
-  if (!session) {
-    return null;
-  }
-
-  return loadPairings().find((pairing) =>
-    pairing.patientId === session.profileId || pairing.caregiverId === session.profileId
-  ) ?? null;
-}
-
-export async function syncActivePairing(session: AppSession | null) {
-  const localPairing = getActivePairing(session);
-
-  if (!session || !supabase || session.authMode === 'demo') {
-    return localPairing;
-  }
-
-  let query = supabase
-    .from('pairings')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(1);
-
-  if (session.role === 'patient') {
-    query = query.eq('patient_id', session.profileId);
-  } else {
-    query = query.eq('caregiver_id', session.profileId);
-  }
-
-  const { data, error } = await query.maybeSingle();
-  if (error || !data) {
-    return localPairing;
-  }
-
-  const pairing = upsertPairing(mapPairingRecord(data));
-  return pairing;
-}
-
-export async function sendStatusUpdate(session: AppSession, pairing: Pairing | null, submission: CommunicationSubmission) {
-  const resolvedPairing = await syncActivePairing(session) ?? pairing;
+export async function sendStatusUpdate(session: AppSession, submission: CommunicationSubmission) {
   const update: StatusUpdate = {
     id: crypto.randomUUID(),
     patientId: session.profileId,
-    caregiverId: resolvedPairing?.caregiverId ?? null,
+    caregiverId: null,
     helperLocation: submission.helperLocation,
     selectedNeeds: submission.selectedNeeds ?? [],
     energyStatus: submission.energyStatus ?? submission.energy ?? null,
@@ -820,8 +615,8 @@ export async function sendStatusUpdate(session: AppSession, pairing: Pairing | n
     const { error } = await supabase.from('status_updates').insert({
       id: update.id,
       patient_id: update.patientId,
-      caregiver_id: update.caregiverId,
-      pairing_id: resolvedPairing?.id ?? null,
+      caregiver_id: null,
+      pairing_id: null,
       helper_location: update.helperLocation,
       selected_needs: update.selectedNeeds,
       energy_status: update.energyStatus,
@@ -856,17 +651,16 @@ function mapStatusRecord(data: Record<string, unknown>): StatusUpdate {
   };
 }
 
-export async function getLatestStatus(session: AppSession, pairing: Pairing | null) {
-  const updates = await getRecentUpdates(session, pairing);
+export async function getLatestStatus(session: AppSession) {
+  const updates = await getRecentUpdates(session);
   return updates[0] ?? null;
 }
 
-export async function getRecentUpdates(session: AppSession, pairing: Pairing | null, limit = 10): Promise<StatusUpdate[]> {
-  const matchesSession = (update: StatusUpdate) => {
-    if (session.role === 'patient') return update.patientId === session.profileId;
-    if (!pairing) return update.caregiverId === session.profileId;
-    return update.patientId === pairing.patientId;
-  };
+export async function getRecentUpdates(session: AppSession, limit = 10): Promise<StatusUpdate[]> {
+  const matchesSession = (update: StatusUpdate) =>
+    session.role === 'patient'
+      ? update.patientId === session.profileId
+      : update.caregiverId === session.profileId;
 
   const localUpdates = loadStatusUpdates().filter(matchesSession).slice(0, limit);
 
@@ -874,8 +668,7 @@ export async function getRecentUpdates(session: AppSession, pairing: Pairing | n
     return localUpdates;
   }
 
-  // For caregivers without a legacy pairing, prefer the connections-based query
-  if (session.role === 'caregiver' && !pairing) {
+  if (session.role === 'caregiver') {
     const connectedUpdates = await getUpdatesForConnectedPatients(session, limit);
     if (connectedUpdates.length) {
       connectedUpdates.forEach(addStatusUpdate);
@@ -883,19 +676,12 @@ export async function getRecentUpdates(session: AppSession, pairing: Pairing | n
     }
   }
 
-  let query = supabase
+  const query = supabase
     .from('status_updates')
     .select('*')
+    .eq('patient_id', session.profileId)
     .order('sent_at', { ascending: false })
     .limit(limit);
-
-  if (session.role === 'patient') {
-    query = query.eq('patient_id', session.profileId);
-  } else if (pairing) {
-    query = query.eq('patient_id', pairing.patientId);
-  } else {
-    query = query.eq('caregiver_id', session.profileId);
-  }
 
   const { data, error } = await query;
   if (error || !data?.length) {
@@ -909,11 +695,10 @@ export async function getRecentUpdates(session: AppSession, pairing: Pairing | n
 
 export function subscribeToStatusUpdates(
   session: AppSession,
-  pairing: Pairing | null,
   onChange: (updates: StatusUpdate[]) => void,
 ) {
   const localListener = () => {
-    getRecentUpdates(session, pairing).then(onChange).catch((error) => {
+    getRecentUpdates(session).then(onChange).catch((error) => {
       console.error('Failed to refresh local status updates', error);
     });
   };

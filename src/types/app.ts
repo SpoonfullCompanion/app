@@ -46,15 +46,6 @@ export interface Connection {
   followerAvatarIcon?: string | null;
 }
 
-export interface Pairing {
-  id: string;
-  code: string;
-  patientId: string;
-  caregiverId: string | null;
-  status: 'pending' | 'paired';
-  createdAt: string;
-}
-
 export type NeedPriority = 'when_you_can' | 'soon' | 'asap';
 
 export interface StatusUpdate {

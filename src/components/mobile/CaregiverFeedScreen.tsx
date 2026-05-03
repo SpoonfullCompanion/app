@@ -18,7 +18,7 @@ import AvatarIcon from '../AvatarIcon';
 
 interface CaregiverFeedScreenProps {
   session: AppSession;
-  /** Legacy pairing updates passed from App.tsx; used as fallback when no connections exist. */
+  /** Updates passed from App.tsx subscription; used as fallback when no connections exist. */
   legacyUpdates: StatusUpdate[];
   onNavigateToConnections?: () => void;
   onArchiveChanged?: () => void;

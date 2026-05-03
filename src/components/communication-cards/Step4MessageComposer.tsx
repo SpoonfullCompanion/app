@@ -38,7 +38,7 @@ export default function Step4MessageComposer({
 
   const handleSendUpdate = async () => {
     await onSend(message);
-    alert('Your update has been saved and shared with your caregiver when pairing is active.');
+    alert('Your update has been saved and shared with your connected caregivers.');
   };
 
   return (

@@ -5,23 +5,17 @@ import SignupScreen from './components/mobile/SignupScreen';
 import DemoRoleScreen from './components/mobile/DemoRoleScreen';
 import CaregiverHome from './components/mobile/CaregiverHome';
 import PatientHome from './components/mobile/PatientHome';
-import PatientPairingScreen from './components/mobile/PatientPairingScreen';
 import { LoadingScreen } from './components/mobile/LoadingScreen';
 import { appConfig } from './lib/appConfig';
 import { isNativeApp } from './lib/nativeAuth';
 import { supabase } from './lib/supabaseClient';
-import type { AppSession, Pairing, CommunicationSubmission, StatusUpdate, UserRole } from './types/app';
+import type { AppSession, CommunicationSubmission, StatusUpdate, UserRole } from './types/app';
 import {
   completeAuthFromUrl,
   continueInDemo,
-  createInviteCode,
-  getActivePairing,
   getRecentUpdates,
-  joinInviteCode,
-  leavePairing,
   restoreSession,
   restoreSessionFromAuthUser,
-  syncActivePairing,
   signInWithPassword,
   signUpWithPassword,
   sendMagicLink,
@@ -38,35 +32,12 @@ function App() {
   const [showSignup, setShowSignup] = React.useState(false);
   const [showDemoRoleSelection, setShowDemoRoleSelection] = React.useState(false);
   const [session, setSession] = React.useState<AppSession | null>(null);
-  const [pairing, setPairing] = React.useState<Pairing | null>(null);
   const [recentUpdates, setRecentUpdates] = React.useState<StatusUpdate[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [authMessage, setAuthMessage] = React.useState('');
-  const [pairingMessage, setPairingMessage] = React.useState('');
-  const [didDismissPairingSetup, setDidDismissPairingSetup] = React.useState(false);
-  const [isCreatingInviteCode, setIsCreatingInviteCode] = React.useState(false);
-  const [showPairingScreen, setShowPairingScreen] = React.useState(false);
   const isDemoSession = session?.authMode === 'demo';
   const showDemoChrome = !isDemoSession;
   const showPatientHeaderChrome = appConfig.showPatientHeaderChrome && showDemoChrome;
-  const pairingSubscriptionKey = pairing
-    ? `${pairing.id}:${pairing.patientId}:${pairing.caregiverId ?? 'none'}:${pairing.status}`
-    : 'none';
-
-  const updatePairingState = React.useCallback((nextPairing: Pairing | null) => {
-    setPairing((currentPairing) => {
-      if (
-        currentPairing?.id === nextPairing?.id
-        && currentPairing?.patientId === nextPairing?.patientId
-        && currentPairing?.caregiverId === nextPairing?.caregiverId
-        && currentPairing?.status === nextPairing?.status
-      ) {
-        return currentPairing;
-      }
-
-      return nextPairing;
-    });
-  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -155,32 +126,20 @@ function App() {
 
   React.useEffect(() => {
     if (!session) {
-      setPairing(null);
       setRecentUpdates([]);
       return;
     }
 
-    const activePairing = getActivePairing(session);
-    updatePairingState(activePairing);
-    setDidDismissPairingSetup(Boolean(activePairing) || session.authMode === 'demo');
-
-    void syncActivePairing(session)
-      .then((syncedPairing) => {
-        updatePairingState(syncedPairing);
-        if (!showPairingScreen) {
-          setDidDismissPairingSetup(Boolean(syncedPairing) || session.authMode === 'demo');
-        }
-        return getRecentUpdates(session, syncedPairing);
-      })
+    void getRecentUpdates(session)
       .then((updates) => setRecentUpdates(updates))
       .catch((error) => console.error('Failed to load recent updates', error));
 
-    const unsubscribe = subscribeToStatusUpdates(session, pairing ?? activePairing, setRecentUpdates);
+    const unsubscribe = subscribeToStatusUpdates(session, setRecentUpdates);
 
     return () => {
       unsubscribe?.();
     };
-  }, [session, pairing, pairingSubscriptionKey, showPairingScreen, updatePairingState]);
+  }, [session]);
 
   const handleSendMagicLink = async (email: string) => {
     const result = await sendMagicLink(email);
@@ -190,9 +149,7 @@ function App() {
   const handleContinueDemo = async (role: UserRole) => {
     const nextSession = await continueInDemo(role);
     setSession(nextSession);
-    setShowDemoRoleSelection(false);
-    setPairing(getActivePairing(nextSession));
-    setRecentUpdates(await getRecentUpdates(nextSession, getActivePairing(nextSession)));
+    setRecentUpdates(await getRecentUpdates(nextSession));
   };
 
   const handleContinueDemoFromLogin = () => {
@@ -296,11 +253,8 @@ function App() {
   const handleSignOut = async () => {
     await signOut();
     setSession(null);
-    setPairing(null);
     setRecentUpdates([]);
-    setDidDismissPairingSetup(false);
     setAuthMessage('');
-    setPairingMessage('');
   };
 
   const handleReturnToMain = async () => {
@@ -308,57 +262,8 @@ function App() {
     setSession(null);
     setShowSignup(false);
     setShowDemoRoleSelection(false);
-    setPairing(null);
     setRecentUpdates([]);
-    setDidDismissPairingSetup(false);
     setAuthMessage('');
-    setPairingMessage('');
-  };
-
-  const handleCreateInviteCode = async () => {
-    if (!session) {
-      return;
-    }
-
-    setIsCreatingInviteCode(true);
-    const result = await createInviteCode(session);
-    if (result.ok && result.pairing) {
-      updatePairingState(result.pairing);
-      setPairingMessage('');
-    } else {
-      setPairingMessage(result.message ?? 'Failed to create invite code.');
-    }
-    setIsCreatingInviteCode(false);
-  };
-
-  const handleJoinInviteCode = async (code: string) => {
-    if (!session) {
-      return 'Sign in first.';
-    }
-
-    const result = await joinInviteCode(session, code);
-    if (result.ok && result.pairing) {
-      updatePairingState(result.pairing);
-      const updates = await getRecentUpdates(session, result.pairing);
-      setRecentUpdates(updates);
-    }
-
-    return result.message ?? 'Pairing updated.';
-  };
-
-  const handleLeavePairing = async () => {
-    if (!session) {
-      return 'Sign in first.';
-    }
-
-    const result = await leavePairing(session, pairing);
-    if (!result.ok) {
-      return result.message ?? 'Unable to leave pairing.';
-    }
-
-    updatePairingState(null);
-    setRecentUpdates([]);
-    return 'Ready for a new invite code.';
   };
 
   const handleSendUpdate = async (submission: CommunicationSubmission) => {
@@ -366,10 +271,8 @@ function App() {
       return;
     }
 
-    const syncedPairing = await syncActivePairing(session);
-    updatePairingState(syncedPairing);
-    await sendStatusUpdate(session, syncedPairing, submission);
-    setRecentUpdates(await getRecentUpdates(session, syncedPairing));
+    await sendStatusUpdate(session, submission);
+    setRecentUpdates(await getRecentUpdates(session));
   };
 
   if (isLoading) {
@@ -409,32 +312,15 @@ function App() {
   }
 
   if (session.role === 'patient') {
-    if (appConfig.mode === 'connected' && (!didDismissPairingSetup || showPairingScreen)) {
-      return (
-        <PatientPairingScreen
-          inviteCode={pairing?.code ?? null}
-          isBusy={isCreatingInviteCode}
-          statusMessage={pairingMessage}
-          onCreateInviteCode={handleCreateInviteCode}
-          onJoinInviteCode={handleJoinInviteCode}
-          onContinue={() => { setDidDismissPairingSetup(true); setShowPairingScreen(false); }}
-          onSignOut={handleSignOut}
-        />
-      );
-    }
-
     return (
       <PatientHome
         session={session}
-        pairing={pairing}
         recentUpdates={recentUpdates}
-        isConnectedMode={appConfig.mode === 'connected'}
         showHeaderChrome={showPatientHeaderChrome}
         showReturnToMain={isDemoSession}
         onSendUpdate={handleSendUpdate}
         onSignOut={handleSignOut}
         onReturnToMain={handleReturnToMain}
-        onOpenPairing={() => setShowPairingScreen(true)}
         onUpdateDisplayName={handleUpdateDisplayName}
         onUpdateEmail={handleUpdateEmail}
         onUpdatePassword={handleUpdatePassword}
@@ -446,13 +332,9 @@ function App() {
   return (
     <CaregiverHome
       session={session}
-      pairing={pairing}
       recentUpdates={recentUpdates}
-      isConnectedMode={appConfig.mode === 'connected'}
       showHeaderChrome={showDemoChrome}
       showReturnToMain={isDemoSession}
-      onJoinInviteCode={handleJoinInviteCode}
-      onLeavePairing={handleLeavePairing}
       onSignOut={handleSignOut}
       onReturnToMain={handleReturnToMain}
       onUpdateDisplayName={handleUpdateDisplayName}

@@ -5,18 +5,14 @@ import CaregiverConnectionsScreen from './CaregiverConnectionsScreen';
 import CaregiverAccountScreen from './CaregiverAccountScreen';
 import CaregiverArchiveScreen from './CaregiverArchiveScreen';
 import AppHeader from './AppHeader';
-import type { AppSession, Pairing, StatusUpdate } from '../../types/app';
+import type { AppSession, StatusUpdate } from '../../types/app';
 import { getFollowerConnections } from '../../services/backend';
 
 interface CaregiverHomeProps {
   session: AppSession | null;
-  pairing: Pairing | null;
   recentUpdates: StatusUpdate[];
-  isConnectedMode: boolean;
   showHeaderChrome: boolean;
   showReturnToMain: boolean;
-  onJoinInviteCode: (code: string) => Promise<string>;
-  onLeavePairing: () => Promise<string>;
   onSignOut: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
@@ -27,12 +23,9 @@ interface CaregiverHomeProps {
 
 export default function CaregiverHome({
   session,
-  pairing,
   recentUpdates,
   showHeaderChrome,
   showReturnToMain,
-  onJoinInviteCode,
-  onLeavePairing,
   onSignOut,
   onReturnToMain,
   onUpdateDisplayName,
@@ -99,10 +92,7 @@ export default function CaregiverHome({
         {activeRoute === 'account' && (
           <CaregiverAccountScreen
             session={session}
-            pairing={pairing}
             showHeaderChrome={showHeaderChrome}
-            onJoinInviteCode={onJoinInviteCode}
-            onLeavePairing={onLeavePairing}
             onSignOut={onSignOut}
             onUpdateDisplayName={onUpdateDisplayName}
             onUpdateEmail={onUpdateEmail}

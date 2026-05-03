@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Link2, LogOut, Pencil, Check, X, Lock } from 'lucide-react';
+import { User, Mail, LogOut, Pencil, Check, X, Lock } from 'lucide-react';
 import type { AppSession } from '../../types/app';
 import { checkDisplayNameAvailable } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
@@ -8,7 +8,6 @@ import AvatarIconPicker from '../AvatarIconPicker';
 interface AccountScreenProps {
   session: AppSession | null;
   onSignOut: () => Promise<void>;
-  onOpenPairing: () => void;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
@@ -63,7 +62,6 @@ function EditButton({ onClick }: { onClick: () => void }) {
 export default function AccountScreen({
   session,
   onSignOut,
-  onOpenPairing,
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,
@@ -329,19 +327,6 @@ export default function AccountScreen({
             </div>
           </div>
 
-          {/* Pairing */}
-          <button
-            onClick={onOpenPairing}
-            className="w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-bold-blue hover:bg-bold-blue/10"
-          >
-            <div className="flex items-center gap-3">
-              <Link2 className="h-5 w-5 text-off-white" />
-              <div className="flex-1">
-                <p className="font-medium text-off-white">Pairing Code</p>
-                <p className="text-xs text-off-white/50">Get your invite code for caregivers</p>
-              </div>
-            </div>
-          </button>
         </div>
 
         {/* Session section */}

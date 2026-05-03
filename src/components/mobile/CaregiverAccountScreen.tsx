@@ -1,6 +1,6 @@
 import React from 'react';
-import { Bell, Link2, LogIn, LogOut, Mail, Pencil, Check, X, User, Lock } from 'lucide-react';
-import type { AppSession, Pairing } from '../../types/app';
+import { Bell, LogOut, Mail, Pencil, Check, X, User, Lock } from 'lucide-react';
+import type { AppSession } from '../../types/app';
 import { getNotificationStatus, requestLocalNotificationPermission, scheduleLocalReminder } from '../../services/notifications';
 import { checkDisplayNameAvailable } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
@@ -8,10 +8,7 @@ import AvatarIconPicker from '../AvatarIconPicker';
 
 interface CaregiverAccountScreenProps {
   session: AppSession | null;
-  pairing: Pairing | null;
   showHeaderChrome: boolean;
-  onJoinInviteCode: (code: string) => Promise<string>;
-  onLeavePairing: () => Promise<string>;
   onSignOut: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
@@ -66,10 +63,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
 
 export default function CaregiverAccountScreen({
   session,
-  pairing,
   showHeaderChrome,
-  onJoinInviteCode,
-  onLeavePairing,
   onSignOut,
   onUpdateDisplayName,
   onUpdateEmail,
@@ -97,9 +91,6 @@ export default function CaregiverAccountScreen({
   // Avatar
   const [draftIcon, setDraftIcon] = React.useState(session?.avatarIcon ?? 'leaf');
 
-  // Legacy pairing
-  const [code, setCode] = React.useState('');
-  const [pairingMessage, setPairingMessage] = React.useState('');
   const [notificationMessage, setNotificationMessage] = React.useState('');
 
   const startEditing = (field: EditingField) => {
@@ -183,19 +174,6 @@ export default function CaregiverAccountScreen({
     } else {
       setPasswordError(result.message);
     }
-  };
-
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = await onJoinInviteCode(code);
-    setPairingMessage(result);
-  };
-
-  const handleLeavePairing = async () => {
-    const result = await onLeavePairing();
-    setPairingMessage(result);
-    setNotificationMessage('');
-    setCode('');
   };
 
   const handleEnableReminders = async () => {
@@ -382,70 +360,21 @@ export default function CaregiverAccountScreen({
           </div>
         </div>
 
-        {/* Active legacy pairing */}
-        {pairing && (
-          <>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Legacy pairing</div>
-            <div className="mb-8 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="mb-1 text-xs text-off-white/50">Invite code</p>
-                    <p className="text-2xl font-bold tracking-[0.25em] text-white">{pairing.code}</p>
-                  </div>
-                  <div className="rounded-lg border border-green-700/40 bg-green-800/30 px-3 py-1.5">
-                    <p className="text-xs font-medium text-green-400">Paired</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    onClick={() => void handleEnableReminders()}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 py-3 text-sm font-medium text-off-white transition-colors hover:border-periwinkle/50"
-                  >
-                    <Bell className="h-4 w-4" />
-                    Enable reminders
-                  </button>
-                  <button
-                    onClick={() => void handleLeavePairing()}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 py-3 text-sm font-medium text-off-white transition-colors hover:border-periwinkle/50"
-                  >
-                    <Link2 className="h-4 w-4" />
-                    Disconnect
-                  </button>
-                </div>
-              </div>
-              {pairingMessage && <p className="mt-3 text-sm text-off-white/70">{pairingMessage}</p>}
-              {notificationMessage && <p className="mt-3 text-sm text-off-white/70">{notificationMessage}</p>}
+        {/* Reminders */}
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Notifications</div>
+        <div className="mb-8 rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
+          <button
+            onClick={() => void handleEnableReminders()}
+            className="flex w-full items-center gap-3 text-left"
+          >
+            <Bell className="h-5 w-5 shrink-0 text-off-white/60" />
+            <div className="flex-1">
+              <p className="font-medium text-off-white">Enable reminders</p>
+              <p className="text-xs text-off-white/50">Schedule local check-in reminders</p>
             </div>
-          </>
-        )}
-
-        {/* Enter code — only show if no pairing */}
-        {!pairing && (
-          <>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Legacy invite code</div>
-            <div className="mb-8 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
-              <p className="mb-3 text-sm text-off-white/50">Already have a patient invite code? Enter it here.</p>
-              <form onSubmit={(e) => void handleJoin(e)} className="space-y-3">
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="Enter invite code"
-                  className="w-full rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 py-3 text-center text-xl tracking-[0.3em] text-white placeholder-off-white/30 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
-                />
-                <button
-                  type="submit"
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90"
-                >
-                  <LogIn className="h-5 w-5" />
-                  Join patient
-                </button>
-              </form>
-              {pairingMessage && <p className="mt-3 text-sm text-off-white/70">{pairingMessage}</p>}
-            </div>
-          </>
-        )}
+          </button>
+          {notificationMessage && <p className="mt-3 text-xs text-off-white/70">{notificationMessage}</p>}
+        </div>
 
         {/* Sign out */}
         <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Session</div>
