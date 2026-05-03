@@ -1128,13 +1128,35 @@ export async function getFriendStatusUpdates(
 
   if (error || !data) return [];
 
-  // Keep only the most recent update per friend
-  const seen = new Set<string>();
-  const deduped = data.filter((row) => {
-    if (seen.has(row.patient_id)) return false;
-    seen.add(row.patient_id);
-    return true;
-  });
+  // Per friend, keep the most recent status update (has energy_status) and the
+  // most recent needs-only update separately so a needs update never hides the
+  // last energy status.
+  const latestStatus = new Map<string, typeof data[0]>();
+  const latestNeeds = new Map<string, typeof data[0]>();
+
+  for (const row of data) {
+    const pid = row.patient_id as string;
+    const isNeedsOnly = !row.energy_status && row.selected_needs?.length > 0;
+    if (isNeedsOnly) {
+      if (!latestNeeds.has(pid)) latestNeeds.set(pid, row);
+    } else {
+      if (!latestStatus.has(pid)) latestStatus.set(pid, row);
+    }
+  }
+
+  const deduped: typeof data = [];
+  for (const pid of friendMap.keys()) {
+    const statusRow = latestStatus.get(pid);
+    const needsRow = latestNeeds.get(pid);
+    // Show status update first (more informative), then needs if it's a different row
+    if (statusRow) deduped.push(statusRow);
+    if (needsRow && needsRow.id !== statusRow?.id) deduped.push(needsRow);
+    // If no status update at all, the needs row is the only thing to show
+    if (!statusRow && !needsRow) {
+      const fallback = data.find((r) => (r.patient_id as string) === pid);
+      if (fallback) deduped.push(fallback);
+    }
+  }
 
   return deduped.map((row) => {
     const base = mapStatusRecord(row);
