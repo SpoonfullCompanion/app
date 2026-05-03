@@ -361,7 +361,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             {/* Info banner */}
             <div className="flex items-start gap-2.5 rounded-xl border border-periwinkle/20 bg-bold-blue/10 px-4 py-3">
               <Info className="h-4 w-4 text-periwinkle mt-0.5 shrink-0" />
-              <p className="text-xs text-periwinkle/90 leading-relaxed">
+              <p className="text-xs text-white/90 leading-relaxed">
                 Friends share energy and symptom updates with each other. Needs are never shared with friends.
               </p>
             </div>
