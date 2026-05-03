@@ -204,7 +204,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
 
         <div className="mt-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            How urgent? <span className="text-off-white/60 normal-case font-normal">(optional)</span>
+            Set Priority <span className="text-off-white/60 normal-case font-normal">(optional)</span>
           </h2>
           <div className="flex flex-col gap-3">
             {PRIORITIES.map((priority) => {
