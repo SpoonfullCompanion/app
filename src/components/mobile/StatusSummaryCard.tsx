@@ -16,10 +16,10 @@ interface StatusSummaryCardProps {
 }
 
 const energyPillColors: Record<string, string> = {
-  crashing: 'bg-red-800/40 border border-red-700/50',
-  low: 'bg-orange-800/40 border border-orange-700/50',
-  resting: 'bg-yellow-700/40 border border-yellow-600/50',
-  available: 'bg-green-800/40 border border-green-700/50',
+  crashing: 'bg-red-950/80 border border-red-600/50 text-red-200',
+  low:      'bg-orange-950/80 border border-orange-600/50 text-orange-200',
+  resting:  'bg-yellow-950/80 border border-yellow-600/50 text-yellow-200',
+  available:'bg-green-950/80 border border-green-600/50 text-green-200',
 };
 
 export default function StatusSummaryCard({ update, emptyMessage }: StatusSummaryCardProps) {
@@ -62,7 +62,7 @@ export default function StatusSummaryCard({ update, emptyMessage }: StatusSummar
           const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
           const colorClass = energyPillColors[energy.id] ?? 'bg-bold-blue/20';
           return (
-            <div className={`flex items-center gap-1.5 rounded-lg ${colorClass} px-3 py-1.5 text-sm font-medium text-white`}>
+            <div className={`flex items-center gap-1.5 rounded-lg ${colorClass} px-3 py-1.5 text-sm font-medium`}>
               {Icon && <Icon className="h-4 w-4" />}
               {energy.label}
             </div>

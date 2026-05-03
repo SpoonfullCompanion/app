@@ -28,10 +28,10 @@ type SearchResult = {
 type Tab = 'caregivers' | 'friends' | 'requests';
 
 const energyPillColors: Record<string, string> = {
-  crashing: 'bg-red-800/40 border border-red-700/50',
-  low: 'bg-orange-800/40 border border-orange-700/50',
-  resting: 'bg-yellow-700/40 border border-yellow-600/50',
-  available: 'bg-green-800/40 border border-green-700/50',
+  crashing: 'bg-red-950/80 border border-red-600/50 text-red-200',
+  low:      'bg-orange-950/80 border border-orange-600/50 text-orange-200',
+  resting:  'bg-yellow-950/80 border border-yellow-600/50 text-yellow-200',
+  available:'bg-green-950/80 border border-green-600/50 text-green-200',
 };
 
 function FriendUpdateCard({ update }: { update: StatusUpdate }) {
@@ -56,7 +56,7 @@ function FriendUpdateCard({ update }: { update: StatusUpdate }) {
           const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
           const colorClass = energyPillColors[energy.id] ?? 'bg-bold-blue/20';
           return (
-            <span className={`flex items-center gap-1 rounded-md ${colorClass} px-2.5 py-1 text-xs font-medium text-white`}>
+            <span className={`flex items-center gap-1 rounded-md ${colorClass} px-2.5 py-1 text-xs font-medium`}>
               {Icon && <Icon className="h-3.5 w-3.5" />}
               {energy.label}
             </span>
