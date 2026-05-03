@@ -154,6 +154,13 @@ function UpdateFeedCard({
             )
           )}
 
+          {/* Message / appreciation text */}
+          {update.messageText && (
+            <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
+              {update.messageText}
+            </p>
+          )}
+
           {/* Needs */}
           {needs.length > 0 && (
             <div className="mb-2 space-y-1.5">
@@ -205,12 +212,6 @@ function UpdateFeedCard({
             </div>
           )}
 
-          {/* Message / appreciation text */}
-          {update.messageText && (
-            <p className="mt-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
-              {update.messageText}
-            </p>
-          )}
         </div>
 
         {/* Response area */}
