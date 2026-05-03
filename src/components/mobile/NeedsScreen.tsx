@@ -19,7 +19,7 @@ const PRIORITIES: { id: NeedPriority; label: string; sublabel: string; icon: Rea
     sublabel: 'No rush',
     icon: Clock,
     borderClass: 'border-teal-700/40 bg-teal-900/20 hover:border-teal-600/50 hover:bg-teal-900/30',
-    selectedClass: 'border-teal-500 bg-teal-700 shadow-teal-700/30',
+    selectedClass: 'border-teal-500 bg-teal-700 shadow-teal-700/40',
   },
   {
     id: 'soon',
@@ -27,7 +27,7 @@ const PRIORITIES: { id: NeedPriority; label: string; sublabel: string; icon: Rea
     sublabel: 'Within the next hour please',
     icon: Hourglass,
     borderClass: 'border-amber-700/40 bg-amber-900/20 hover:border-amber-600/50 hover:bg-amber-900/30',
-    selectedClass: 'border-amber-500 bg-amber-700 shadow-amber-700/30',
+    selectedClass: 'border-amber-500 bg-amber-700 shadow-amber-700/40',
   },
   {
     id: 'asap',
@@ -35,7 +35,7 @@ const PRIORITIES: { id: NeedPriority; label: string; sublabel: string; icon: Rea
     sublabel: 'Please stop what you\'re doing',
     icon: Zap,
     borderClass: 'border-red-700/40 bg-red-900/20 hover:border-red-600/50 hover:bg-red-900/30',
-    selectedClass: 'border-red-500 bg-red-700 shadow-red-700/30',
+    selectedClass: 'border-red-500 bg-red-700 shadow-red-700/40',
   },
 ];
 
@@ -45,13 +45,14 @@ const APPRECIATION: { id: string; label: string; icon: React.ComponentType<{ cla
   { id: 'i_love_you', label: 'I love you', icon: Heart },
 ];
 
-export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, profileId }: NeedsScreenProps) {
+export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: NeedsScreenProps) {
   const [selectedNeeds, setSelectedNeeds] = useState<Set<string>>(new Set());
   const [selectedPriority, setSelectedPriority] = useState<NeedPriority | null>(null);
   const [selectedAppreciation, setSelectedAppreciation] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [customNote, setCustomNote] = useState('');
+  const [pulseKey, setPulseKey] = useState(0);
 
   useEffect(() => {
     if (!sent) return;
@@ -74,7 +75,6 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
     }
     setSelectedNeeds(newNeeds);
 
-    // Reset priority if all needs deselected
     if (newNeeds.size === 0) {
       setSelectedPriority(null);
     }
@@ -83,6 +83,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
   const handleSendNeeds = async () => {
     if (selectedNeeds.size === 0 && !customNote.trim() && selectedAppreciation.size === 0) return;
 
+    setPulseKey(k => k + 1);
     setIsSending(true);
     try {
       const needsArray = Array.from(selectedNeeds);
@@ -124,7 +125,6 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
 
   const hasSelection = selectedNeeds.size > 0 || customNote.trim().length > 0 || selectedAppreciation.size > 0;
 
-
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
       <div className="mx-auto max-w-2xl px-4 py-6">
@@ -139,7 +139,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-all hover:border-bold-blue hover:text-bold-blue active:scale-90"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
@@ -153,21 +153,17 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
               <button
                 key={need.id}
                 onClick={() => handleNeedClick(need.id)}
-                className={`rounded-xl border-2 p-3 text-left transition-all ${
+                className={`rounded-xl border-2 p-3 text-left transition-all duration-150 active:scale-95 ${
                   isSelected
-                    ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.02]'
-                    : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
+                    ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/40 scale-[1.03]'
+                    : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {Icon && (
-                    <Icon className={`h-4 w-4 transition-colors ${
-                      isSelected ? 'text-white' : 'text-off-white'
-                    }`} />
+                    <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-off-white'}`} />
                   )}
-                  <span className={`text-sm font-medium transition-colors ${
-                    isSelected ? 'text-white' : 'text-off-white'
-                  }`}>
+                  <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-off-white'}`}>
                     {need.label}
                   </span>
                 </div>
@@ -192,7 +188,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
             <button
               onClick={handleSpeakNote}
               disabled={!customNote.trim() || !ttsEnabled}
-              className="rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 text-zinc-100 transition-colors hover:border-bold-blue hover:bg-midnight-black/80 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 text-zinc-100 transition-all hover:border-bold-blue hover:bg-midnight-black/80 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Volume2 className="h-5 w-5" />
             </button>
@@ -200,35 +196,35 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
         </div>
 
         <div className="mt-6">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-              How urgent? <span className="text-off-white/40 normal-case font-normal">(optional)</span>
-            </h2>
-            <div className="flex flex-col gap-3">
-              {PRIORITIES.map((priority) => {
-                const isSelected = selectedPriority === priority.id;
-                return (
-                  <button
-                    key={priority.id}
-                    onClick={() => setSelectedPriority(isSelected ? null : priority.id)}
-                    className={`flex items-center gap-4 rounded-xl border-2 px-4 py-3.5 text-left transition-all ${
-                      isSelected
-                        ? `${priority.selectedClass} shadow-lg scale-[1.01]`
-                        : priority.borderClass
-                    }`}
-                  >
-                    <priority.icon className={`h-5 w-5 shrink-0 transition-colors ${isSelected ? 'text-white' : 'text-off-white/70'}`} />
-                    <div>
-                      <p className={`text-sm font-semibold transition-colors ${isSelected ? 'text-white' : 'text-off-white'}`}>
-                        {priority.label}
-                      </p>
-                      <p className={`text-xs transition-colors ${isSelected ? 'text-white/80' : 'text-off-white/50'}`}>
-                        {priority.sublabel}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
+            How urgent? <span className="text-off-white/40 normal-case font-normal">(optional)</span>
+          </h2>
+          <div className="flex flex-col gap-3">
+            {PRIORITIES.map((priority) => {
+              const isSelected = selectedPriority === priority.id;
+              return (
+                <button
+                  key={priority.id}
+                  onClick={() => setSelectedPriority(isSelected ? null : priority.id)}
+                  className={`flex items-center gap-4 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-150 active:scale-[0.98] ${
+                    isSelected
+                      ? `${priority.selectedClass} shadow-lg scale-[1.02]`
+                      : priority.borderClass
+                  }`}
+                >
+                  <priority.icon className={`h-5 w-5 shrink-0 ${isSelected ? 'text-white' : 'text-off-white/70'}`} />
+                  <div>
+                    <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-off-white'}`}>
+                      {priority.label}
+                    </p>
+                    <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-off-white/50'}`}>
+                      {priority.sublabel}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="mt-6">
@@ -248,14 +244,14 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
                     setSelectedAppreciation(next);
                     if (!isSelected && ttsEnabled) speak(item.label);
                   }}
-                  className={`flex items-center gap-4 rounded-xl border-2 px-4 py-3.5 text-left transition-all ${
+                  className={`flex items-center gap-4 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-150 active:scale-[0.98] ${
                     isSelected
-                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.01]'
-                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.01]'
+                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/40 scale-[1.02]'
+                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80'
                   }`}
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 transition-colors ${isSelected ? 'text-white' : 'text-off-white/70'}`} />
-                  <span className={`text-sm font-medium transition-colors ${isSelected ? 'text-white' : 'text-off-white'}`}>
+                  <item.icon className={`h-5 w-5 shrink-0 ${isSelected ? 'text-white' : 'text-off-white/70'}`} />
+                  <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-off-white'}`}>
                     {item.label}
                   </span>
                 </button>
@@ -274,9 +270,10 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, pro
                 </div>
               ) : (
                 <button
+                  key={pulseKey}
                   onClick={() => void handleSendNeeds()}
                   disabled={isSending}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
+                  className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
                 >
                   <Send className="h-5 w-5" />
                   {isSending ? 'Sending...' : selectedNeeds.size > 0 ? `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}` : 'Send Message'}

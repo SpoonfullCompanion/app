@@ -40,22 +40,24 @@ export default function CaregiverHome({
   return (
     <div className="bg-midnight-black">
       <AppHeader onNavigate={setActiveRoute} activeRoute={activeRoute} />
-      {activeRoute === 'home' && (
-        <CaregiverFeedScreen
-          session={session}
-          updates={recentUpdates}
-        />
-      )}
-      {activeRoute === 'account' && (
-        <CaregiverAccountScreen
-          session={session}
-          pairing={pairing}
-          showHeaderChrome={showHeaderChrome}
-          onJoinInviteCode={onJoinInviteCode}
-          onLeavePairing={onLeavePairing}
-          onSignOut={onSignOut}
-        />
-      )}
+      <div key={activeRoute} className="animate-fade-up">
+        {activeRoute === 'home' && (
+          <CaregiverFeedScreen
+            session={session}
+            updates={recentUpdates}
+          />
+        )}
+        {activeRoute === 'account' && (
+          <CaregiverAccountScreen
+            session={session}
+            pairing={pairing}
+            showHeaderChrome={showHeaderChrome}
+            onJoinInviteCode={onJoinInviteCode}
+            onLeavePairing={onLeavePairing}
+            onSignOut={onSignOut}
+          />
+        )}
+      </div>
       <CaregiverBottomNavigation
         activeRoute={activeRoute}
         onNavigate={setActiveRoute}

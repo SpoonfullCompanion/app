@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Home, Activity, MessageSquare, Stethoscope, User } from 'lucide-react';
 
 export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account';
@@ -16,6 +17,14 @@ const navItems = [
 ];
 
 export default function BottomNavigation({ activeRoute, onNavigate }: BottomNavigationProps) {
+  const [justTapped, setJustTapped] = useState<NavRoute | null>(null);
+
+  const handleTap = (id: NavRoute) => {
+    onNavigate(id);
+    setJustTapped(id);
+    setTimeout(() => setJustTapped(null), 400);
+  };
+
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-dark-blue/70 bg-midnight-black/95 backdrop-blur"
@@ -24,17 +33,21 @@ export default function BottomNavigation({ activeRoute, onNavigate }: BottomNavi
       <div className="mx-auto flex max-w-4xl items-center justify-around px-2 py-2">
         {navItems.map(({ id, label, icon: Icon }) => {
           const isActive = activeRoute === id;
+          const isBouncing = justTapped === id;
           return (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-lg px-3 py-2 transition-colors ${
+              onClick={() => handleTap(id)}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-lg px-3 py-2 transition-colors active:scale-95 ${
                 isActive
                   ? 'text-bold-blue'
                   : 'text-off-white/60 hover:text-off-white/80'
               }`}
             >
-              <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
+              <Icon
+                className={`h-6 w-6 ${isBouncing ? 'animate-nav-bounce' : ''}`}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
               <span className={`text-xs font-medium ${isActive ? 'font-semibold' : ''}`}>
                 {label}
               </span>

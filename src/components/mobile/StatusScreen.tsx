@@ -16,6 +16,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [pulseKey, setPulseKey] = useState(0);
 
   useEffect(() => {
     if (!sent) return;
@@ -52,6 +53,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
   const handleSendStatus = async () => {
     if (!selectedEnergy && selectedSymptoms.size === 0) return;
 
+    setPulseKey(k => k + 1);
     setIsSending(true);
     try {
       const energy = ENERGY_STATUSES.find(e => e.id === selectedEnergy);
@@ -94,7 +96,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
           </div>
           <button
             onClick={onToggleTTS}
-            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-colors hover:border-bold-blue hover:text-bold-blue"
+            className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-all hover:border-bold-blue hover:text-bold-blue active:scale-90"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
@@ -116,7 +118,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   hover: 'hover:border-red-700/60 hover:bg-red-900/40',
                   selectedBorder: 'border-red-700',
                   selectedBg: 'bg-red-800',
-                  selectedShadow: 'shadow-red-800/30'
+                  selectedShadow: 'shadow-red-800/40'
                 },
                 low: {
                   border: 'border-orange-800/50',
@@ -124,7 +126,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   hover: 'hover:border-orange-700/60 hover:bg-orange-900/40',
                   selectedBorder: 'border-orange-700',
                   selectedBg: 'bg-orange-800',
-                  selectedShadow: 'shadow-orange-800/30'
+                  selectedShadow: 'shadow-orange-800/40'
                 },
                 resting: {
                   border: 'border-yellow-700/50',
@@ -132,7 +134,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   hover: 'hover:border-yellow-600/60 hover:bg-yellow-900/40',
                   selectedBorder: 'border-yellow-600',
                   selectedBg: 'bg-yellow-700',
-                  selectedShadow: 'shadow-yellow-700/30'
+                  selectedShadow: 'shadow-yellow-700/40'
                 },
                 available: {
                   border: 'border-green-800/50',
@@ -140,7 +142,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   hover: 'hover:border-green-700/60 hover:bg-green-900/40',
                   selectedBorder: 'border-green-700',
                   selectedBg: 'bg-green-800',
-                  selectedShadow: 'shadow-green-800/30'
+                  selectedShadow: 'shadow-green-800/40'
                 }
               };
 
@@ -150,19 +152,19 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                 <button
                   key={energy.id}
                   onClick={() => handleEnergySelect(energy.id)}
-                  className={`rounded-xl border-2 p-4 text-left transition-all ${
+                  className={`rounded-xl border-2 p-4 text-left transition-all duration-150 active:scale-95 ${
                     isSelected
-                      ? `${colors.selectedBorder} ${colors.selectedBg} shadow-lg ${colors.selectedShadow} scale-[1.02]`
-                      : `${colors.border} ${colors.bg} ${colors.hover} hover:scale-[1.02]`
+                      ? `${colors.selectedBorder} ${colors.selectedBg} shadow-lg ${colors.selectedShadow} scale-[1.03]`
+                      : `${colors.border} ${colors.bg} ${colors.hover}`
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    {Icon && <Icon className="h-5 w-5 text-white transition-colors" />}
-                    <span className="font-semibold text-white transition-colors">
+                    {Icon && <Icon className="h-5 w-5 text-white" />}
+                    <span className="font-semibold text-white">
                       {energy.label}
                     </span>
                   </div>
-                  <p className="text-xs text-white/90 transition-colors">
+                  <p className="text-xs text-white/90">
                     {energy.description}
                   </p>
                 </button>
@@ -183,19 +185,15 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                 <button
                   key={symptom.id}
                   onClick={() => toggleSymptom(symptom.id)}
-                  className={`rounded-xl border-2 p-3 text-left transition-all ${
+                  className={`rounded-xl border-2 p-3 text-left transition-all duration-150 active:scale-95 ${
                     isSelected
-                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/30 scale-[1.02]'
-                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80 hover:scale-[1.02]'
+                      ? 'border-bold-blue bg-bold-blue shadow-lg shadow-bold-blue/40 scale-[1.03]'
+                      : 'border-periwinkle/30 bg-midnight-black/60 hover:border-periwinkle/50 hover:bg-midnight-black/80'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {Icon && <Icon className={`h-4 w-4 transition-colors ${
-                      isSelected ? 'text-white' : 'text-off-white'
-                    }`} />}
-                    <span className={`text-sm font-medium transition-colors ${
-                      isSelected ? 'text-white' : 'text-off-white'
-                    }`}>
+                    {Icon && <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-off-white'}`} />}
+                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-off-white'}`}>
                       {symptom.label}
                     </span>
                   </div>
@@ -215,9 +213,10 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                 </div>
               ) : (
                 <button
+                  key={pulseKey}
                   onClick={() => void handleSendStatus()}
                   disabled={isSending}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 disabled:opacity-50"
+                  className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
                 >
                   <RefreshCw className="h-5 w-5" />
                   {isSending ? 'Updating...' : 'Update Status'}

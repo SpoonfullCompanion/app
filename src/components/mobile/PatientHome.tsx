@@ -51,40 +51,42 @@ export default function PatientHome({
   return (
     <div className="bg-midnight-black">
       <AppHeader onNavigate={handleNavigate} activeRoute={activeRoute} />
-      {activeRoute === 'home' && (
-        <HomeScreen
-          recentUpdates={recentUpdates}
-          onNavigate={handleNavigate}
-        />
-      )}
-      {activeRoute === 'status' && (
-        <StatusScreen
-          ttsEnabled={ttsEnabled}
-          onToggleTTS={handleToggleTTS}
-          onSendUpdate={onSendUpdate}
-        />
-      )}
-      {activeRoute === 'needs' && (
-        <NeedsScreen
-          ttsEnabled={ttsEnabled}
-          onToggleTTS={handleToggleTTS}
-          onSendUpdate={onSendUpdate}
-          profileId={session?.profileId || ''}
-        />
-      )}
-      {activeRoute === 'hospital' && (
-        <HospitalScreen
-          ttsEnabled={ttsEnabled}
-          onToggleTTS={handleToggleTTS}
-        />
-      )}
-      {activeRoute === 'account' && (
-        <AccountScreen
-          session={session}
-          onSignOut={onSignOut}
-          onOpenPairing={onOpenPairing}
-        />
-      )}
+      <div key={activeRoute} className="animate-fade-up">
+        {activeRoute === 'home' && (
+          <HomeScreen
+            recentUpdates={recentUpdates}
+            onNavigate={handleNavigate}
+          />
+        )}
+        {activeRoute === 'status' && (
+          <StatusScreen
+            ttsEnabled={ttsEnabled}
+            onToggleTTS={handleToggleTTS}
+            onSendUpdate={onSendUpdate}
+          />
+        )}
+        {activeRoute === 'needs' && (
+          <NeedsScreen
+            ttsEnabled={ttsEnabled}
+            onToggleTTS={handleToggleTTS}
+            onSendUpdate={onSendUpdate}
+            profileId={session?.profileId || ''}
+          />
+        )}
+        {activeRoute === 'hospital' && (
+          <HospitalScreen
+            ttsEnabled={ttsEnabled}
+            onToggleTTS={handleToggleTTS}
+          />
+        )}
+        {activeRoute === 'account' && (
+          <AccountScreen
+            session={session}
+            onSignOut={onSignOut}
+            onOpenPairing={onOpenPairing}
+          />
+        )}
+      </div>
       <BottomNavigation activeRoute={activeRoute} onNavigate={handleNavigate} />
     </div>
   );

@@ -181,7 +181,7 @@ function UpdateFeedCard({
               </button>
               <button
                 onClick={() => setExpanded(v => !v)}
-                className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/60 transition-all hover:border-periwinkle/50 hover:text-off-white/80"
+                className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/60 transition-all hover:border-periwinkle/50 hover:text-off-white/80 active:scale-95"
               >
                 Note
                 {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -293,13 +293,18 @@ export default function CaregiverFeedScreen({ session, updates }: CaregiverFeedS
 
         {updates.length > 0 ? (
           <div className="space-y-3">
-            {updates.map(update => (
-              <UpdateFeedCard
+            {updates.map((update, i) => (
+              <div
                 key={update.id}
-                update={update}
-                response={responses[update.id] ?? null}
-                onRespond={handleRespond}
-              />
+                className="animate-slide-up"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <UpdateFeedCard
+                  update={update}
+                  response={responses[update.id] ?? null}
+                  onRespond={handleRespond}
+                />
+              </div>
             ))}
           </div>
         ) : (

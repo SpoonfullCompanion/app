@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Home, User } from 'lucide-react';
 
 export type CaregiverNavRoute = 'home' | 'account';
@@ -18,6 +19,14 @@ export default function CaregiverBottomNavigation({
   onNavigate,
   unseenCount = 0,
 }: CaregiverBottomNavigationProps) {
+  const [justTapped, setJustTapped] = useState<CaregiverNavRoute | null>(null);
+
+  const handleTap = (id: CaregiverNavRoute) => {
+    onNavigate(id);
+    setJustTapped(id);
+    setTimeout(() => setJustTapped(null), 400);
+  };
+
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-dark-blue/70 bg-midnight-black/95 backdrop-blur"
@@ -26,18 +35,22 @@ export default function CaregiverBottomNavigation({
       <div className="mx-auto flex max-w-4xl items-center justify-around px-2 py-2">
         {navItems.map(({ id, label, icon: Icon }) => {
           const isActive = activeRoute === id;
+          const isBouncing = justTapped === id;
           return (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
-              className={`relative flex flex-1 flex-col items-center gap-1 rounded-lg px-3 py-2 transition-colors ${
+              onClick={() => handleTap(id)}
+              className={`relative flex flex-1 flex-col items-center gap-1 rounded-lg px-3 py-2 transition-colors active:scale-95 ${
                 isActive
                   ? 'text-bold-blue'
                   : 'text-off-white/60 hover:text-off-white/80'
               }`}
             >
               <div className="relative">
-                <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
+                <Icon
+                  className={`h-6 w-6 ${isBouncing ? 'animate-nav-bounce' : ''}`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
                 {id === 'home' && unseenCount > 0 && (
                   <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-bold-blue text-[10px] font-bold text-white">
                     {unseenCount > 9 ? '9+' : unseenCount}
