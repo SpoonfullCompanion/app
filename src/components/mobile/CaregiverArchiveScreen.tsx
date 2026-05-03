@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Bookmark, BookmarkX } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Archive, X } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -101,10 +101,10 @@ function ArchivedUpdateCard({
               <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
               <button
                 onClick={() => onUnarchive(update.id)}
-                className="rounded-lg p-1.5 text-bold-blue transition-all hover:text-off-white/60 active:scale-90"
+                className="rounded-lg p-1.5 text-off-white/40 transition-all hover:text-off-white/70 active:scale-90"
                 title="Remove from archive"
               >
-                <BookmarkX className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -340,10 +340,10 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
         <div className="mb-6">
           <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
           <div className="flex items-center gap-2">
-            <Bookmark className="h-4 w-4 text-bold-blue" fill="currentColor" />
-            <p className="text-base font-semibold text-white">Saved Updates</p>
+            <Archive className="h-4 w-4 text-bold-blue" />
+            <p className="text-base font-semibold text-white">Archive</p>
           </div>
-          <p className="mt-1 text-xs text-off-white/50">Up to 20 updates saved</p>
+          <p className="mt-1 text-xs text-off-white/50">Up to 20 updates</p>
         </div>
 
         {isLoading ? (
@@ -354,9 +354,9 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
           </div>
         ) : updates.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-            <Bookmark className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
-            <p className="text-sm text-off-white/70">No saved updates yet</p>
-            <p className="mt-1 text-xs text-off-white/50">Tap the bookmark icon on any update card to save it here</p>
+            <Archive className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
+            <p className="text-sm text-off-white/70">Archive is empty</p>
+            <p className="mt-1 text-xs text-off-white/50">Tap the bookmark icon on any feed card to archive it</p>
           </div>
         ) : (
           <div className="space-y-3">
