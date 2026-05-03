@@ -18,6 +18,7 @@ interface CaregiverHomeProps {
   onLeavePairing: () => Promise<string>;
   onSignOut: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
+  onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateAvatarIcon: (iconId: string) => Promise<{ ok: boolean; message: string }>;
 }
 
@@ -31,6 +32,7 @@ export default function CaregiverHome({
   onLeavePairing,
   onSignOut,
   onReturnToMain,
+  onUpdateDisplayName,
   onUpdateAvatarIcon,
 }: CaregiverHomeProps) {
   const [activeRoute, setActiveRoute] = React.useState<CaregiverNavRoute>('home');
@@ -88,6 +90,7 @@ export default function CaregiverHome({
             onJoinInviteCode={onJoinInviteCode}
             onLeavePairing={onLeavePairing}
             onSignOut={onSignOut}
+            onUpdateDisplayName={onUpdateDisplayName}
             onUpdateAvatarIcon={onUpdateAvatarIcon}
           />
         )}

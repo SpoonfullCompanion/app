@@ -455,6 +455,7 @@ function App() {
       onLeavePairing={handleLeavePairing}
       onSignOut={handleSignOut}
       onReturnToMain={handleReturnToMain}
+      onUpdateDisplayName={handleUpdateDisplayName}
       onUpdateAvatarIcon={handleUpdateAvatarIcon}
     />
   );

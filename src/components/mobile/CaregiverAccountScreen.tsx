@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Link2, LogIn, LogOut, Mail, Pencil, Check, X } from 'lucide-react';
+import { Bell, Link2, LogIn, LogOut, Mail, Pencil, Check, X, User } from 'lucide-react';
 import type { AppSession, Pairing } from '../../types/app';
 import { getNotificationStatus, requestLocalNotificationPermission, scheduleLocalReminder } from '../../services/notifications';
 import AvatarIcon from '../AvatarIcon';
@@ -12,6 +12,7 @@ interface CaregiverAccountScreenProps {
   onJoinInviteCode: (code: string) => Promise<string>;
   onLeavePairing: () => Promise<string>;
   onSignOut: () => Promise<void>;
+  onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateAvatarIcon: (iconId: string) => Promise<{ ok: boolean; message: string }>;
 }
 
@@ -22,14 +23,36 @@ export default function CaregiverAccountScreen({
   onJoinInviteCode,
   onLeavePairing,
   onSignOut,
+  onUpdateDisplayName,
   onUpdateAvatarIcon,
 }: CaregiverAccountScreenProps) {
   const [code, setCode] = React.useState('');
   const [pairingMessage, setPairingMessage] = React.useState('');
   const [notificationMessage, setNotificationMessage] = React.useState('');
+
+  // Display name editing
+  const [editingName, setEditingName] = React.useState(false);
+  const [draftName, setDraftName] = React.useState(session?.displayName ?? '');
+  const [savingName, setSavingName] = React.useState(false);
+  const [nameMessage, setNameMessage] = React.useState('');
+
+  // Icon editing
   const [editingIcon, setEditingIcon] = React.useState(false);
   const [draftIcon, setDraftIcon] = React.useState(session?.avatarIcon ?? 'leaf');
   const [savingIcon, setSavingIcon] = React.useState(false);
+
+  const handleSaveName = async () => {
+    if (!draftName.trim()) return;
+    setSavingName(true);
+    const result = await onUpdateDisplayName(draftName.trim());
+    setSavingName(false);
+    if (result.ok) {
+      setEditingName(false);
+      setNameMessage('');
+    } else {
+      setNameMessage(result.message);
+    }
+  };
 
   const handleSaveIcon = async () => {
     setSavingIcon(true);
@@ -93,6 +116,58 @@ export default function CaregiverAccountScreen({
         <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Profile</div>
         <div className="mb-8 space-y-2">
 
+          {/* Display name */}
+          <div className="rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
+            {editingName ? (
+              <div>
+                <p className="mb-2 text-xs text-off-white/50">Display name</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    maxLength={32}
+                    autoFocus
+                    className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-off-white/30 outline-none focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveName()}
+                    disabled={savingName || !draftName.trim()}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-bold-blue text-white transition-all hover:bg-bold-blue/80 disabled:opacity-40"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingName(false); setDraftName(session?.displayName ?? ''); setNameMessage(''); }}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-periwinkle/20 text-off-white/60 transition-all hover:border-periwinkle/50 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {nameMessage && <p className="mt-2 text-xs text-red-400">{nameMessage}</p>}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-off-white/50 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-off-white/50 mb-0.5">Display name</p>
+                  <p className="font-medium text-off-white text-sm truncate">{session?.displayName || 'Not set'}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setDraftName(session?.displayName ?? ''); setEditingName(true); }}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-periwinkle transition-all hover:border-periwinkle/50 hover:text-white"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Avatar icon */}
           <div className="rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
             {editingIcon ? (
               <div>
