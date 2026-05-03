@@ -407,7 +407,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates }: Caregive
             <p className="text-sm text-off-white/70">No updates yet</p>
             <p className="mt-1 text-xs text-off-white/50">
               {activeConnections.length === 0
-                ? 'Connect with a patient in Account to see their updates here'
+                ? 'Connect with a patient to see their updates here'
                 : 'Patient updates will appear here once they send one'}
             </p>
           </div>
