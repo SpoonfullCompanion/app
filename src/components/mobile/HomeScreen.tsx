@@ -88,7 +88,7 @@ function UpdateCard({ update, response, onArchive, archiving }: {
               <button
                 onClick={() => onArchive(update.id)}
                 disabled={archiving}
-                className="text-off-white/30 transition-colors hover:text-off-white/70 active:scale-90 disabled:opacity-30"
+                className="text-off-white/55 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
                 title="Archive"
               >
                 <Archive className="h-3.5 w-3.5" />
@@ -286,7 +286,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
             </div>
             <button
               onClick={() => onNavigate('archive' as NavRoute)}
-              className="text-xs text-off-white/50 hover:text-off-white/80 transition-colors"
+              className="text-xs text-off-white/65 hover:text-off-white/90 transition-colors"
             >
               View archive
             </button>
