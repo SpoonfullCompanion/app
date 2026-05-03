@@ -60,6 +60,9 @@ export interface StatusUpdate {
   sentAt: string;
   delivery: 'sent' | 'draft';
   needPriority?: NeedPriority | null;
+  /** Denormalized — populated on friend feed updates */
+  patientDisplayName?: string;
+  patientAvatarIcon?: string | null;
 }
 
 export interface CaregiverResponse {

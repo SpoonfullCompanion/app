@@ -1,14 +1,18 @@
 import React from 'react';
-import { Search, UserPlus, Check, X, Users, Clock, Link2, Loader } from 'lucide-react';
-import type { AppSession, Connection } from '../../types/app';
+import * as LucideIcons from 'lucide-react';
+import { Search, UserPlus, Check, X, Users, Clock, Link2, Loader, Heart, Info } from 'lucide-react';
+import type { AppSession, Connection, StatusUpdate } from '../../types/app';
 import {
   searchProfiles,
   getPatientConnections,
   requestConnection,
   respondToConnection,
   removeConnection,
+  getFriendStatusUpdates,
 } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
+import { formatDistanceToNow } from './time';
+import { ENERGY_STATUSES, SYMPTOMS } from '../../utils/communicationData';
 
 interface ConnectionsScreenProps {
   session: AppSession;
@@ -21,12 +25,68 @@ type SearchResult = {
   avatarIcon: string | null;
 };
 
-type Tab = 'caregivers' | 'requests';
+type Tab = 'caregivers' | 'friends' | 'requests';
+
+const energyPillColors: Record<string, string> = {
+  crashing: 'bg-red-800/40 border border-red-700/50',
+  low: 'bg-orange-800/40 border border-orange-700/50',
+  resting: 'bg-yellow-700/40 border border-yellow-600/50',
+  available: 'bg-green-800/40 border border-green-700/50',
+};
+
+function FriendUpdateCard({ update }: { update: StatusUpdate }) {
+  const energy = ENERGY_STATUSES.find((e) => e.id === update.energyStatus);
+  const symptoms = (update.selectedSymptoms ?? [])
+    .map((id) => SYMPTOMS.find((s) => s.id === id))
+    .filter(Boolean) as typeof SYMPTOMS;
+
+  return (
+    <div className="rounded-xl border border-periwinkle/15 bg-midnight-black/50 px-4 py-3">
+      <div className="flex items-center gap-2.5 mb-2.5">
+        <AvatarIcon iconId={update.patientAvatarIcon ?? null} size="sm" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-off-white truncate">
+            {update.patientDisplayName ?? 'Friend'}
+          </p>
+          <p className="text-xs text-off-white/50">{formatDistanceToNow(update.sentAt)}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {energy && (() => {
+          const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+          const colorClass = energyPillColors[energy.id] ?? 'bg-bold-blue/20';
+          return (
+            <span className={`flex items-center gap-1 rounded-md ${colorClass} px-2.5 py-1 text-xs font-medium text-white`}>
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {energy.label}
+            </span>
+          );
+        })()}
+        {symptoms.map((symptom) => {
+          const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+          return (
+            <span key={symptom.id} className="flex items-center gap-1 rounded-md bg-periwinkle/10 px-2.5 py-1 text-xs text-off-white/80">
+              {Icon && <Icon className="h-3.5 w-3.5" />}
+              {symptom.label}
+            </span>
+          );
+        })}
+        {!energy && symptoms.length === 0 && (
+          <span className="text-xs text-off-white/40">No details shared</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
   const [tab, setTab] = React.useState<Tab>('caregivers');
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [isLoadingConnections, setIsLoadingConnections] = React.useState(true);
+
+  // Friend feed
+  const [friendUpdates, setFriendUpdates] = React.useState<StatusUpdate[]>([]);
+  const [isLoadingFeed, setIsLoadingFeed] = React.useState(false);
 
   // Search state
   const [query, setQuery] = React.useState('');
@@ -45,12 +105,26 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     setIsLoadingConnections(false);
   }, [session]);
 
+  const loadFriendFeed = React.useCallback(async () => {
+    setIsLoadingFeed(true);
+    const updates = await getFriendStatusUpdates(session);
+    setFriendUpdates(updates);
+    setIsLoadingFeed(false);
+  }, [session]);
+
   React.useEffect(() => {
     void loadConnections();
   }, [loadConnections]);
 
+  React.useEffect(() => {
+    if (tab === 'friends') void loadFriendFeed();
+  }, [tab, loadFriendFeed]);
+
   const activeConnections = connections.filter(
     (c) => c.status === 'active' && c.connectionType === 'caregiver',
+  );
+  const activeFriends = connections.filter(
+    (c) => c.status === 'active' && c.connectionType === 'patient_friend',
   );
   const pendingRequests = connections.filter((c) => c.status === 'pending');
 
@@ -83,7 +157,6 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
   const handleRequest = async (target: SearchResult) => {
     setRequestingId(target.profileId);
     const connectionType = target.role === 'caregiver' ? 'caregiver' : 'patient_friend';
-    // For patient_friend: current user is the follower, target is the patient whose updates they'll see
     const asPatient = connectionType === 'caregiver';
     const result = await requestConnection(session, target.profileId, connectionType, asPatient);
     setRequestMessages((prev) => ({ ...prev, [target.profileId]: result.message }));
@@ -95,12 +168,14 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     }
   };
 
-  const handleRespond = async (connectionId: string, accept: boolean) => {
-    setRespondingId(connectionId);
-    await respondToConnection(session, connectionId, accept);
+  const handleRespond = async (conn: Connection, accept: boolean) => {
+    setRespondingId(conn.id);
+    await respondToConnection(session, conn.id, accept);
     setRespondingId(null);
     await loadConnections();
-    if (accept) setTab('caregivers');
+    if (accept) {
+      setTab(conn.connectionType === 'patient_friend' ? 'friends' : 'caregivers');
+    }
   };
 
   const handleRemove = async (connectionId: string) => {
@@ -108,6 +183,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     await removeConnection(session, connectionId);
     setRemovingId(null);
     void loadConnections();
+    if (tab === 'friends') void loadFriendFeed();
   };
 
   return (
@@ -151,7 +227,11 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                     <AvatarIcon iconId={result.avatarIcon} size="sm" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-off-white text-sm truncate">{result.displayName}</p>
-                      <p className="text-xs text-off-white/70">{result.role === 'caregiver' ? 'Helper' : 'Patient'}</p>
+                      {result.role === 'caregiver' ? (
+                        <p className="text-xs text-off-white/70">Helper</p>
+                      ) : (
+                        <p className="text-xs text-periwinkle/80">Patient — shares status updates only</p>
+                      )}
                     </div>
                     {requestMessages[result.profileId] ? (
                       <span className="text-xs text-periwinkle">{requestMessages[result.profileId]}</span>
@@ -163,10 +243,12 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                       >
                         {requestingId === result.profileId ? (
                           <Loader className="h-3 w-3 animate-spin" />
+                        ) : result.role === 'patient' ? (
+                          <Heart className="h-3 w-3" />
                         ) : (
                           <UserPlus className="h-3 w-3" />
                         )}
-                        Invite
+                        {result.role === 'patient' ? 'Add Friend' : 'Invite'}
                       </button>
                     )}
                   </div>
@@ -190,6 +272,21 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             {activeConnections.length > 0 && (
               <span className="ml-1.5 rounded-full bg-bold-blue/30 px-1.5 py-0.5 text-xs text-periwinkle">
                 {activeConnections.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setTab('friends')}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
+              tab === 'friends'
+                ? 'bg-bold-blue/20 text-white'
+                : 'text-off-white/70 hover:text-off-white'
+            }`}
+          >
+            Friends
+            {activeFriends.length > 0 && (
+              <span className="ml-1.5 rounded-full bg-bold-blue/30 px-1.5 py-0.5 text-xs text-periwinkle">
+                {activeFriends.length}
               </span>
             )}
           </button>
@@ -229,37 +326,113 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                 const otherName = iAmPatient ? (conn.followerDisplayName ?? 'Unknown') : (conn.patientDisplayName ?? 'Unknown');
                 const otherIcon = iAmPatient ? conn.followerAvatarIcon : conn.patientAvatarIcon;
                 return (
-                <div
-                  key={conn.id}
-                  className="flex items-center gap-3 rounded-xl border border-dark-blue/50 bg-midnight-black/50 px-4 py-3"
-                >
-                  <AvatarIcon iconId={otherIcon} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-off-white text-sm truncate">
-                      {otherName}
-                    </p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-                      <span className="text-xs text-green-400">{conn.connectionType === 'caregiver' ? 'Active helper' : 'Patient friend'}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => void handleRemove(conn.id)}
-                    disabled={removingId === conn.id}
-                    className="flex items-center gap-1 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-off-white/70 transition-all hover:border-red-500/40 hover:text-red-400 disabled:opacity-40"
+                  <div
+                    key={conn.id}
+                    className="flex items-center gap-3 rounded-xl border border-dark-blue/50 bg-midnight-black/50 px-4 py-3"
                   >
-                    {removingId === conn.id ? (
-                      <Loader className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <X className="h-3 w-3" />
-                    )}
-                    Remove
-                  </button>
-                </div>
+                    <AvatarIcon iconId={otherIcon} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-off-white text-sm truncate">{otherName}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                        <span className="text-xs text-green-400">Active helper</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => void handleRemove(conn.id)}
+                      disabled={removingId === conn.id}
+                      className="flex items-center gap-1 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-off-white/70 transition-all hover:border-red-500/40 hover:text-red-400 disabled:opacity-40"
+                    >
+                      {removingId === conn.id ? (
+                        <Loader className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <X className="h-3 w-3" />
+                      )}
+                      Remove
+                    </button>
+                  </div>
                 );
               })
             )}
           </div>
+
+        ) : tab === 'friends' ? (
+          <div className="space-y-4">
+            {/* Info banner */}
+            <div className="flex items-start gap-2.5 rounded-xl border border-periwinkle/20 bg-bold-blue/10 px-4 py-3">
+              <Info className="h-4 w-4 text-periwinkle mt-0.5 shrink-0" />
+              <p className="text-xs text-periwinkle/90 leading-relaxed">
+                Friends share energy and symptom updates with each other. Needs are never shared with friends.
+              </p>
+            </div>
+
+            {/* Friend list */}
+            {activeFriends.length === 0 ? (
+              <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-12 text-center">
+                <Heart className="mx-auto mb-3 h-8 w-8 text-off-white/50" />
+                <p className="text-sm text-off-white/90">No friends connected yet</p>
+                <p className="mt-1 text-xs text-off-white/65">Search for other patients above to add a friend</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {activeFriends.map((conn) => {
+                  const iAmPatient = conn.patientId === session.profileId;
+                  const otherName = iAmPatient ? (conn.followerDisplayName ?? 'Unknown') : (conn.patientDisplayName ?? 'Unknown');
+                  const otherIcon = iAmPatient ? conn.followerAvatarIcon : conn.patientAvatarIcon;
+                  return (
+                    <div
+                      key={conn.id}
+                      className="flex items-center gap-3 rounded-xl border border-dark-blue/50 bg-midnight-black/50 px-4 py-3"
+                    >
+                      <AvatarIcon iconId={otherIcon} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-off-white text-sm truncate">{otherName}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                          <span className="text-xs text-green-400">Patient friend</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => void handleRemove(conn.id)}
+                        disabled={removingId === conn.id}
+                        className="flex items-center gap-1 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-off-white/70 transition-all hover:border-red-500/40 hover:text-red-400 disabled:opacity-40"
+                      >
+                        {removingId === conn.id ? (
+                          <Loader className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Friend feed */}
+            {activeFriends.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-off-white/50 mb-2 px-0.5">Recent Updates</p>
+                {isLoadingFeed ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader className="h-4 w-4 animate-spin text-periwinkle/60" />
+                  </div>
+                ) : friendUpdates.length === 0 ? (
+                  <div className="rounded-xl border border-dark-blue/30 bg-midnight-black/40 px-4 py-8 text-center">
+                    <p className="text-sm text-off-white/60">No updates from friends yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {friendUpdates.map((u) => (
+                      <FriendUpdateCard key={u.id} update={u} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
         ) : (
           /* Requests tab */
           <div className="space-y-2">
@@ -282,7 +455,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                     key={conn.id}
                     className="rounded-xl border border-bold-blue/30 bg-midnight-black/50 px-4 py-4"
                   >
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-3 mb-2">
                       <AvatarIcon iconId={otherIcon} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-off-white text-sm truncate">{otherName}</p>
@@ -299,12 +472,15 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                             }
                           </p>
                         </div>
+                        {conn.connectionType === 'patient_friend' && (
+                          <p className="mt-1 text-xs text-off-white/45">Status updates only — needs are not shared</p>
+                        )}
                       </div>
                     </div>
                     {theyRequested && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-3">
                         <button
-                          onClick={() => void handleRespond(conn.id, true)}
+                          onClick={() => void handleRespond(conn, true)}
                           disabled={respondingId === conn.id}
                           className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-bold-blue py-2 text-sm font-semibold text-white transition-all hover:bg-bold-blue/80 active:scale-95 disabled:opacity-50"
                         >
@@ -316,7 +492,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                           Accept
                         </button>
                         <button
-                          onClick={() => void handleRespond(conn.id, false)}
+                          onClick={() => void handleRespond(conn, false)}
                           disabled={respondingId === conn.id}
                           className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-periwinkle/20 py-2 text-sm font-medium text-off-white/60 transition-all hover:border-periwinkle/40 hover:text-white active:scale-95 disabled:opacity-50"
                         >
@@ -329,7 +505,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                       <button
                         onClick={() => void handleRemove(conn.id)}
                         disabled={removingId === conn.id}
-                        className="text-xs text-off-white/70 underline underline-offset-2 hover:text-off-white"
+                        className="mt-2 text-xs text-off-white/70 underline underline-offset-2 hover:text-off-white"
                       >
                         Cancel invite
                       </button>

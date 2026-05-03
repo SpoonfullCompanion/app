@@ -886,7 +886,7 @@ export async function respondToConnection(
     .from('connections')
     .update({ status: newStatus, updated_at: new Date().toISOString() })
     .eq('id', connectionId)
-    .eq('patient_id', session.profileId)
+    .or(`patient_id.eq.${session.profileId},follower_id.eq.${session.profileId}`)
     .select()
     .maybeSingle();
 
@@ -1057,6 +1057,71 @@ export async function getUpdatesForConnectedPatients(
 
   if (error || !data) return [];
   return data.map(mapStatusRecord);
+}
+
+/** Get recent status updates from mutual patient friends.
+ *  Collects patient IDs from both sides of active patient_friend connections
+ *  then fetches their latest status updates, enriched with display name + avatar. */
+export async function getFriendStatusUpdates(
+  session: AppSession,
+  limit = 20,
+): Promise<StatusUpdate[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  // Fetch both sides: connections where current user is the patient, and where they are the follower
+  const [asPatientRes, asFollowerRes] = await Promise.all([
+    supabase
+      .from('connections')
+      .select('follower_id, follower:profiles!connections_follower_id_fkey(display_name, avatar_icon)')
+      .eq('patient_id', session.profileId)
+      .eq('connection_type', 'patient_friend')
+      .eq('status', 'active'),
+    supabase
+      .from('connections')
+      .select('patient_id, patient:profiles!connections_patient_id_fkey(display_name, avatar_icon)')
+      .eq('follower_id', session.profileId)
+      .eq('connection_type', 'patient_friend')
+      .eq('status', 'active'),
+  ]);
+
+  // Build a map of friendId -> { displayName, avatarIcon }
+  const friendMap = new Map<string, { displayName: string; avatarIcon: string | null }>();
+
+  for (const row of asPatientRes.data ?? []) {
+    const profile = row.follower as Record<string, unknown> | null;
+    friendMap.set(row.follower_id, {
+      displayName: (profile?.display_name as string) ?? 'Unknown',
+      avatarIcon: (profile?.avatar_icon as string | null) ?? null,
+    });
+  }
+  for (const row of asFollowerRes.data ?? []) {
+    const profile = row.patient as Record<string, unknown> | null;
+    friendMap.set(row.patient_id, {
+      displayName: (profile?.display_name as string) ?? 'Unknown',
+      avatarIcon: (profile?.avatar_icon as string | null) ?? null,
+    });
+  }
+
+  if (friendMap.size === 0) return [];
+
+  const { data, error } = await supabase
+    .from('status_updates')
+    .select('*')
+    .in('patient_id', [...friendMap.keys()])
+    .order('sent_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const base = mapStatusRecord(row);
+    const friend = friendMap.get(base.patientId);
+    return {
+      ...base,
+      patientDisplayName: friend?.displayName,
+      patientAvatarIcon: friend?.avatarIcon ?? null,
+    };
+  });
 }
 
 // ─── Archive ─────────────────────────────────────────────────────────────────
