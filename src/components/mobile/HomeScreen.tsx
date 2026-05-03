@@ -286,7 +286,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
             </div>
             <button
               onClick={() => onNavigate('archive' as NavRoute)}
-              className="text-xs text-periwinkle/70 hover:text-periwinkle transition-colors"
+              className="text-xs text-off-white/50 hover:text-off-white/80 transition-colors"
             >
               View archive
             </button>
