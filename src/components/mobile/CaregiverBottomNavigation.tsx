@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Home, Users } from 'lucide-react';
+import { Home, Users, Bookmark } from 'lucide-react';
 
-export type CaregiverNavRoute = 'home' | 'connections' | 'account';
+export type CaregiverNavRoute = 'home' | 'connections' | 'account' | 'archive';
 
 interface CaregiverBottomNavigationProps {
   activeRoute: CaregiverNavRoute;
@@ -11,8 +11,9 @@ interface CaregiverBottomNavigationProps {
 }
 
 const navItems = [
-  { id: 'home' as const,        label: 'Feed',        icon: Home  },
-  { id: 'connections' as const, label: 'Connections', icon: Users },
+  { id: 'home' as const,        label: 'Feed',        icon: Home     },
+  { id: 'connections' as const, label: 'Connections', icon: Users    },
+  { id: 'archive' as const,     label: 'Saved',       icon: Bookmark },
 ];
 
 export default function CaregiverBottomNavigation({

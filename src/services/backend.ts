@@ -1246,6 +1246,80 @@ export async function getUpdatesForConnectedPatients(
   return data.map(mapStatusRecord);
 }
 
+// ─── Archive ─────────────────────────────────────────────────────────────────
+
+const ARCHIVE_MAX = 20;
+
+export async function archiveUpdate(caregiverId: string, statusUpdateId: string): Promise<void> {
+  if (!supabase) return;
+
+  await supabase
+    .from('caregiver_archived_updates')
+    .upsert(
+      { caregiver_id: caregiverId, status_update_id: statusUpdateId },
+      { onConflict: 'caregiver_id,status_update_id' },
+    );
+
+  // Prune beyond ARCHIVE_MAX — keep the newest rows
+  const { data } = await supabase
+    .from('caregiver_archived_updates')
+    .select('id, archived_at')
+    .eq('caregiver_id', caregiverId)
+    .order('archived_at', { ascending: false });
+
+  if (data && data.length > ARCHIVE_MAX) {
+    const toDelete = data.slice(ARCHIVE_MAX).map((r) => r.id);
+    await supabase.from('caregiver_archived_updates').delete().in('id', toDelete);
+  }
+}
+
+export async function unarchiveUpdate(caregiverId: string, statusUpdateId: string): Promise<void> {
+  if (!supabase) return;
+  await supabase
+    .from('caregiver_archived_updates')
+    .delete()
+    .eq('caregiver_id', caregiverId)
+    .eq('status_update_id', statusUpdateId);
+}
+
+export async function getArchivedUpdateIds(caregiverId: string): Promise<Set<string>> {
+  if (!supabase) return new Set();
+  const { data } = await supabase
+    .from('caregiver_archived_updates')
+    .select('status_update_id')
+    .eq('caregiver_id', caregiverId)
+    .order('archived_at', { ascending: false })
+    .limit(ARCHIVE_MAX);
+
+  return new Set((data ?? []).map((r) => r.status_update_id as string));
+}
+
+export async function getArchivedUpdates(session: AppSession): Promise<StatusUpdate[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  const { data, error } = await supabase
+    .from('caregiver_archived_updates')
+    .select(`
+      archived_at,
+      status_updates (*)
+    `)
+    .eq('caregiver_id', session.profileId)
+    .order('archived_at', { ascending: false })
+    .limit(ARCHIVE_MAX);
+
+  if (error || !data) return [];
+
+  return data
+    .map((row) => {
+      const u = row.status_updates as Record<string, unknown> | null;
+      if (!u) return null;
+      return mapStatusRecord(u);
+    })
+    .filter(Boolean) as StatusUpdate[];
+}
+
+// ─── End Archive ──────────────────────────────────────────────────────────────
+
 // ─── End Connections ──────────────────────────────────────────────────────────
 
 export async function getResponsesForPatient(

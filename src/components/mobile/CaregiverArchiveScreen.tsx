@@ -1,37 +1,24 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Bookmark } from 'lucide-react';
-import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
+import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Bookmark, BookmarkX } from 'lucide-react';
+import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import {
-  archiveUpdate,
-  getArchivedUpdateIds,
-  getFollowerConnections,
+  getArchivedUpdates,
   getResponsesForUpdates,
-  getUpdatesForConnectedPatients,
-  markUpdatesSeen,
   sendCaregiverResponse,
   unarchiveUpdate,
 } from '../../services/backend';
-import AvatarIcon from '../AvatarIcon';
-
-interface CaregiverFeedScreenProps {
-  session: AppSession;
-  /** Legacy pairing updates passed from App.tsx; used as fallback when no connections exist. */
-  legacyUpdates: StatusUpdate[];
-  onNavigateToConnections?: () => void;
-  onArchiveChanged?: () => void;
-}
 
 const PRIORITY_CONFIG: Record<NeedPriority, {
   label: string; sublabel: string;
   icon: React.ComponentType<{ className?: string }>;
   banner: string; stripe: string; iconClass: string;
 }> = {
-  when_you_can: { label: 'When you can',  sublabel: 'No rush',                        icon: Clock,     banner: 'bg-teal-900/60 border-teal-600/40',  stripe: 'bg-teal-500',  iconClass: 'text-teal-300'  },
-  soon:         { label: 'Soon',           sublabel: 'Within the next hour',           icon: Hourglass, banner: 'bg-amber-900/60 border-amber-600/40', stripe: 'bg-amber-400', iconClass: 'text-amber-300' },
-  asap:         { label: 'Need ASAP',      sublabel: "Please stop what you're doing",  icon: Zap,       banner: 'bg-red-900/70 border-red-500/50',     stripe: 'bg-red-500',   iconClass: 'text-red-300'   },
+  when_you_can: { label: 'When you can', sublabel: 'No rush',                        icon: Clock,     banner: 'bg-teal-900/60 border-teal-600/40',  stripe: 'bg-teal-500',  iconClass: 'text-teal-300'  },
+  soon:         { label: 'Soon',          sublabel: 'Within the next hour',           icon: Hourglass, banner: 'bg-amber-900/60 border-amber-600/40', stripe: 'bg-amber-400', iconClass: 'text-amber-300' },
+  asap:         { label: 'Need ASAP',     sublabel: "Please stop what you're doing",  icon: Zap,       banner: 'bg-red-900/70 border-red-500/50',     stripe: 'bg-red-500',   iconClass: 'text-red-300'   },
 };
 
 const energyStyles: Record<string, { pill: string; dot: string; bar: string }> = {
@@ -44,20 +31,20 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
 const QUICK_REPLIES_STATUS = ['Do you need anything?', 'Let me know if I can help', 'I am here for you'];
 const QUICK_REPLIES_NEEDS = ['On it!', 'Be there soon', 'Coming in 10 minutes'];
 
-// ─── Update card ─────────────────────────────────────────────────────────────
+// ─── Archived card ────────────────────────────────────────────────────────────
 
-function UpdateFeedCard({
+function ArchivedUpdateCard({
   update,
   response,
-  isArchived,
   onRespond,
-  onToggleArchive,
+  onUnarchive,
+  removing,
 }: {
   update: StatusUpdate;
   response: CaregiverResponse | null;
-  isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
-  onToggleArchive: (updateId: string) => void;
+  onUnarchive: (updateId: string) => void;
+  removing: boolean;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
@@ -77,7 +64,6 @@ function UpdateFeedCard({
   const priority = update.needPriority && PRIORITY_CONFIG[update.needPriority] ? PRIORITY_CONFIG[update.needPriority] : null;
   const energyStyle = energy ? (energyStyles[energy.id] ?? energyStyles.resting) : null;
   const isNeedsOnly = !energy && needs.length > 0 && symptoms.length === 0;
-  const isSeen = Boolean(response?.seenAt);
   const hasResponse = Boolean(response?.message);
 
   const handleQuickReply = async (msg: string) => {
@@ -97,9 +83,9 @@ function UpdateFeedCard({
   };
 
   return (
-    <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
-      isSeen ? 'border-periwinkle/20' : 'border-bold-blue/50 shadow-bold-blue/10'
-    }`}>
+    <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
+      removing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+    } border-periwinkle/20`}>
       {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
       <div className="flex-1 min-w-0">
@@ -110,23 +96,25 @@ function UpdateFeedCard({
               <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
                 {isNeedsOnly ? 'Needs' : 'Status'}
               </span>
-              {!isSeen && <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
               <button
-                onClick={() => onToggleArchive(update.id)}
-                className={`rounded-lg p-1.5 transition-all active:scale-90 ${
-                  isArchived
-                    ? 'text-bold-blue'
-                    : 'text-off-white/30 hover:text-off-white/60'
-                }`}
-                title={isArchived ? 'Remove from archive' : 'Save to archive'}
+                onClick={() => onUnarchive(update.id)}
+                className="rounded-lg p-1.5 text-bold-blue transition-all hover:text-off-white/60 active:scale-90"
+                title="Remove from archive"
               >
-                <Bookmark className="h-4 w-4" fill={isArchived ? 'currentColor' : 'none'} />
+                <BookmarkX className="h-4 w-4" />
               </button>
             </div>
           </div>
+
+          {/* Message / appreciation text */}
+          {update.messageText && (
+            <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
+              {update.messageText}
+            </p>
+          )}
 
           {/* Energy */}
           {energy && energyStyle && (() => {
@@ -175,13 +163,6 @@ function UpdateFeedCard({
             )
           )}
 
-          {/* Message / appreciation text */}
-          {update.messageText && (
-            <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
-              {update.messageText}
-            </p>
-          )}
-
           {/* Needs */}
           {needs.length > 0 && (
             <div className="mb-2 space-y-1.5">
@@ -199,9 +180,7 @@ function UpdateFeedCard({
                     }`}
                   >
                     <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                      checked
-                        ? 'border-green-400 bg-green-400'
-                        : 'border-periwinkle/50 bg-transparent'
+                      checked ? 'border-green-400 bg-green-400' : 'border-periwinkle/50 bg-transparent'
                     }`}>
                       {checked && <Check className="h-3 w-3 text-midnight-black" strokeWidth={3} />}
                     </div>
@@ -232,7 +211,6 @@ function UpdateFeedCard({
               })}
             </div>
           )}
-
         </div>
 
         {/* Response area */}
@@ -297,122 +275,48 @@ function UpdateFeedCard({
   );
 }
 
-// ─── Patient section header ───────────────────────────────────────────────────
+// ─── Main archive screen ──────────────────────────────────────────────────────
 
-function PatientSectionHeader({
-  displayName,
-  avatarIcon,
-  unseenCount,
-}: {
-  displayName: string;
-  avatarIcon: string | null | undefined;
-  unseenCount: number;
-}) {
-  return (
-    <div className="flex items-center gap-3 mb-3 mt-6 first:mt-0">
-      <AvatarIcon iconId={avatarIcon} size="sm" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-off-white truncate">{displayName}</p>
-      </div>
-      {unseenCount > 0 && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-          {unseenCount}
-        </span>
-      )}
-    </div>
-  );
+interface CaregiverArchiveScreenProps {
+  session: AppSession;
+  refreshToken?: number;
 }
 
-// ─── Main feed ────────────────────────────────────────────────────────────────
-
-export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections, onArchiveChanged }: CaregiverFeedScreenProps) {
-  const [connections, setConnections] = React.useState<Connection[]>([]);
+export default function CaregiverArchiveScreen({ session, refreshToken }: CaregiverArchiveScreenProps) {
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
-  const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [hasLoaded, setHasLoaded] = React.useState(false);
+  const [removingIds, setRemovingIds] = React.useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const loadFeed = React.useCallback(async (showSpinner = false) => {
-    if (showSpinner) setIsRefreshing(true);
-    try {
-      const [conns, freshUpdates, archived] = await Promise.all([
-        getFollowerConnections(session),
-        getUpdatesForConnectedPatients(session, 30),
-        getArchivedUpdateIds(session.profileId),
-      ]);
-      setConnections(conns);
-      setArchivedIds(archived);
-      // Fall back to legacy pairing updates if no connection-based updates
-      setUpdates(freshUpdates.length > 0 ? freshUpdates : legacyUpdates);
-    } catch {
-      setUpdates(legacyUpdates);
-    } finally {
-      setIsRefreshing(false);
-      setHasLoaded(true);
+  const load = React.useCallback(async () => {
+    setIsLoading(true);
+    const archived = await getArchivedUpdates(session);
+    setUpdates(archived);
+    if (archived.length > 0) {
+      const ids = archived.map(u => u.id);
+      const resps = await getResponsesForUpdates(session.profileId, ids);
+      setResponses(resps);
     }
-  }, [session, legacyUpdates]);
+    setIsLoading(false);
+  }, [session]);
 
-  // Initial load
   React.useEffect(() => {
-    void loadFeed();
+    void load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.profileId]);
+  }, [session.profileId, refreshToken]);
 
-  // Refresh when legacyUpdates change (realtime push from App.tsx)
-  React.useEffect(() => {
-    if (hasLoaded) void loadFeed();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [legacyUpdates]);
-
-  // Mark seen + fetch responses whenever updates change
-  React.useEffect(() => {
-    if (!updates.length) return;
-    const ids = updates.map(u => u.id);
-
-    getResponsesForUpdates(session.profileId, ids).then(fetched => {
-      setResponses(prev => {
-        const next = { ...fetched };
-        for (const id of ids) {
-          if (prev[id]?.seenAt && !next[id]?.seenAt) {
-            next[id] = { ...next[id], ...prev[id] };
-          }
-        }
-        return next;
-      });
-    }).catch(console.error);
-
-    const unseenIds = ids.filter(id => !responses[id]?.seenAt);
-    if (unseenIds.length) {
-      const now = new Date().toISOString();
-      setResponses(prev => {
-        const next = { ...prev };
-        for (const id of unseenIds) {
-          if (!next[id]) {
-            next[id] = { id: '', statusUpdateId: id, caregiverId: session.profileId, message: '', seenAt: now, createdAt: now };
-          } else {
-            next[id] = { ...next[id], seenAt: now };
-          }
-        }
-        return next;
-      });
-      void markUpdatesSeen(session.profileId, unseenIds).catch(console.error);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updates, session.profileId]);
-
-  const handleToggleArchive = (updateId: string) => {
-    const nowArchived = !archivedIds.has(updateId);
-    setArchivedIds(prev => {
-      const next = new Set(prev);
-      nowArchived ? next.add(updateId) : next.delete(updateId);
-      return next;
+  const handleUnarchive = (updateId: string) => {
+    setRemovingIds(prev => new Set(prev).add(updateId));
+    void unarchiveUpdate(session.profileId, updateId).then(() => {
+      setTimeout(() => {
+        setUpdates(prev => prev.filter(u => u.id !== updateId));
+        setRemovingIds(prev => {
+          const next = new Set(prev);
+          next.delete(updateId);
+          return next;
+        });
+      }, 300);
     });
-    if (nowArchived) {
-      void archiveUpdate(session.profileId, updateId).then(() => onArchiveChanged?.());
-    } else {
-      void unarchiveUpdate(session.profileId, updateId).then(() => onArchiveChanged?.());
-    }
   };
 
   const handleRespond = async (updateId: string, message: string) => {
@@ -428,132 +332,49 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     }
   };
 
-  // Build patient identity map from connections
-  const activeConnections = connections.filter(c => c.status === 'active');
-  const patientMap = new Map<string, { displayName: string; avatarIcon: string | null | undefined }>(
-    activeConnections.map(c => [c.patientId, { displayName: c.patientDisplayName ?? 'Patient', avatarIcon: c.patientAvatarIcon }])
-  );
-
-  // Determine if we have multiple distinct patients in the feed
-  const patientIds = [...new Set(updates.map(u => u.patientId))];
-  const isMultiPatient = patientIds.length > 1 || (patientIds.length === 1 && patientMap.has(patientIds[0]));
-
-  // Group updates by patient, preserving chronological order across groups
-  const grouped: Array<{ patientId: string; updateList: StatusUpdate[] }> = [];
-  for (const pid of patientIds) {
-    grouped.push({ patientId: pid, updateList: updates.filter(u => u.patientId === pid) });
-  }
-
-  const totalUnseen = updates.filter(u => !responses[u.id]?.seenAt).length;
-
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
 
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
-            <div className="flex items-center gap-2">
-              <p className="text-base font-semibold text-white">Patient Updates</p>
-              {totalUnseen > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-                  {totalUnseen}
-                </span>
-              )}
-            </div>
-            {isMultiPatient && patientIds.length > 1 && (
-              <p className="mt-0.5 text-xs text-off-white/70">
-                {patientIds.length} patients
-              </p>
-            )}
+        <div className="mb-6">
+          <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
+          <div className="flex items-center gap-2">
+            <Bookmark className="h-4 w-4 text-bold-blue" fill="currentColor" />
+            <p className="text-base font-semibold text-white">Saved Updates</p>
           </div>
-          <button
-            onClick={() => void loadFeed(true)}
-            disabled={isRefreshing}
-            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          <p className="mt-1 text-xs text-off-white/50">Up to 20 updates saved</p>
         </div>
 
-        {updates.length === 0 ? (
-          <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
-            <p className="text-sm text-off-white/90">No updates yet</p>
-            {activeConnections.length === 0 ? (
-              <button
-                onClick={onNavigateToConnections}
-                className="mt-2 text-xs text-periwinkle underline underline-offset-2 transition-opacity hover:opacity-80"
-              >
-                Connect with a patient to see their updates here
-              </button>
-            ) : (
-              <p className="mt-1 text-xs text-off-white/70">Patient updates will appear here once they send one</p>
-            )}
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-28 animate-pulse rounded-2xl bg-white/5" />
+            ))}
           </div>
-        ) : isMultiPatient && patientIds.length > 1 ? (
-          /* Multi-patient grouped view */
-          <div className="space-y-1">
-            {grouped.map(({ patientId, updateList }) => {
-              const patient = patientMap.get(patientId);
-              const sectionUnseen = updateList.filter(u => !responses[u.id]?.seenAt).length;
-              return (
-                <div key={patientId}>
-                  <PatientSectionHeader
-                    displayName={patient?.displayName ?? 'Patient'}
-                    avatarIcon={patient?.avatarIcon}
-                    unseenCount={sectionUnseen}
-                  />
-                  <div className="space-y-3">
-                    {updateList.map((update, i) => (
-                      <div
-                        key={update.id}
-                        className="animate-slide-up"
-                        style={{ animationDelay: `${i * 40}ms` }}
-                      >
-                        <UpdateFeedCard
-                          update={update}
-                          response={responses[update.id] ?? null}
-                          isArchived={archivedIds.has(update.id)}
-                          onRespond={handleRespond}
-                          onToggleArchive={handleToggleArchive}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+        ) : updates.length === 0 ? (
+          <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
+            <Bookmark className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
+            <p className="text-sm text-off-white/70">No saved updates yet</p>
+            <p className="mt-1 text-xs text-off-white/50">Tap the bookmark icon on any update card to save it here</p>
           </div>
         ) : (
-          /* Single patient — show their name once at top if known, then flat list */
-          <div>
-            {isMultiPatient && patientIds.length === 1 && patientMap.has(patientIds[0]) && (
-              <PatientSectionHeader
-                displayName={patientMap.get(patientIds[0])!.displayName}
-                avatarIcon={patientMap.get(patientIds[0])!.avatarIcon}
-                unseenCount={0}
-              />
-            )}
-            <div className="space-y-3">
-              {updates.map((update, i) => (
-                <div
-                  key={update.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${i * 50}ms` }}
-                >
-                  <UpdateFeedCard
-                    update={update}
-                    response={responses[update.id] ?? null}
-                    isArchived={archivedIds.has(update.id)}
-                    onRespond={handleRespond}
-                    onToggleArchive={handleToggleArchive}
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="space-y-3">
+            {updates.map((update, i) => (
+              <div
+                key={update.id}
+                className="animate-slide-up"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <ArchivedUpdateCard
+                  update={update}
+                  response={responses[update.id] ?? null}
+                  onRespond={handleRespond}
+                  onUnarchive={handleUnarchive}
+                  removing={removingIds.has(update.id)}
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>

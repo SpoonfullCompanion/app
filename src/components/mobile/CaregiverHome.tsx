@@ -3,6 +3,7 @@ import CaregiverBottomNavigation, { type CaregiverNavRoute } from './CaregiverBo
 import CaregiverFeedScreen from './CaregiverFeedScreen';
 import CaregiverConnectionsScreen from './CaregiverConnectionsScreen';
 import CaregiverAccountScreen from './CaregiverAccountScreen';
+import CaregiverArchiveScreen from './CaregiverArchiveScreen';
 import AppHeader from './AppHeader';
 import type { AppSession, Pairing, StatusUpdate } from '../../types/app';
 import { getFollowerConnections } from '../../services/backend';
@@ -42,6 +43,7 @@ export default function CaregiverHome({
   const [activeRoute, setActiveRoute] = React.useState<CaregiverNavRoute>('home');
   const [unseenCount, setUnseenCount] = React.useState(0);
   const [pendingConnectionCount, setPendingConnectionCount] = React.useState(0);
+  const [archiveRefreshToken, setArchiveRefreshToken] = React.useState(0);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -79,12 +81,19 @@ export default function CaregiverHome({
             session={session}
             legacyUpdates={recentUpdates}
             onNavigateToConnections={() => setActiveRoute('connections')}
+            onArchiveChanged={() => setArchiveRefreshToken(t => t + 1)}
           />
         )}
         {activeRoute === 'connections' && (
           <CaregiverConnectionsScreen
             session={session}
             onConnectionsChanged={refreshPendingCount}
+          />
+        )}
+        {activeRoute === 'archive' && (
+          <CaregiverArchiveScreen
+            session={session}
+            refreshToken={archiveRefreshToken}
           />
         )}
         {activeRoute === 'account' && (
