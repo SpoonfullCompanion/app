@@ -10,6 +10,7 @@ interface NeedsScreenProps {
   onToggleTTS: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
   profileId: string;
+  onNavigate: (route: 'hospital') => void;
 }
 
 const PRIORITIES: { id: NeedPriority; label: string; sublabel: string; icon: React.ComponentType<{ className?: string }>; borderClass: string; selectedClass: string }[] = [
@@ -45,7 +46,7 @@ const APPRECIATION: { id: string; label: string; icon: React.ComponentType<{ cla
   { id: 'i_love_you', label: 'I love you', icon: Heart },
 ];
 
-export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: NeedsScreenProps) {
+export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onNavigate }: NeedsScreenProps) {
   const [selectedNeeds, setSelectedNeeds] = useState<Set<string>>(new Set());
   const [selectedPriority, setSelectedPriority] = useState<NeedPriority | null>(null);
   const [selectedAppreciation, setSelectedAppreciation] = useState<Set<string>>(new Set());
@@ -134,7 +135,14 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: N
               Needs
             </p>
             <p className="text-sm text-white">
-              Tap to speak, or select your needs to notify to your helper.
+              Tap to speak, or select your needs to notify to your helper.{' '}
+              In the hospital?{' '}
+              <button
+                onClick={() => onNavigate('hospital')}
+                className="text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
+              >
+                Try Hospital Mode.
+              </button>
             </p>
           </div>
           <button

@@ -71,6 +71,7 @@ export default function PatientHome({
             onToggleTTS={handleToggleTTS}
             onSendUpdate={onSendUpdate}
             profileId={session?.profileId || ''}
+            onNavigate={handleNavigate}
           />
         )}
         {activeRoute === 'hospital' && (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Home, Activity, MessageSquare, Stethoscope } from 'lucide-react';
+import { Home, Activity, MessageSquare } from 'lucide-react';
 
 export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account';
 
@@ -12,7 +12,6 @@ const navItems = [
   { id: 'home' as const, label: 'Home', icon: Home },
   { id: 'status' as const, label: 'Status', icon: Activity },
   { id: 'needs' as const, label: 'Needs', icon: MessageSquare },
-  { id: 'hospital' as const, label: 'Hospital', icon: Stethoscope },
 ];
 
 export default function BottomNavigation({ activeRoute, onNavigate }: BottomNavigationProps) {
