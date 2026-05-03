@@ -289,7 +289,14 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Link2 className="h-3 w-3 text-periwinkle" />
                           <p className="text-xs text-periwinkle">
-                            {theyRequested ? 'Wants to be your helper' : 'Invite sent — waiting for them'}
+                            {theyRequested
+                              ? conn.connectionType === 'patient_friend'
+                                ? 'Wants to share status updates with you'
+                                : 'Wants to be your helper'
+                              : conn.connectionType === 'patient_friend'
+                                ? 'Invite sent — waiting for them to accept'
+                                : 'Invite sent — waiting for them'
+                            }
                           </p>
                         </div>
                       </div>
