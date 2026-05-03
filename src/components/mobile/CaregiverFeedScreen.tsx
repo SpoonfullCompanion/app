@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -11,17 +11,38 @@ interface CaregiverFeedScreenProps {
   updates: StatusUpdate[];
 }
 
-const PRIORITY_CONFIG: Record<NeedPriority, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
-  when_you_can: { label: 'When you can', icon: Clock, className: 'bg-teal-700/80 border-teal-500/60 text-white' },
-  soon: { label: 'Soon', icon: Hourglass, className: 'bg-amber-700/80 border-amber-500/60 text-white' },
-  asap: { label: 'Need ASAP', icon: Zap, className: 'bg-red-700/80 border-red-500/60 text-white' },
+const PRIORITY_CONFIG: Record<NeedPriority, { label: string; sublabel: string; icon: React.ComponentType<{ className?: string }>; banner: string; stripe: string; iconClass: string }> = {
+  when_you_can: {
+    label: 'When you can',
+    sublabel: 'No rush',
+    icon: Clock,
+    banner: 'bg-teal-900/60 border-teal-600/40',
+    stripe: 'bg-teal-500',
+    iconClass: 'text-teal-300',
+  },
+  soon: {
+    label: 'Soon',
+    sublabel: 'Within the next hour',
+    icon: Hourglass,
+    banner: 'bg-amber-900/60 border-amber-600/40',
+    stripe: 'bg-amber-400',
+    iconClass: 'text-amber-300',
+  },
+  asap: {
+    label: 'Need ASAP',
+    sublabel: 'Please stop what you\'re doing',
+    icon: Zap,
+    banner: 'bg-red-900/70 border-red-500/50',
+    stripe: 'bg-red-500',
+    iconClass: 'text-red-300',
+  },
 };
 
-const energyStyles: Record<string, { pill: string; glow: string; bar: string }> = {
-  crashing: { pill: 'bg-red-800/50 border-red-700/60 text-white', glow: 'shadow-red-900/40', bar: 'bg-red-700' },
-  low:      { pill: 'bg-orange-800/50 border-orange-700/60 text-white', glow: 'shadow-orange-900/40', bar: 'bg-orange-600' },
-  resting:  { pill: 'bg-yellow-700/50 border-yellow-600/60 text-white', glow: 'shadow-yellow-900/30', bar: 'bg-yellow-600' },
-  available:{ pill: 'bg-green-800/50 border-green-700/60 text-white', glow: 'shadow-green-900/40', bar: 'bg-green-600' },
+const energyStyles: Record<string, { pill: string; dot: string; bar: string }> = {
+  crashing:  { pill: 'bg-red-950/70 border-red-600/50 text-red-200',        dot: 'bg-red-500',    bar: 'bg-red-700' },
+  low:       { pill: 'bg-orange-950/70 border-orange-600/50 text-orange-200', dot: 'bg-orange-400', bar: 'bg-orange-600' },
+  resting:   { pill: 'bg-yellow-950/70 border-yellow-600/50 text-yellow-200', dot: 'bg-yellow-400', bar: 'bg-yellow-600' },
+  available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',   dot: 'bg-green-400',  bar: 'bg-green-600' },
 };
 
 const QUICK_REPLIES = ['Got it', 'On my way', 'Give me a few minutes', 'I\'ll be right there'];
@@ -73,94 +94,113 @@ function UpdateFeedCard({
   };
 
   return (
-    <div className={`rounded-2xl border bg-midnight-black/60 p-4 shadow-lg transition-all ${
-      isSeen ? 'border-periwinkle/15' : 'border-bold-blue/50 shadow-bold-blue/10'
-    } ${energyStyle?.glow ?? ''}`}>
+    <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
+      isSeen ? 'border-periwinkle/20' : 'border-bold-blue/50 shadow-bold-blue/10'
+    }`}>
+      {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
-      {/* Header row */}
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-[0.2em] text-off-white/40">
-            {isNeedsOnly ? 'Needs' : 'Status'}
-          </span>
-          {!isSeen && (
-            <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />
+      <div className="flex-1 min-w-0">
+        <div className="p-4">
+          {/* Header row */}
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase tracking-[0.2em] text-off-white/40">
+                {isNeedsOnly ? 'Needs' : 'Status'}
+              </span>
+              {!isSeen && (
+                <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />
+              )}
+            </div>
+            <span className="text-xs text-off-white/35">
+              {formatDistanceToNow(update.sentAt)}
+            </span>
+          </div>
+
+          {/* Energy */}
+          {energy && energyStyle && (() => {
+            const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+            return (
+              <div className="mb-3 flex items-center gap-3">
+                <div className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${energyStyle.pill}`}>
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${energyStyle.dot}`} />
+                  {Icon && <Icon className="h-4 w-4" />}
+                  <span className="text-sm font-bold tracking-wide">{energy.label}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="h-1.5 w-full rounded-full bg-white/10">
+                    <div
+                      className={`h-1.5 rounded-full ${energyStyle.bar}`}
+                      style={{
+                        width: energy.id === 'crashing' ? '15%'
+                          : energy.id === 'low' ? '35%'
+                          : energy.id === 'resting' ? '60%'
+                          : '90%'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Priority banner */}
+          {isNeedsOnly && (
+            priority ? (() => {
+              const PriorityIcon = priority.icon;
+              return (
+                <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
+                  <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
+                  <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
+                  <div className="py-2 pr-3">
+                    <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
+                    <p className="mt-0.5 text-xs text-white/55">{priority.sublabel}</p>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="mb-3 flex items-center gap-3 overflow-hidden rounded-lg border bg-periwinkle/10 border-periwinkle/25">
+                <div className="w-1 self-stretch shrink-0 bg-periwinkle/50" />
+                <MessageSquare className="h-5 w-5 shrink-0 text-periwinkle/70" />
+                <div className="py-2 pr-3">
+                  <p className="text-sm font-bold text-white leading-none">Need request</p>
+                </div>
+              </div>
+            )
+          )}
+
+          {/* Needs */}
+          {needs.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {needs.map(need => {
+                const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+                return (
+                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue px-2.5 py-1 text-sm font-semibold text-white">
+                    {Icon && <Icon className="h-3.5 w-3.5" />}
+                    {need.label}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Symptoms */}
+          {symptoms.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {symptoms.map(symptom => {
+                const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+                return (
+                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-2.5 py-1 text-sm text-off-white/60">
+                    {Icon && <Icon className="h-3.5 w-3.5" />}
+                    {symptom.label}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
-        <span className="text-xs text-off-white/35">
-          {formatDistanceToNow(update.sentAt)}
-        </span>
-      </div>
 
-      {/* Energy */}
-      {energy && energyStyle && (() => {
-        const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-        return (
-          <div className="mb-3 flex items-center gap-3">
-            <div className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold ${energyStyle.pill}`}>
-              {Icon && <Icon className="h-4 w-4" />}
-              {energy.label}
-            </div>
-            <div className="flex-1">
-              <div className="h-1.5 w-full rounded-full bg-white/10">
-                <div
-                  className={`h-1.5 rounded-full ${energyStyle.bar}`}
-                  style={{
-                    width: energy.id === 'crashing' ? '15%'
-                      : energy.id === 'low' ? '35%'
-                      : energy.id === 'resting' ? '60%'
-                      : '90%'
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Priority */}
-      {priority && (() => {
-        const PriorityIcon = priority.icon;
-        return (
-          <div className={`mb-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-semibold ${priority.className}`}>
-            <PriorityIcon className="h-3 w-3" />
-            {priority.label}
-          </div>
-        );
-      })()}
-
-      {/* Needs */}
-      {needs.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {needs.map(need => {
-            const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-            return (
-              <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue/25 px-2.5 py-1 text-sm font-medium text-off-white/90">
-                {Icon && <Icon className="h-3.5 w-3.5" />}
-                {need.label}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Symptoms */}
-      {symptoms.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {symptoms.map(symptom => {
-            const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-            return (
-              <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-2.5 py-1 text-sm text-off-white/70">
-                {Icon && <Icon className="h-3.5 w-3.5" />}
-                {symptom.label}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Response area */}
-      <div className="mt-3 border-t border-white/5 pt-3">
+        {/* Response area */}
+        <div className="border-t border-white/5 px-4 pb-4 pt-3">
         {hasResponse ? (
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
@@ -224,6 +264,7 @@ function UpdateFeedCard({
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );
