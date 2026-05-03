@@ -134,22 +134,23 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
       </div>
 
       <div className="pt-4 border-t border-dark-blue/50">
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">Type here to speak out loud</h3>
-        <div className="flex flex-col gap-3">
+        <label className="mb-2 block text-sm font-medium text-white">
+          Type to Speak or Add Notes
+        </label>
+        <div className="flex gap-2">
           <textarea
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
-            placeholder="Type your message here..."
-            rows={4}
-            className="w-full px-4 py-3 rounded-xl bg-midnight-black/50 border-2 border-dark-blue text-periwinkle placeholder-periwinkle/40 focus:outline-none focus:border-bold-blue transition-colors resize-none"
+            placeholder="Type a custom message or note here..."
+            rows={3}
+            className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-zinc-100/40 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30 resize-none"
           />
           <button
             onClick={handleCustomSpeak}
             disabled={!customText.trim() || !ttsEnabled}
-            className="self-end px-6 py-3 rounded-xl bg-bold-blue hover:bg-bold-blue/90 disabled:bg-dark-blue/50 disabled:cursor-not-allowed text-white disabled:text-periwinkle/50 font-medium transition-colors flex items-center gap-2"
+            className="rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 text-zinc-100 transition-all hover:border-bold-blue hover:bg-midnight-black/80 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <Volume2 size={20} />
-            Speak
+            <Volume2 className="h-5 w-5" />
           </button>
         </div>
       </div>
