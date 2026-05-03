@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Rss, MessageSquare, Activity, Users } from 'lucide-react';
+import { Home, MessageSquare, Activity, Users } from 'lucide-react';
 
 export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account' | 'connections';
 
@@ -10,7 +10,7 @@ interface BottomNavigationProps {
 }
 
 const navItems = [
-  { id: 'home' as const,        label: 'Feed',        icon: Rss },
+  { id: 'home' as const,        label: 'Feed',        icon: Home },
   { id: 'needs' as const,       label: 'Needs',       icon: MessageSquare },
   { id: 'status' as const,      label: 'Status',      icon: Activity },
   { id: 'connections' as const, label: 'Connections', icon: Users },
