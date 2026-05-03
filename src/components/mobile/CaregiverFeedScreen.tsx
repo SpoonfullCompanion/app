@@ -45,7 +45,7 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',   dot: 'bg-green-400',  bar: 'bg-green-600' },
 };
 
-const QUICK_REPLIES = ['Got it', 'On my way', 'Give me a few minutes', 'I\'ll be right there'];
+const QUICK_REPLIES = ['Do you need anything?', 'Let me know if I can help', 'I am here for you'];
 
 function UpdateFeedCard({
   update,
@@ -225,7 +225,7 @@ function UpdateFeedCard({
             {expanded && (
               <div className="mt-3 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  {QUICK_REPLIES.slice(1).map(msg => (
+                  {QUICK_REPLIES.map(msg => (
                     <button
                       key={msg}
                       onClick={() => void handleQuickReply(msg)}
