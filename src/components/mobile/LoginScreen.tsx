@@ -1,7 +1,6 @@
 import React from 'react';
-import Button from '../Button';
 import { appConfig } from '../../lib/appConfig';
-import type { UserRole, DemoMode } from '../../types/app';
+import type { DemoMode } from '../../types/app';
 
 interface LoginScreenProps {
   mode: DemoMode;
@@ -11,6 +10,12 @@ interface LoginScreenProps {
   onShowSignup: () => void;
   statusMessage?: string;
 }
+
+const inputClass =
+  'w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 px-4 py-3.5 text-base text-off-white placeholder-off-white/30 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/30';
+
+const ctaClass =
+  'flex w-full items-center justify-center rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
 
 export default function LoginScreen({
   mode,
@@ -33,7 +38,6 @@ export default function LoginScreen({
     setIsBusy(true);
     setLocalStatusMessage('');
     setIsError(false);
-
     try {
       const message = await onSignInWithPassword(email, password);
       const isSuccessMessage = message.toLowerCase().includes('signed in') || message.toLowerCase().includes('reloading');
@@ -53,7 +57,6 @@ export default function LoginScreen({
     setIsBusy(true);
     setLocalStatusMessage('');
     setIsError(false);
-
     try {
       const message = await onSendMagicLink(magicLinkEmail);
       const isSuccessMessage = message.toLowerCase().includes('sent') || message.toLowerCase().includes('check');
@@ -74,13 +77,11 @@ export default function LoginScreen({
       setLocalStatusMessage('Enter your email address first.');
       return;
     }
-
     setIsBusy(true);
     setLocalStatusMessage('');
     setIsError(false);
-
     try {
-      const message = await onSendMagicLink(email);
+      await onSendMagicLink(email);
       setIsError(false);
       setLocalStatusMessage('Password reset link sent to your email.');
       setShowForgotPassword(false);
@@ -93,119 +94,120 @@ export default function LoginScreen({
     }
   };
 
+  const displayMessage = statusMessage || localStatusMessage;
+
   return (
-    <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col justify-center rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
-        <div className="flex flex-col items-center mb-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] text-off-white">
+      <div className="mx-auto max-w-xl px-6 py-10 pb-16">
+
+        <div className="flex flex-col items-center mb-10 pt-4">
           <img
             src="/Spoonfull-Logo-DarkBG copy.svg"
             alt="Spoonfull"
-            className="w-44 h-auto md:w-52"
+            className="w-40 h-auto md:w-48"
           />
         </div>
-        <div>
-           <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
-            Sign In
-          </p>
-        </div>
 
-        {statusMessage || localStatusMessage ? (
+        <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-1">
+          Welcome back
+        </p>
+        <h1 className="text-3xl font-bold font-league-spartan mb-6">Sign in</h1>
+
+        {displayMessage && (
           <div
-            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+            className={`mb-5 rounded-xl border px-4 py-3 text-sm font-medium ${
               isError
-                ? 'border-red-500/60 bg-red-500/20 text-red-100'
-                : 'border-periwinkle/40 bg-periwinkle/10 text-off-white/85'
+                ? 'border-red-500/50 bg-red-500/15 text-red-200'
+                : 'border-periwinkle/30 bg-periwinkle/10 text-off-white/85'
             }`}
           >
-            {statusMessage || localStatusMessage}
+            {displayMessage}
           </div>
-        ) : null}
+        )}
 
-        <form onSubmit={handleSignIn} className="mt-5 space-y-2">
+        <form onSubmit={handleSignIn} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-off-white/90 mb-1" htmlFor="email">
+            <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="email">
               Email
             </label>
             <input
               id="email"
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-off-white/90 mb-1" htmlFor="password">
+            <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="password">
               Password
             </label>
             <input
               id="password"
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Your password"
-              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
+              className={inputClass}
             />
           </div>
 
-          <div className="pt-1">
+          <div className="flex items-center justify-between pt-1">
             <button
               type="button"
               onClick={() => setShowForgotPassword(!showForgotPassword)}
-              className="text-sm text-periwinkle underline font-bold"
+              className="text-sm text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
             >
               Forgot password?
             </button>
           </div>
 
           {showForgotPassword && (
-            <div className="rounded-2xl border border-periwinkle/40 bg-periwinkle/10 p-4">
-              <p className="text-sm text-off-white/85 mb-3">
-                We'll send you a password reset link to your email address.
+            <div className="rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
+              <p className="text-sm text-off-white/70 mb-3">
+                We'll send a reset link to your email address.
               </p>
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className="w-full"
+                onClick={() => void handleForgotPassword()}
                 disabled={!email || isBusy || !appConfig.hasSupabase}
-                onClick={handleForgotPassword}
+                className="flex w-full items-center justify-center rounded-full border border-bold-blue px-6 py-3 text-sm font-semibold text-bold-blue transition-all hover:bg-bold-blue hover:text-white active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Send reset link
-              </Button>
+              </button>
             </div>
           )}
 
-          <div className="pt-2">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={!email || !password || isBusy || !appConfig.hasSupabase}
-            >
-              Sign in
-            </Button>
-          </div>
+          <button
+            type="submit"
+            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
+            className={ctaClass}
+          >
+            {isBusy ? 'Signing in…' : 'Sign in'}
+          </button>
         </form>
 
-         <p className="mt-.5 text-sm text-off-white/70">
-           <button
-             type="button"
-             onClick={onShowSignup}
-             className="text-periwinkle underline font-bold"
-           >
-             Create an account
-           </button>
-         </p>
+        <p className="mt-5 text-sm text-off-white/60">
+          Don't have an account?{' '}
+          <button
+            type="button"
+            onClick={onShowSignup}
+            className="text-periwinkle underline underline-offset-2 font-semibold hover:text-white transition-colors"
+          >
+            Create an account
+          </button>
+        </p>
 
-        <div className="relative my-12">
+        <div className="relative my-10">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-dark-blue/40"></div>
+            <div className="w-full border-t border-periwinkle/15" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] px-4 text-sm text-off-white/60 uppercase tracking-[0.15em]">
+            <span className="bg-[#1d1d1d] px-4 text-xs text-off-white/40 uppercase tracking-[0.2em]">
               Or
             </span>
           </div>
@@ -213,38 +215,39 @@ export default function LoginScreen({
 
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-4">
-            Quick link to email
+            Passwordless sign-in
           </p>
-
           <form onSubmit={handleMagicLink} className="space-y-4">
-            <label className="block text-sm font-semibold text-off-white/90" htmlFor="magic-email">
-              Send me a magic link
-            </label>
-            <input
-              id="magic-email"
-              type="email"
-              value={magicLinkEmail}
-              onChange={(event) => setMagicLinkEmail(event.target.value)}
-              placeholder="name@example.com"
-              autoCapitalize="none"
-              autoCorrect="off"
-              className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
-            />
-            <Button
+            <div>
+              <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="magic-email">
+                Email address
+              </label>
+              <input
+                id="magic-email"
+                type="email"
+                value={magicLinkEmail}
+                onChange={(e) => setMagicLinkEmail(e.target.value)}
+                placeholder="name@example.com"
+                autoCapitalize="none"
+                autoCorrect="off"
+                className={inputClass}
+              />
+            </div>
+            <button
               type="submit"
-              className="w-full"
               disabled={!magicLinkEmail || isBusy || !appConfig.hasSupabase}
+              className={ctaClass}
             >
               {appConfig.hasSupabase ? 'Send magic link' : 'Supabase not configured'}
-            </Button>
+            </button>
           </form>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-10 text-center">
           <button
             type="button"
             onClick={onContinueDemo}
-            className="text-xs text-off-white/50 underline"
+            className="text-xs text-off-white/35 underline underline-offset-2 hover:text-off-white/60 transition-colors"
           >
             Continue in demo mode
           </button>

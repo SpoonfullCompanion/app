@@ -1,13 +1,19 @@
 import React from 'react';
-import Button from '../Button';
 import { appConfig } from '../../lib/appConfig';
 import type { UserRole } from '../../types/app';
+import { UserRound, HeartHandshake, ChevronLeft } from 'lucide-react';
 
 interface SignupScreenProps {
   onSignUpWithPassword: (email: string, password: string, role: UserRole) => Promise<string>;
   onBack: () => void;
   statusMessage?: string;
 }
+
+const inputClass =
+  'w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 px-4 py-3.5 text-base text-off-white placeholder-off-white/30 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/30';
+
+const ctaClass =
+  'flex w-full items-center justify-center rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
 
 export default function SignupScreen({
   onSignUpWithPassword,
@@ -23,17 +29,17 @@ export default function SignupScreen({
 
   const handleSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedRole) {
-      return;
-    }
+    if (!selectedRole) return;
 
     setIsBusy(true);
     setLocalStatusMessage('');
     setIsError(false);
-
     try {
       const message = await onSignUpWithPassword(email, password, selectedRole);
-      const isSuccessMessage = message.toLowerCase().includes('signed up') || message.toLowerCase().includes('reloading') || message.toLowerCase().includes('created');
+      const isSuccessMessage =
+        message.toLowerCase().includes('signed up') ||
+        message.toLowerCase().includes('reloading') ||
+        message.toLowerCase().includes('created');
       setIsError(!isSuccessMessage);
       setLocalStatusMessage(message);
     } catch (error) {
@@ -53,113 +59,138 @@ export default function SignupScreen({
     }
   };
 
+  const displayMessage = statusMessage || localStatusMessage;
+
   if (!selectedRole) {
     return (
-      <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
-        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col justify-between rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
-          <div>
-            <button onClick={onBack} className="text-sm font-semibold text-periwinkle underline">
-              Back to Login
-            </button>
-            <p className="mt-8 text-xs uppercase tracking-[0.3em] text-periwinkle">Create account</p>
-            <h1 className="mt-4 text-4xl font-bold font-league-spartan leading-none">Choose your role</h1>
-            <p className="mt-4 max-w-xl text-base text-off-white/80">
-              Select how you'll use Spoonfull.
-            </p>
-          </div>
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] text-off-white">
+        <div className="mx-auto max-w-xl px-6 py-10">
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 text-sm text-periwinkle underline-offset-2 hover:text-white transition-colors mb-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to sign in
+          </button>
+
+          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-1">
+            Get started
+          </p>
+          <h1 className="text-3xl font-bold font-league-spartan mb-2">Choose your role</h1>
+          <p className="text-sm text-off-white/60 mb-8">
+            Select how you'll use Spoonfull to continue.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <button
               onClick={() => setSelectedRole('patient')}
-              className="rounded-[1.75rem] border border-dark-blue bg-dark-blue/40 p-6 text-left transition-transform duration-200 hover:-translate-y-1 hover:border-periwinkle"
+              className="group rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-6 text-left transition-all duration-200 hover:border-bold-blue hover:bg-bold-blue/10 active:scale-[0.98]"
             >
-              <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Send your status</p>
-              <h2 className="mt-3 text-3xl font-bold font-league-spartan">Patient</h2>
-              <p className="mt-4 text-base text-off-white/75">
-                Use the Spoonfull communication cards with persistent state, pairing, and mobile-friendly controls.
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-periwinkle/30 bg-midnight-black/60 group-hover:border-bold-blue/60">
+                <UserRound className="h-5 w-5 text-periwinkle group-hover:text-bold-blue" />
+              </div>
+              <p className="text-xs uppercase tracking-[0.25em] text-off-white/50 mb-2">Send your status</p>
+              <h2 className="text-2xl font-bold font-league-spartan text-white mb-3">Patient</h2>
+              <p className="text-sm text-off-white/65 leading-relaxed">
+                Communicate your energy, symptoms, and needs to your helper in real time.
               </p>
             </button>
 
             <button
               onClick={() => setSelectedRole('caregiver')}
-              className="rounded-[1.75rem] border border-dark-blue bg-dark-blue/40 p-6 text-left transition-transform duration-200 hover:-translate-y-1 hover:border-periwinkle"
+              className="group rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-6 text-left transition-all duration-200 hover:border-bold-blue hover:bg-bold-blue/10 active:scale-[0.98]"
             >
-              <p className="text-xs uppercase tracking-[0.3em] text-periwinkle/90">Find out what they need</p>
-              <h2 className="mt-3 text-3xl font-bold font-league-spartan">Helper</h2>
-              <p className="mt-4 text-base text-off-white/75">
-                Pair to a patient, follow the latest status, and enable reminders once notifications are configured.
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-periwinkle/30 bg-midnight-black/60 group-hover:border-bold-blue/60">
+                <HeartHandshake className="h-5 w-5 text-periwinkle group-hover:text-bold-blue" />
+              </div>
+              <p className="text-xs uppercase tracking-[0.25em] text-off-white/50 mb-2">Find out what they need</p>
+              <h2 className="text-2xl font-bold font-league-spartan text-white mb-3">Helper</h2>
+              <p className="text-sm text-off-white/65 leading-relaxed">
+                Pair with a patient and follow their latest status with notifications.
               </p>
             </button>
           </div>
 
-          <p className="mt-10 text-center text-sm text-off-white/60">Choose a role to continue.</p>
+          <p className="mt-8 text-center text-xs text-off-white/40">
+            Choose a role to continue setting up your account.
+          </p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
-      <div className="mx-auto max-w-xl rounded-[2rem] border border-dark-blue bg-dark-blue/25 p-6 shadow-xl shadow-black/20">
-        <button onClick={handleBack} className="text-sm font-semibold text-periwinkle underline">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] text-off-white">
+      <div className="mx-auto max-w-xl px-6 py-10">
+
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-1 text-sm text-periwinkle underline-offset-2 hover:text-white transition-colors mb-8"
+        >
+          <ChevronLeft className="h-4 w-4" />
           Back
         </button>
 
-        <p className="mt-8 text-xs uppercase tracking-[0.3em] text-periwinkle">
-          {selectedRole === 'patient' ? 'Patient' : 'Helper'}
+        <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-1">
+          {selectedRole === 'patient' ? 'Patient account' : 'Helper account'}
         </p>
-        <h1 className="mt-3 text-4xl font-bold font-league-spartan">Create your account</h1>
-        <p className="mt-4 text-base text-off-white/75">
+        <h1 className="text-3xl font-bold font-league-spartan mb-2">Create your account</h1>
+        <p className="text-sm text-off-white/60 mb-8">
           Set up your {selectedRole === 'patient' ? 'patient' : 'helper'} account to get started.
         </p>
 
-        <form onSubmit={handleSignUp} className="mt-8 space-y-4">
-          <label className="block text-sm font-semibold text-off-white/90" htmlFor="signup-email">
-            Email
-          </label>
-          <input
-            id="signup-email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="name@example.com"
-            autoCapitalize="none"
-            autoCorrect="off"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
-          />
-
-          <label className="block text-sm font-semibold text-off-white/90" htmlFor="signup-password">
-            Password
-          </label>
-          <input
-            id="signup-password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="At least 6 characters"
-            className="w-full rounded-2xl border-2 border-dark-blue bg-midnight-black/60 px-4 py-4 text-lg text-off-white outline-none transition-colors focus:border-periwinkle"
-          />
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
-          >
-            Create account
-          </Button>
-        </form>
-
-        {statusMessage || localStatusMessage ? (
+        {displayMessage && (
           <div
-            className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+            className={`mb-5 rounded-xl border px-4 py-3 text-sm font-medium ${
               isError
-                ? 'border-red-500/60 bg-red-500/20 text-red-100'
-                : 'border-periwinkle/40 bg-periwinkle/10 text-off-white/85'
+                ? 'border-red-500/50 bg-red-500/15 text-red-200'
+                : 'border-periwinkle/30 bg-periwinkle/10 text-off-white/85'
             }`}
           >
-            {statusMessage || localStatusMessage}
+            {displayMessage}
           </div>
-        ) : null}
+        )}
+
+        <form onSubmit={handleSignUp} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="signup-email">
+              Email
+            </label>
+            <input
+              id="signup-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="signup-password">
+              Password
+            </label>
+            <input
+              id="signup-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 6 characters"
+              className={inputClass}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={!email || !password || isBusy || !appConfig.hasSupabase}
+            className={ctaClass}
+          >
+            {isBusy ? 'Creating account…' : 'Create account'}
+          </button>
+        </form>
       </div>
     </main>
   );
