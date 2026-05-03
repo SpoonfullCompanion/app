@@ -31,6 +31,10 @@ export default function CaregiverHome({
 }: CaregiverHomeProps) {
   const [activeRoute, setActiveRoute] = React.useState<CaregiverNavRoute>('home');
 
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeRoute]);
+
   if (!session) return null;
 
   return (

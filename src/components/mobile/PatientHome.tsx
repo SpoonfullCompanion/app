@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BottomNavigation, { type NavRoute } from './BottomNavigation';
 import AppHeader from './AppHeader';
 import HomeScreen from './HomeScreen';
@@ -39,6 +39,10 @@ export default function PatientHome({
   const handleNavigate = (route: NavRoute) => {
     setActiveRoute(route);
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeRoute]);
 
   const handleToggleTTS = () => {
     setTtsEnabled(!ttsEnabled);
