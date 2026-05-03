@@ -456,6 +456,8 @@ function App() {
       onSignOut={handleSignOut}
       onReturnToMain={handleReturnToMain}
       onUpdateDisplayName={handleUpdateDisplayName}
+      onUpdateEmail={handleUpdateEmail}
+      onUpdatePassword={handleUpdatePassword}
       onUpdateAvatarIcon={handleUpdateAvatarIcon}
     />
   );
