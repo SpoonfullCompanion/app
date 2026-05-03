@@ -1,9 +1,11 @@
 import React from 'react';
 import CaregiverBottomNavigation, { type CaregiverNavRoute } from './CaregiverBottomNavigation';
 import CaregiverFeedScreen from './CaregiverFeedScreen';
+import CaregiverConnectionsScreen from './CaregiverConnectionsScreen';
 import CaregiverAccountScreen from './CaregiverAccountScreen';
 import AppHeader from './AppHeader';
 import type { AppSession, Pairing, StatusUpdate } from '../../types/app';
+import { getFollowerConnections } from '../../services/backend';
 
 interface CaregiverHomeProps {
   session: AppSession | null;
@@ -32,17 +34,33 @@ export default function CaregiverHome({
   onUpdateAvatarIcon,
 }: CaregiverHomeProps) {
   const [activeRoute, setActiveRoute] = React.useState<CaregiverNavRoute>('home');
-  // Track unseen count for the nav badge — derived from what the feed reports back
   const [unseenCount, setUnseenCount] = React.useState(0);
+  const [pendingConnectionCount, setPendingConnectionCount] = React.useState(0);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeRoute]);
 
-  // Clear badge when user navigates to feed
+  // Clear badges when navigating to respective tabs
   React.useEffect(() => {
     if (activeRoute === 'home') setUnseenCount(0);
+    if (activeRoute === 'connections') setPendingConnectionCount(0);
   }, [activeRoute]);
+
+  // Poll pending connection count for nav badge
+  const refreshPendingCount = React.useCallback(() => {
+    if (!session) return;
+    getFollowerConnections(session).then((conns) => {
+      const pending = conns.filter((c) => c.status === 'pending').length;
+      setPendingConnectionCount(pending);
+    }).catch(() => {});
+  }, [session]);
+
+  React.useEffect(() => {
+    refreshPendingCount();
+    const id = window.setInterval(refreshPendingCount, 15_000);
+    return () => window.clearInterval(id);
+  }, [refreshPendingCount]);
 
   if (!session) return null;
 
@@ -54,6 +72,12 @@ export default function CaregiverHome({
           <CaregiverFeedScreen
             session={session}
             legacyUpdates={recentUpdates}
+          />
+        )}
+        {activeRoute === 'connections' && (
+          <CaregiverConnectionsScreen
+            session={session}
+            onConnectionsChanged={refreshPendingCount}
           />
         )}
         {activeRoute === 'account' && (
@@ -72,6 +96,7 @@ export default function CaregiverHome({
         activeRoute={activeRoute}
         onNavigate={setActiveRoute}
         unseenCount={activeRoute === 'home' ? 0 : unseenCount}
+        pendingConnectionCount={activeRoute === 'connections' ? 0 : pendingConnectionCount}
       />
 
       {showReturnToMain && (
