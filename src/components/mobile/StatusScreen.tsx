@@ -83,7 +83,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
   const canSend = selectedEnergy !== null || selectedSymptoms.size > 0;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -203,25 +203,23 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="mx-auto max-w-2xl">
-            {sent ? (
-              <div className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
-                <CheckCircle className="h-5 w-5" />
-                Status updated
-              </div>
-            ) : (
-              <button
-                key={pulseKey}
-                onClick={() => void handleSendStatus()}
-                disabled={isSending || !canSend}
-                className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
-              >
-                <RefreshCw className="h-5 w-5" />
-                {isSending ? 'Updating...' : 'Update Status'}
-              </button>
-            )}
-          </div>
+        <div className="mt-8">
+          {sent ? (
+            <div className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
+              <CheckCircle className="h-5 w-5" />
+              Status updated
+            </div>
+          ) : (
+            <button
+              key={pulseKey}
+              onClick={() => void handleSendStatus()}
+              disabled={isSending || !canSend}
+              className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
+            >
+              <RefreshCw className="h-5 w-5" />
+              {isSending ? 'Updating...' : 'Update Status'}
+            </button>
+          )}
         </div>
       </div>
     </div>
