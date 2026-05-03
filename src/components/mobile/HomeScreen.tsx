@@ -108,19 +108,29 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
           })()}
 
           {/* Priority banner */}
-          {priority && (() => {
-            const PriorityIcon = priority.icon;
-            return (
-              <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
-                <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
-                <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
+          {isNeedsOnly && (
+            priority ? (() => {
+              const PriorityIcon = priority.icon;
+              return (
+                <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
+                  <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
+                  <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
+                  <div className="py-2 pr-3">
+                    <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
+                    <p className="mt-0.5 text-xs text-white/55">{priority.sublabel}</p>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="mb-3 flex items-center gap-3 overflow-hidden rounded-lg border bg-periwinkle/10 border-periwinkle/25">
+                <div className="w-1 self-stretch shrink-0 bg-periwinkle/50" />
+                <MessageSquare className="h-5 w-5 shrink-0 text-periwinkle/70" />
                 <div className="py-2 pr-3">
-                  <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                  <p className="mt-0.5 text-xs text-white/55">{priority.sublabel}</p>
+                  <p className="text-sm font-bold text-white leading-none">Need request</p>
                 </div>
               </div>
-            );
-          })()}
+            )
+          )}
 
           {/* Needs — solid bold-blue, clearly action-oriented */}
           {needs.length > 0 && (
