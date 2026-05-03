@@ -68,3 +68,19 @@
   animation: gentleGlow 2.5s ease-in-out infinite;
   will-change: filter;
 }
+
+@keyframes needsPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+.animate-needs-pulse {
+  animation: needsPulse 2.8s ease-in-out infinite;
+  will-change: opacity, transform;
+}
