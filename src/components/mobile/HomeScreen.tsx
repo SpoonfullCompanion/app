@@ -66,8 +66,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
 
   return (
     <div className="flex overflow-hidden rounded-2xl border border-periwinkle/20 bg-midnight-black/60 shadow-lg">
-      {/* Left color stripe keyed to energy level */}
-      <div className={`w-1 shrink-0 ${energyStyle?.stripe ?? 'bg-white/60'}`} />
+      {isNeedsOnly && <div className={`w-1 shrink-0 ${energyStyle?.stripe ?? 'bg-white/20'}`} />}
 
       <div className="flex-1 min-w-0">
         <div className="p-4">
@@ -154,28 +153,29 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
           )}
         </div>
 
-        {/* Read receipt footer */}
-        <div className="border-t border-white/5 px-4 py-3">
-          {hasNote ? (
-            <div className="flex items-start gap-2.5">
-              <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
-              <div>
-                <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/40">Helper replied</p>
-                <p className="text-sm text-off-white/80 italic">{response!.message}</p>
+        {isNeedsOnly && (
+          <div className="border-t border-white/5 px-4 py-3">
+            {hasNote ? (
+              <div className="flex items-start gap-2.5">
+                <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
+                <div>
+                  <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/40">Helper replied</p>
+                  <p className="text-sm text-off-white/80 italic">{response!.message}</p>
+                </div>
               </div>
-            </div>
-          ) : isSeen ? (
-            <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
-              <p className="text-xs font-medium text-green-300">Helper saw this</p>
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
-              <EyeOff className="h-3.5 w-3.5 text-off-white/40" />
-              <p className="text-xs text-off-white/50">Waiting for helper...</p>
-            </div>
-          )}
-        </div>
+            ) : isSeen ? (
+              <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                <p className="text-xs font-medium text-green-300">Helper saw this</p>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
+                <EyeOff className="h-3.5 w-3.5 text-off-white/40" />
+                <p className="text-xs text-off-white/50">Waiting for helper...</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
