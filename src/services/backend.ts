@@ -1113,7 +1113,15 @@ export async function getFriendStatusUpdates(
 
   if (error || !data) return [];
 
-  return data.map((row) => {
+  // Keep only the most recent update per friend
+  const seen = new Set<string>();
+  const deduped = data.filter((row) => {
+    if (seen.has(row.patient_id)) return false;
+    seen.add(row.patient_id);
+    return true;
+  });
+
+  return deduped.map((row) => {
     const base = mapStatusRecord(row);
     const friend = friendMap.get(base.patientId);
     return {
