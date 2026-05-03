@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Home, MessageSquare, Activity, Users } from 'lucide-react';
 
-export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account' | 'connections';
+export type NavRoute = 'home' | 'status' | 'needs' | 'hospital' | 'account' | 'connections' | 'archive';
 
 interface BottomNavigationProps {
   activeRoute: NavRoute;

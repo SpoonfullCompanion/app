@@ -1,11 +1,11 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
-import { getResponsesForPatient, getPatientConnections } from '../../services/backend';
+import { getResponsesForPatient, getPatientConnections, archivePatientUpdate, getPatientArchivedUpdateIds } from '../../services/backend';
 
 interface HomeScreenProps {
   session: AppSession | null;
@@ -47,7 +47,12 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
-function UpdateCard({ update, response }: { update: StatusUpdate; response: CaregiverResponse | null }) {
+function UpdateCard({ update, response, onArchive, archiving }: {
+  update: StatusUpdate;
+  response: CaregiverResponse | null;
+  onArchive: (id: string) => void;
+  archiving: boolean;
+}) {
   const energy = update.energyStatus
     ? ENERGY_STATUSES.find(e => e.id === update.energyStatus)
     : null;
@@ -76,9 +81,19 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
               {isNeedsOnly ? 'Needs' : 'Status'}
             </span>
-            <span className="text-xs text-off-white/60">
-              {formatDistanceToNow(update.sentAt)}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-off-white/60">
+                {formatDistanceToNow(update.sentAt)}
+              </span>
+              <button
+                onClick={() => onArchive(update.id)}
+                disabled={archiving}
+                className="text-off-white/30 transition-colors hover:text-off-white/70 active:scale-90 disabled:opacity-30"
+                title="Archive"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Energy */}
@@ -194,6 +209,8 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
 export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeScreenProps) {
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
   const [hasActiveConnections, setHasActiveConnections] = React.useState<boolean | null>(null);
+  const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
+  const [archivingId, setArchivingId] = React.useState<string | null>(null);
 
   const fetchResponses = React.useCallback(() => {
     if (!recentUpdates.length) return;
@@ -216,6 +233,21 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
       .then((conns) => setHasActiveConnections(conns.some(c => c.status === 'active')))
       .catch(() => setHasActiveConnections(true));
   }, [session]);
+
+  React.useEffect(() => {
+    if (!session || session.authMode === 'demo') return;
+    getPatientArchivedUpdateIds(session.profileId).then(setArchivedIds).catch(console.error);
+  }, [session]);
+
+  const handleArchive = async (updateId: string) => {
+    if (!session || session.authMode === 'demo') return;
+    setArchivingId(updateId);
+    await archivePatientUpdate(session.profileId, updateId);
+    setArchivedIds(prev => new Set([...prev, updateId]));
+    setArchivingId(null);
+  };
+
+  const visibleUpdates = recentUpdates.filter(u => !archivedIds.has(u.id));
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
@@ -240,15 +272,29 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
 
         {/* Recent updates section */}
         <div className="mb-8">
-          <div className="mb-4">
-            <p className="text-sm font-semibold text-off-white/80">Recent Updates</p>
-            <p className="text-xs text-off-white/70">What you sent your helper</p>
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-semibold text-off-white/80">Recent Updates</p>
+              <p className="text-xs text-off-white/70">What you sent your helper</p>
+            </div>
+            <button
+              onClick={() => onNavigate('archive' as NavRoute)}
+              className="text-xs text-periwinkle/70 hover:text-periwinkle transition-colors"
+            >
+              View archive
+            </button>
           </div>
 
-          {recentUpdates.length > 0 ? (
+          {visibleUpdates.length > 0 ? (
             <div className="space-y-3">
-              {recentUpdates.map((update) => (
-                <UpdateCard key={update.id} update={update} response={responses[update.id] ?? null} />
+              {visibleUpdates.map((update) => (
+                <UpdateCard
+                  key={update.id}
+                  update={update}
+                  response={responses[update.id] ?? null}
+                  onArchive={handleArchive}
+                  archiving={archivingId === update.id}
+                />
               ))}
             </div>
           ) : (

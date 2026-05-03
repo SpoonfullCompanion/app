@@ -1204,6 +1204,76 @@ export async function getArchivedUpdates(session: AppSession): Promise<StatusUpd
     .filter(Boolean) as StatusUpdate[];
 }
 
+// ─── Patient Archive ──────────────────────────────────────────────────────────
+
+const PATIENT_ARCHIVE_MAX = 20;
+
+export async function archivePatientUpdate(patientId: string, statusUpdateId: string): Promise<void> {
+  if (!supabase) return;
+
+  await supabase
+    .from('patient_archived_updates')
+    .upsert(
+      { patient_id: patientId, status_update_id: statusUpdateId },
+      { onConflict: 'patient_id,status_update_id' },
+    );
+
+  const { data } = await supabase
+    .from('patient_archived_updates')
+    .select('id, archived_at')
+    .eq('patient_id', patientId)
+    .order('archived_at', { ascending: false });
+
+  if (data && data.length > PATIENT_ARCHIVE_MAX) {
+    const toDelete = data.slice(PATIENT_ARCHIVE_MAX).map((r) => r.id);
+    await supabase.from('patient_archived_updates').delete().in('id', toDelete);
+  }
+}
+
+export async function unarchivePatientUpdate(patientId: string, statusUpdateId: string): Promise<void> {
+  if (!supabase) return;
+  await supabase
+    .from('patient_archived_updates')
+    .delete()
+    .eq('patient_id', patientId)
+    .eq('status_update_id', statusUpdateId);
+}
+
+export async function getPatientArchivedUpdateIds(patientId: string): Promise<Set<string>> {
+  if (!supabase) return new Set();
+  const { data } = await supabase
+    .from('patient_archived_updates')
+    .select('status_update_id')
+    .eq('patient_id', patientId)
+    .order('archived_at', { ascending: false })
+    .limit(PATIENT_ARCHIVE_MAX);
+
+  return new Set((data ?? []).map((r) => r.status_update_id as string));
+}
+
+export async function getPatientArchivedUpdates(session: AppSession): Promise<StatusUpdate[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  const { data, error } = await supabase
+    .from('patient_archived_updates')
+    .select(`archived_at, status_updates (*)`)
+    .eq('patient_id', session.profileId)
+    .order('archived_at', { ascending: false })
+    .limit(PATIENT_ARCHIVE_MAX);
+
+  if (error || !data) return [];
+
+  return data
+    .map((row) => {
+      const u = row.status_updates as Record<string, unknown> | null;
+      if (!u) return null;
+      return mapStatusRecord(u);
+    })
+    .filter(Boolean) as StatusUpdate[];
+}
+
+// ─── End Patient Archive ──────────────────────────────────────────────────────
+
 // ─── End Archive ──────────────────────────────────────────────────────────────
 
 // ─── End Connections ──────────────────────────────────────────────────────────
