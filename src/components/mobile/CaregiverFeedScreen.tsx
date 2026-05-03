@@ -17,6 +17,7 @@ interface CaregiverFeedScreenProps {
   session: AppSession;
   /** Legacy pairing updates passed from App.tsx; used as fallback when no connections exist. */
   legacyUpdates: StatusUpdate[];
+  onNavigateToConnections?: () => void;
 }
 
 const PRIORITY_CONFIG: Record<NeedPriority, {
@@ -265,7 +266,7 @@ function PatientSectionHeader({
 
 // ─── Main feed ────────────────────────────────────────────────────────────────
 
-export default function CaregiverFeedScreen({ session, legacyUpdates }: CaregiverFeedScreenProps) {
+export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections }: CaregiverFeedScreenProps) {
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
@@ -405,11 +406,16 @@ export default function CaregiverFeedScreen({ session, legacyUpdates }: Caregive
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
             <Users className="mx-auto mb-3 h-8 w-8 text-off-white/40" />
             <p className="text-sm text-off-white/70">No updates yet</p>
-            <p className="mt-1 text-xs text-off-white/50">
-              {activeConnections.length === 0
-                ? 'Connect with a patient to see their updates here'
-                : 'Patient updates will appear here once they send one'}
-            </p>
+            {activeConnections.length === 0 ? (
+              <button
+                onClick={onNavigateToConnections}
+                className="mt-2 text-xs text-periwinkle underline underline-offset-2 transition-opacity hover:opacity-80"
+              >
+                Connect with a patient to see their updates here
+              </button>
+            ) : (
+              <p className="mt-1 text-xs text-off-white/50">Patient updates will appear here once they send one</p>
+            )}
           </div>
         ) : isMultiPatient && patientIds.length > 1 ? (
           /* Multi-patient grouped view */

@@ -78,6 +78,7 @@ export default function CaregiverHome({
           <CaregiverFeedScreen
             session={session}
             legacyUpdates={recentUpdates}
+            onNavigateToConnections={() => setActiveRoute('connections')}
           />
         )}
         {activeRoute === 'connections' && (
