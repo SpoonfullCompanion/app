@@ -165,7 +165,7 @@ function UpdateCard({ update, response, onArchive, archiving }: {
 
           {/* Symptoms */}
           {symptoms.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className={`flex flex-wrap gap-1.5 ${update.messageText ? 'mb-3' : ''}`}>
               {symptoms.map(symptom => {
                 const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
@@ -176,6 +176,13 @@ function UpdateCard({ update, response, onArchive, archiving }: {
                 );
               })}
             </div>
+          )}
+
+          {/* Custom note / appreciation text */}
+          {update.messageText && (
+            <p className="text-sm leading-relaxed text-off-white/75 whitespace-pre-wrap">
+              {update.messageText}
+            </p>
           )}
         </div>
 
