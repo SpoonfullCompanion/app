@@ -414,6 +414,52 @@ export async function updateDisplayName(
   return { ok: true, message: 'Display name updated.', session: updated };
 }
 
+export async function updateEmail(
+  session: AppSession,
+  newEmail: string,
+): Promise<{ ok: boolean; message: string; session?: AppSession }> {
+  const trimmed = newEmail.trim().toLowerCase();
+  if (!trimmed) {
+    return { ok: false, message: 'Enter a new email address.' };
+  }
+
+  if (!supabase) {
+    return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  const { error } = await supabase.auth.updateUser({ email: trimmed });
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  const updated: AppSession = { ...session, email: trimmed };
+  writeStorage(STORAGE_KEYS.session, updated);
+  return {
+    ok: true,
+    message: 'Check your new email address for a confirmation link.',
+    session: updated,
+  };
+}
+
+export async function updatePassword(
+  newPassword: string,
+): Promise<{ ok: boolean; message: string }> {
+  if (!newPassword) {
+    return { ok: false, message: 'Enter a new password.' };
+  }
+
+  if (!supabase) {
+    return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: 'Password updated.' };
+}
+
 export async function signInWithPassword(email: string, password: string, role?: UserRole) {
   if (!supabase) {
     return { ok: false, message: 'Supabase is not configured.' };

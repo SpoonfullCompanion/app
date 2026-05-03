@@ -29,6 +29,8 @@ import {
   signOut,
   subscribeToStatusUpdates,
   updateDisplayName,
+  updateEmail,
+  updatePassword,
 } from './services/backend';
 
 function App() {
@@ -268,6 +270,19 @@ function App() {
     return result;
   };
 
+  const handleUpdateEmail = async (newEmail: string) => {
+    if (!session) return { ok: false, message: 'Not signed in.' };
+    const result = await updateEmail(session, newEmail);
+    if (result.ok && result.session) {
+      setSession(result.session);
+    }
+    return result;
+  };
+
+  const handleUpdatePassword = async (newPassword: string) => {
+    return updatePassword(newPassword);
+  };
+
   const handleSignOut = async () => {
     await signOut();
     setSession(null);
@@ -411,6 +426,8 @@ function App() {
         onReturnToMain={handleReturnToMain}
         onOpenPairing={() => setShowPairingScreen(true)}
         onUpdateDisplayName={handleUpdateDisplayName}
+        onUpdateEmail={handleUpdateEmail}
+        onUpdatePassword={handleUpdatePassword}
       />
     );
   }

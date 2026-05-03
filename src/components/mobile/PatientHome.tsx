@@ -20,6 +20,8 @@ interface PatientHomeProps {
   onReturnToMain: () => Promise<void>;
   onOpenPairing: () => void;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
+  onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
+  onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 export default function PatientHome({
@@ -34,6 +36,8 @@ export default function PatientHome({
   onReturnToMain,
   onOpenPairing,
   onUpdateDisplayName,
+  onUpdateEmail,
+  onUpdatePassword,
 }: PatientHomeProps) {
   const [activeRoute, setActiveRoute] = useState<NavRoute>('home');
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -88,6 +92,8 @@ export default function PatientHome({
             onSignOut={onSignOut}
             onOpenPairing={onOpenPairing}
             onUpdateDisplayName={onUpdateDisplayName}
+            onUpdateEmail={onUpdateEmail}
+            onUpdatePassword={onUpdatePassword}
           />
         )}
       </div>
