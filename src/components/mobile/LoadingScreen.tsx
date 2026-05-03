@@ -12,6 +12,12 @@ export function LoadingScreen() {
           />
         </div>
 
+        <img
+          src="/Spoonfull-Logo-DarkBG.svg"
+          alt="Spoonfull"
+          className="w-40 h-auto opacity-90 md:w-48"
+        />
+
         <div className="flex flex-col items-center gap-2">
           <p className="text-[#7894FF] text-lg font-medium animate-pulse">
             Loading...
