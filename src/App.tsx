@@ -297,7 +297,7 @@ function App() {
     await signOut();
     setSession(null);
     setPairing(null);
-    setLatestStatus(null);
+    setRecentUpdates([]);
     setDidDismissPairingSetup(false);
     setAuthMessage('');
     setPairingMessage('');
@@ -309,7 +309,7 @@ function App() {
     setShowSignup(false);
     setShowDemoRoleSelection(false);
     setPairing(null);
-    setLatestStatus(null);
+    setRecentUpdates([]);
     setDidDismissPairingSetup(false);
     setAuthMessage('');
     setPairingMessage('');
@@ -339,8 +339,8 @@ function App() {
     const result = await joinInviteCode(session, code);
     if (result.ok && result.pairing) {
       updatePairingState(result.pairing);
-      const update = await getLatestStatus(session, result.pairing);
-      setLatestStatus(update);
+      const updates = await getRecentUpdates(session, result.pairing);
+      setRecentUpdates(updates);
     }
 
     return result.message ?? 'Pairing updated.';
@@ -357,7 +357,7 @@ function App() {
     }
 
     updatePairingState(null);
-    setLatestStatus(null);
+    setRecentUpdates([]);
     return 'Ready for a new invite code.';
   };
 

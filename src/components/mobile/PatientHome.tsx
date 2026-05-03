@@ -78,6 +78,7 @@ export default function PatientHome({
       <div key={activeRoute} className="animate-fade-up">
         {activeRoute === 'home' && (
           <HomeScreen
+            session={session}
             recentUpdates={recentUpdates}
             onNavigate={handleNavigate}
           />

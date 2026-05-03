@@ -65,7 +65,9 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     }
     setIsSearching(true);
     const results = await searchProfiles(session, value);
-    setSearchResults(results.filter((r) => !existingFollowerIds.has(r.profileId)));
+    setSearchResults(
+      results.filter((r) => r.role === 'caregiver' && !existingFollowerIds.has(r.profileId))
+    );
     setIsSearching(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, connections]);
@@ -80,13 +82,13 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
 
   const handleRequest = async (target: SearchResult) => {
     setRequestingId(target.profileId);
-    // Patient is inviting a caregiver: patient = session, follower = target
     const result = await requestConnection(session, target.profileId, 'caregiver', true);
     setRequestMessages((prev) => ({ ...prev, [target.profileId]: result.message }));
     setRequestingId(null);
     if (result.ok) {
       void loadConnections();
       setSearchResults((prev) => prev.filter((r) => r.profileId !== target.profileId));
+      setTab('requests');
     }
   };
 
@@ -94,7 +96,8 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     setRespondingId(connectionId);
     await respondToConnection(session, connectionId, accept);
     setRespondingId(null);
-    void loadConnections();
+    await loadConnections();
+    if (accept) setTab('caregivers');
   };
 
   const handleRemove = async (connectionId: string) => {
@@ -121,7 +124,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by display name…"
+              placeholder="Search helpers by display name…"
               autoCapitalize="none"
               autoCorrect="off"
               className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-sm text-off-white placeholder-off-white/30 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
@@ -145,7 +148,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                     <AvatarIcon iconId={result.avatarIcon} size="sm" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-off-white text-sm truncate">{result.displayName}</p>
-                      <p className="text-xs text-off-white/40 capitalize">{result.role}</p>
+                      <p className="text-xs text-off-white/40">Helper</p>
                     </div>
                     {requestMessages[result.profileId] ? (
                       <span className="text-xs text-periwinkle">{requestMessages[result.profileId]}</span>

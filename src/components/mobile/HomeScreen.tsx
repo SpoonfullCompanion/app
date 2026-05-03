@@ -1,13 +1,14 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
-import type { CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
+import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
-import { getResponsesForPatient } from '../../services/backend';
+import { getResponsesForPatient, getPatientConnections } from '../../services/backend';
 
 interface HomeScreenProps {
+  session: AppSession | null;
   recentUpdates: StatusUpdate[];
   onNavigate: (route: NavRoute) => void;
 }
@@ -39,11 +40,11 @@ const PRIORITY_CONFIG: Record<NeedPriority, { label: string; sublabel: string; i
   },
 };
 
-const energyStyles: Record<string, { pill: string; dot: string; bar: string; stripe: string }> = {
-  crashing:  { pill: 'bg-red-950/70 border-red-600/50 text-red-200',      dot: 'bg-red-500',    bar: 'bg-red-700',    stripe: 'bg-red-600' },
-  low:       { pill: 'bg-orange-950/70 border-orange-600/50 text-orange-200', dot: 'bg-orange-400', bar: 'bg-orange-600', stripe: 'bg-orange-500' },
-  resting:   { pill: 'bg-yellow-950/70 border-yellow-600/50 text-yellow-200', dot: 'bg-yellow-400', bar: 'bg-yellow-600', stripe: 'bg-yellow-500' },
-  available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',  dot: 'bg-green-400',  bar: 'bg-green-600',  stripe: 'bg-green-500' },
+const energyStyles: Record<string, { pill: string; dot: string; bar: string }> = {
+  crashing:  { pill: 'bg-red-950/70 border-red-600/50 text-red-200',         dot: 'bg-red-500',    bar: 'bg-red-700'    },
+  low:       { pill: 'bg-orange-950/70 border-orange-600/50 text-orange-200', dot: 'bg-orange-400', bar: 'bg-orange-600' },
+  resting:   { pill: 'bg-yellow-950/70 border-yellow-600/50 text-yellow-200', dot: 'bg-yellow-400', bar: 'bg-yellow-600' },
+  available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
 function UpdateCard({ update, response }: { update: StatusUpdate; response: CaregiverResponse | null }) {
@@ -107,7 +108,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             );
           })()}
 
-          {/* Priority banner */}
+          {/* Priority banner (needs-only) */}
           {isNeedsOnly && (
             priority ? (() => {
               const PriorityIcon = priority.icon;
@@ -132,7 +133,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             )
           )}
 
-          {/* Needs — solid bold-blue, clearly action-oriented */}
+          {/* Needs */}
           {needs.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {needs.map(need => {
@@ -147,7 +148,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             </div>
           )}
 
-          {/* Symptoms — muted, informational */}
+          {/* Symptoms */}
           {symptoms.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {symptoms.map(symptom => {
@@ -163,36 +164,36 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
           )}
         </div>
 
-        {isNeedsOnly && (
-          <div className="border-t border-white/5 px-4 py-3">
-            {hasNote ? (
-              <div className="flex items-start gap-2.5">
-                <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
-                <div>
-                  <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/40">Helper replied</p>
-                  <p className="text-sm text-off-white/80 italic">{response!.message}</p>
-                </div>
+        {/* Helper response footer — shown on all update types */}
+        <div className="border-t border-white/5 px-4 py-3">
+          {hasNote ? (
+            <div className="flex items-start gap-2.5">
+              <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
+              <div>
+                <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/40">Helper replied</p>
+                <p className="text-sm text-off-white/80 italic">{response!.message}</p>
               </div>
-            ) : isSeen ? (
-              <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
-                <p className="text-xs font-medium text-green-300">Helper saw this</p>
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
-                <EyeOff className="h-3.5 w-3.5 text-off-white/40" />
-                <p className="text-xs text-off-white/50">Waiting for helper...</p>
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          ) : isSeen ? (
+            <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+              <p className="text-xs font-medium text-green-300">Helper saw this</p>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
+              <EyeOff className="h-3.5 w-3.5 text-off-white/40" />
+              <p className="text-xs text-off-white/50">Waiting for helper...</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-export default function HomeScreen({ recentUpdates, onNavigate }: HomeScreenProps) {
+export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeScreenProps) {
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
+  const [hasActiveConnections, setHasActiveConnections] = React.useState<boolean | null>(null);
 
   const fetchResponses = React.useCallback(() => {
     if (!recentUpdates.length) return;
@@ -206,9 +207,36 @@ export default function HomeScreen({ recentUpdates, onNavigate }: HomeScreenProp
     return () => window.clearInterval(id);
   }, [fetchResponses]);
 
+  React.useEffect(() => {
+    if (!session || session.authMode === 'demo') {
+      setHasActiveConnections(true);
+      return;
+    }
+    getPatientConnections(session)
+      .then((conns) => setHasActiveConnections(conns.some(c => c.status === 'active')))
+      .catch(() => setHasActiveConnections(true));
+  }, [session]);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
+
+        {/* No-connections nudge */}
+        {hasActiveConnections === false && (
+          <button
+            onClick={() => onNavigate('connections')}
+            className="mb-6 flex w-full items-center gap-4 rounded-2xl border border-bold-blue/40 bg-bold-blue/10 px-4 py-4 text-left transition-all hover:bg-bold-blue/15 active:scale-[0.98]"
+          >
+            <div className="rounded-full bg-bold-blue/20 p-2.5 shrink-0">
+              <Users className="h-5 w-5 text-bold-blue" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white">Connect a helper</p>
+              <p className="text-xs text-off-white/55 mt-0.5">Your updates won't reach anyone until you add a helper</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-bold-blue/60 shrink-0" />
+          </button>
+        )}
 
         {/* Recent updates section */}
         <div className="mb-8">
@@ -231,7 +259,7 @@ export default function HomeScreen({ recentUpdates, onNavigate }: HomeScreenProp
           )}
         </div>
 
-        {/* Action cards section */}
+        {/* Action cards */}
         <div className="mb-3">
           <div className="mb-4">
             <p className="text-sm font-semibold text-off-white/80">Communicate</p>
@@ -239,7 +267,6 @@ export default function HomeScreen({ recentUpdates, onNavigate }: HomeScreenProp
           </div>
 
           <div className="space-y-3">
-            {/* Needs card — primary action, visually prominent */}
             <button
               onClick={() => onNavigate('needs')}
               className="group relative w-full overflow-hidden rounded-xl border-2 border-bold-blue bg-bold-blue/20 p-5 text-left transition-all active:scale-[0.98] hover:bg-bold-blue/30"
@@ -257,7 +284,6 @@ export default function HomeScreen({ recentUpdates, onNavigate }: HomeScreenProp
               </div>
             </button>
 
-            {/* Status card */}
             <button
               onClick={() => onNavigate('status')}
               className="group w-full rounded-xl border border-bold-blue/40 bg-bold-blue/15 p-4 text-left transition-all active:scale-[0.98] hover:bg-bold-blue/25 hover:border-bold-blue/60"
@@ -274,7 +300,6 @@ export default function HomeScreen({ recentUpdates, onNavigate }: HomeScreenProp
               </div>
             </button>
 
-            {/* Hospital mode card */}
             <button
               onClick={() => onNavigate('hospital')}
               className="group w-full rounded-xl border border-periwinkle/30 bg-periwinkle/10 p-4 text-left transition-all active:scale-[0.98] hover:bg-periwinkle/15 hover:border-periwinkle/50"
