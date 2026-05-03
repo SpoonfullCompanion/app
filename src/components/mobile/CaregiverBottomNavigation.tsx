@@ -46,7 +46,7 @@ export default function CaregiverBottomNavigation({
               className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all duration-150 active:scale-95 ${
                 isActive
                   ? 'bg-bold-blue/20 text-bold-blue'
-                  : 'text-off-white/50 hover:text-off-white/80'
+                  : 'text-off-white/75 hover:text-off-white'
               }`}
             >
               <div className="relative">
