@@ -27,6 +27,25 @@ export interface AppSession {
   avatarIcon: string | null;
 }
 
+export type ConnectionType = 'caregiver' | 'patient_friend';
+export type ConnectionStatus = 'pending' | 'active' | 'declined';
+
+export interface Connection {
+  id: string;
+  patientId: string;
+  followerId: string;
+  connectionType: ConnectionType;
+  status: ConnectionStatus;
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  /** Denormalized from profiles — populated when fetching connection lists */
+  patientDisplayName?: string;
+  patientAvatarIcon?: string | null;
+  followerDisplayName?: string;
+  followerAvatarIcon?: string | null;
+}
+
 export interface Pairing {
   id: string;
   code: string;

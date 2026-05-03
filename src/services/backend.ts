@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabaseClient';
 import type {
   AppSession,
   CaregiverResponse,
+  Connection,
+  ConnectionType,
   Pairing,
   CommunicationSubmission,
   StatusUpdate,
@@ -872,6 +874,15 @@ export async function getRecentUpdates(session: AppSession, pairing: Pairing | n
     return localUpdates;
   }
 
+  // For caregivers without a legacy pairing, prefer the connections-based query
+  if (session.role === 'caregiver' && !pairing) {
+    const connectedUpdates = await getUpdatesForConnectedPatients(session, limit);
+    if (connectedUpdates.length) {
+      connectedUpdates.forEach(addStatusUpdate);
+      return connectedUpdates;
+    }
+  }
+
   let query = supabase
     .from('status_updates')
     .select('*')
@@ -1022,6 +1033,220 @@ export async function getResponsesForUpdates(
   }
   return map;
 }
+
+// ─── Connections ─────────────────────────────────────────────────────────────
+
+function mapConnectionRecord(row: Record<string, unknown>, patientProfile?: Record<string, unknown> | null, followerProfile?: Record<string, unknown> | null): Connection {
+  return {
+    id: row.id as string,
+    patientId: row.patient_id as string,
+    followerId: row.follower_id as string,
+    connectionType: row.connection_type as Connection['connectionType'],
+    status: row.status as Connection['status'],
+    requestedBy: row.requested_by as string,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+    patientDisplayName: (patientProfile?.display_name as string | undefined) ?? (row.patient_display_name as string | undefined),
+    patientAvatarIcon: (patientProfile?.avatar_icon as string | null | undefined) ?? (row.patient_avatar_icon as string | null | undefined),
+    followerDisplayName: (followerProfile?.display_name as string | undefined) ?? (row.follower_display_name as string | undefined),
+    followerAvatarIcon: (followerProfile?.avatar_icon as string | null | undefined) ?? (row.follower_avatar_icon as string | null | undefined),
+  };
+}
+
+/** Request a connection. Either side can initiate. */
+export async function requestConnection(
+  session: AppSession,
+  targetProfileId: string,
+  connectionType: ConnectionType,
+  asPatient: boolean,
+): Promise<{ ok: boolean; message: string; connection?: Connection }> {
+  if (!supabase) return { ok: false, message: 'Supabase is not configured.' };
+
+  const patientId = asPatient ? session.profileId : targetProfileId;
+  const followerId = asPatient ? targetProfileId : session.profileId;
+
+  const { data, error } = await supabase
+    .from('connections')
+    .insert({
+      patient_id: patientId,
+      follower_id: followerId,
+      connection_type: connectionType,
+      status: 'pending',
+      requested_by: session.profileId,
+    })
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === '23505') {
+      return { ok: false, message: 'A connection with this person already exists.' };
+    }
+    return { ok: false, message: error.message };
+  }
+
+  if (!data) return { ok: false, message: 'Failed to create connection.' };
+  return { ok: true, message: 'Connection request sent.', connection: mapConnectionRecord(data) };
+}
+
+/** Patient approves or declines a pending connection request. */
+export async function respondToConnection(
+  session: AppSession,
+  connectionId: string,
+  accept: boolean,
+): Promise<{ ok: boolean; message: string; connection?: Connection }> {
+  if (!supabase) return { ok: false, message: 'Supabase is not configured.' };
+
+  const newStatus = accept ? 'active' : 'declined';
+  const { data, error } = await supabase
+    .from('connections')
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq('id', connectionId)
+    .eq('patient_id', session.profileId)
+    .select()
+    .maybeSingle();
+
+  if (error) return { ok: false, message: error.message };
+  if (!data) return { ok: false, message: 'Connection not found or not authorised.' };
+  return {
+    ok: true,
+    message: accept ? 'Connection accepted.' : 'Connection declined.',
+    connection: mapConnectionRecord(data),
+  };
+}
+
+/** Remove an active connection (either side can disconnect). */
+export async function removeConnection(
+  session: AppSession,
+  connectionId: string,
+): Promise<{ ok: boolean; message: string }> {
+  if (!supabase) return { ok: false, message: 'Supabase is not configured.' };
+
+  const { error } = await supabase
+    .from('connections')
+    .delete()
+    .eq('id', connectionId)
+    .or(`patient_id.eq.${session.profileId},follower_id.eq.${session.profileId}`);
+
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: 'Connection removed.' };
+}
+
+/** Get all active connections for a patient (their caregivers + patient friends). */
+export async function getPatientConnections(session: AppSession): Promise<Connection[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  const { data, error } = await supabase
+    .from('connections')
+    .select(`
+      *,
+      follower:profiles!connections_follower_id_fkey(display_name, avatar_icon)
+    `)
+    .eq('patient_id', session.profileId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const follower = row.follower as Record<string, unknown> | null;
+    return {
+      id: row.id,
+      patientId: row.patient_id,
+      followerId: row.follower_id,
+      connectionType: row.connection_type as Connection['connectionType'],
+      status: row.status as Connection['status'],
+      requestedBy: row.requested_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      followerDisplayName: follower?.display_name as string | undefined,
+      followerAvatarIcon: follower?.avatar_icon as string | null | undefined,
+    };
+  });
+}
+
+/** Get all active patients for a caregiver or patient-friend follower. */
+export async function getFollowerConnections(session: AppSession): Promise<Connection[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  const { data, error } = await supabase
+    .from('connections')
+    .select(`
+      *,
+      patient:profiles!connections_patient_id_fkey(display_name, avatar_icon)
+    `)
+    .eq('follower_id', session.profileId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const patient = row.patient as Record<string, unknown> | null;
+    return {
+      id: row.id,
+      patientId: row.patient_id,
+      followerId: row.follower_id,
+      connectionType: row.connection_type as Connection['connectionType'],
+      status: row.status as Connection['status'],
+      requestedBy: row.requested_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      patientDisplayName: patient?.display_name as string | undefined,
+      patientAvatarIcon: patient?.avatar_icon as string | null | undefined,
+    };
+  });
+}
+
+/** Search profiles by display name (case-insensitive prefix match). Returns up to 10 results. */
+export async function searchProfiles(
+  session: AppSession,
+  query: string,
+): Promise<Array<{ profileId: string; displayName: string; role: UserRole; avatarIcon: string | null }>> {
+  if (!supabase || !query.trim()) return [];
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, display_name, role, avatar_icon')
+    .ilike('display_name', `${query.trim()}%`)
+    .neq('id', session.profileId)
+    .limit(10);
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    profileId: row.id as string,
+    displayName: row.display_name as string,
+    role: row.role as UserRole,
+    avatarIcon: row.avatar_icon as string | null,
+  }));
+}
+
+/** Get recent status updates for all of a caregiver's active patients (via connections). */
+export async function getUpdatesForConnectedPatients(
+  session: AppSession,
+  limit = 20,
+): Promise<StatusUpdate[]> {
+  if (!supabase || session.authMode === 'demo') {
+    return getRecentUpdates(session, null, limit);
+  }
+
+  const connections = await getFollowerConnections(session);
+  const activePatientIds = connections
+    .filter((c) => c.status === 'active')
+    .map((c) => c.patientId);
+
+  if (!activePatientIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('status_updates')
+    .select('*')
+    .in('patient_id', activePatientIds)
+    .order('sent_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map(mapStatusRecord);
+}
+
+// ─── End Connections ──────────────────────────────────────────────────────────
 
 export async function getResponsesForPatient(
   statusUpdateIds: string[],
