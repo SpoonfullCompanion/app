@@ -91,6 +91,7 @@ export default function PatientHome({
             onToggleTTS={handleToggleTTS}
             onSendUpdate={onSendUpdate}
             profileId={session?.profileId || ''}
+            session={session}
             onNavigate={handleNavigate}
           />
         )}

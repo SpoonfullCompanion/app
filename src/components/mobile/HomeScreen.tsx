@@ -1,11 +1,11 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
-import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
+import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
-import { getResponsesForPatient, getPatientConnections, archivePatientUpdate, getPatientArchivedUpdateIds } from '../../services/backend';
+import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds } from '../../services/backend';
 
 interface HomeScreenProps {
   session: AppSession | null;
@@ -47,11 +47,12 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
-function UpdateCard({ update, response, onArchive, archiving }: {
+function UpdateCard({ update, response, onArchive, archiving, helperMap }: {
   update: StatusUpdate;
   response: CaregiverResponse | null;
   onArchive: (id: string) => void;
   archiving: boolean;
+  helperMap: Map<string, string>;
 }) {
   const energy = update.energyStatus
     ? ENERGY_STATUSES.find(e => e.id === update.energyStatus)
@@ -163,6 +164,20 @@ function UpdateCard({ update, response, onArchive, archiving }: {
             </div>
           )}
 
+          {/* Sent to — only for need updates with explicit targeting */}
+          {isNeedsOnly && update.targetedFollowerIds && update.targetedFollowerIds.length > 0 && (() => {
+            const names = update.targetedFollowerIds
+              .map((id) => helperMap.get(id))
+              .filter(Boolean) as string[];
+            const label = names.length > 0 ? names.join(', ') : 'Selected helpers';
+            return (
+              <div className="mb-2 flex items-center gap-1.5 text-xs text-off-white/55">
+                <SendHorizonal className="h-3 w-3 shrink-0" />
+                <span>Sent to: {label}</span>
+              </div>
+            );
+          })()}
+
           {/* Symptoms */}
           {symptoms.length > 0 && (
             <div className={`flex flex-wrap gap-1.5 ${update.messageText ? 'mb-3' : ''}`}>
@@ -218,6 +233,16 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
   const [hasActiveConnections, setHasActiveConnections] = React.useState<boolean | null>(null);
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
   const [archivingId, setArchivingId] = React.useState<string | null>(null);
+  const [helpers, setHelpers] = React.useState<Connection[]>([]);
+
+  // Map of follower profile ID -> display name for "Sent to" labels
+  const helperMap = React.useMemo(() => {
+    const m = new Map<string, string>();
+    for (const h of helpers) {
+      m.set(h.followerId, h.followerDisplayName ?? 'Helper');
+    }
+    return m;
+  }, [helpers]);
 
   const fetchResponses = React.useCallback(() => {
     if (!recentUpdates.length) return;
@@ -239,6 +264,11 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
     getPatientConnections(session)
       .then((conns) => setHasActiveConnections(conns.some(c => c.status === 'active')))
       .catch(() => setHasActiveConnections(true));
+  }, [session]);
+
+  React.useEffect(() => {
+    if (!session || session.authMode === 'demo') return;
+    getActiveHelpers(session).then(setHelpers).catch(console.error);
   }, [session]);
 
   React.useEffect(() => {
@@ -301,6 +331,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
                   response={responses[update.id] ?? null}
                   onArchive={handleArchive}
                   archiving={archivingId === update.id}
+                  helperMap={helperMap}
                 />
               ))}
             </div>

@@ -595,6 +595,12 @@ export async function completeAuthFromUrl(url: string) {
 }
 
 export async function sendStatusUpdate(session: AppSession, submission: CommunicationSubmission) {
+  // Only need submissions can be targeted; status updates always broadcast (null)
+  const targetedFollowerIds =
+    submission.type === 'need' && submission.targetedFollowerIds?.length
+      ? submission.targetedFollowerIds
+      : null;
+
   const update: StatusUpdate = {
     id: crypto.randomUUID(),
     patientId: session.profileId,
@@ -607,6 +613,7 @@ export async function sendStatusUpdate(session: AppSession, submission: Communic
     sentAt: new Date().toISOString(),
     delivery: 'sent',
     needPriority: submission.needPriority ?? null,
+    targetedFollowerIds,
   };
 
   addStatusUpdate(update);
@@ -625,6 +632,7 @@ export async function sendStatusUpdate(session: AppSession, submission: Communic
       sent_at: update.sentAt,
       delivery: update.delivery,
       need_priority: update.needPriority ?? null,
+      targeted_follower_ids: targetedFollowerIds,
     });
 
     if (error) {
@@ -648,6 +656,7 @@ function mapStatusRecord(data: Record<string, unknown>): StatusUpdate {
     sentAt: data.sent_at as string,
     delivery: data.delivery as 'sent' | 'draft',
     needPriority: (data.need_priority as StatusUpdate['needPriority']) ?? null,
+    targetedFollowerIds: (data.targeted_follower_ids as string[] | null) ?? null,
   };
 }
 
@@ -914,6 +923,12 @@ export async function removeConnection(
 
   if (error) return { ok: false, message: error.message };
   return { ok: true, message: 'Connection removed.' };
+}
+
+/** Returns only the active caregiver-type helpers following this patient. */
+export async function getActiveHelpers(session: AppSession): Promise<Connection[]> {
+  const all = await getPatientConnections(session);
+  return all.filter((c) => c.status === 'active' && c.connectionType === 'caregiver');
 }
 
 /** Get all connections for a patient: rows where they are the patient (helpers following them)

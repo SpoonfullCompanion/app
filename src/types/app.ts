@@ -60,6 +60,8 @@ export interface StatusUpdate {
   sentAt: string;
   delivery: 'sent' | 'draft';
   needPriority?: NeedPriority | null;
+  /** null = broadcast to all active helpers; non-null = targeted helper profile IDs */
+  targetedFollowerIds?: string[] | null;
   /** Denormalized — populated on friend feed updates */
   patientDisplayName?: string;
   patientAvatarIcon?: string | null;
@@ -92,4 +94,6 @@ export interface CommunicationSubmission {
   message?: string;
   messageText?: string;
   needPriority?: NeedPriority | null;
+  /** null = all helpers; array of profile IDs = targeted send */
+  targetedFollowerIds?: string[] | null;
 }

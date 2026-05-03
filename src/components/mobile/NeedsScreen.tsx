@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Send, Clock, Zap, Hourglass, HandHeart, Star, Heart, CheckCircle } from 'lucide-react';
+import { Volume2, VolumeX, Send, Clock, Zap, Hourglass, HandHeart, Star, Heart, CheckCircle, Users, Check } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { NEEDS } from '../../utils/communicationData';
 import { speak } from '../../utils/textToSpeech';
-import type { CommunicationSubmission, NeedPriority } from '../../types/app';
+import type { AppSession, Connection, CommunicationSubmission, NeedPriority } from '../../types/app';
+import { getActiveHelpers } from '../../services/backend';
+import AvatarIcon from '../AvatarIcon';
 
 interface NeedsScreenProps {
   ttsEnabled: boolean;
   onToggleTTS: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
   profileId: string;
+  session: AppSession | null;
   onNavigate: (route: 'hospital') => void;
 }
 
@@ -46,7 +49,7 @@ const APPRECIATION: { id: string; label: string; icon: React.ComponentType<{ cla
   { id: 'i_love_you', label: 'I love you', icon: Heart },
 ];
 
-export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onNavigate }: NeedsScreenProps) {
+export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, session, onNavigate }: NeedsScreenProps) {
   const [selectedNeeds, setSelectedNeeds] = useState<Set<string>>(new Set());
   const [selectedPriority, setSelectedPriority] = useState<NeedPriority | null>(null);
   const [selectedAppreciation, setSelectedAppreciation] = useState<Set<string>>(new Set());
@@ -54,6 +57,18 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
   const [sent, setSent] = useState(false);
   const [customNote, setCustomNote] = useState('');
   const [pulseKey, setPulseKey] = useState(0);
+  const [helpers, setHelpers] = useState<Connection[]>([]);
+  const [selectedHelperIds, setSelectedHelperIds] = useState<Set<string>>(new Set());
+
+  // Load active helpers once on mount
+  useEffect(() => {
+    if (!session || session.authMode === 'demo') return;
+    getActiveHelpers(session).then((conns) => {
+      setHelpers(conns);
+      // Default: all selected (broadcast)
+      setSelectedHelperIds(new Set(conns.map((c) => c.followerId)));
+    }).catch(console.error);
+  }, [session]);
 
   useEffect(() => {
     if (!sent) return;
@@ -101,11 +116,16 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
         .filter(Boolean) as string[];
       if (appreciationMessages.length > 0) parts.push(appreciationMessages.join('. '));
 
+      // null = broadcast (all helpers selected, or demo/no helpers); array = targeted
+      const allSelected = helpers.length === 0 || selectedHelperIds.size === helpers.length;
+      const targetedFollowerIds = allSelected ? null : Array.from(selectedHelperIds);
+
       await onSendUpdate({
         type: 'need',
         selectedNeeds: needsArray,
         message: parts.join('. '),
         needPriority: selectedPriority,
+        targetedFollowerIds,
       });
 
       setSelectedNeeds(new Set());
@@ -266,6 +286,78 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
             })}
           </div>
         </div>
+
+        {/* Helper selector — only shown when patient has multiple helpers */}
+        {helpers.length > 1 && (
+          <div className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
+              Send to <span className="text-off-white/60 normal-case font-normal">(select helpers)</span>
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {/* "All" chip */}
+              <button
+                onClick={() => {
+                  if (selectedHelperIds.size === helpers.length) {
+                    // deselect all but keep at least one — keep all selected (UX: can't send to nobody)
+                    return;
+                  }
+                  setSelectedHelperIds(new Set(helpers.map((h) => h.followerId)));
+                }}
+                className={`flex items-center gap-2 rounded-full border-2 px-3.5 py-2 text-sm font-medium transition-all duration-150 active:scale-95 ${
+                  selectedHelperIds.size === helpers.length
+                    ? 'border-bold-blue bg-bold-blue text-white shadow-lg shadow-bold-blue/30'
+                    : 'border-periwinkle/30 bg-midnight-black/60 text-off-white/80 hover:border-periwinkle/50'
+                }`}
+              >
+                <Users className="h-3.5 w-3.5" />
+                All helpers
+                {selectedHelperIds.size === helpers.length && (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+              </button>
+
+              {/* Individual helper chips */}
+              {helpers.map((helper) => {
+                const isSelected = selectedHelperIds.has(helper.followerId);
+                const name = helper.followerDisplayName ?? 'Helper';
+                return (
+                  <button
+                    key={helper.followerId}
+                    onClick={() => {
+                      const next = new Set(selectedHelperIds);
+                      if (isSelected) {
+                        // Don't allow deselecting the last helper
+                        if (next.size === 1) return;
+                        next.delete(helper.followerId);
+                      } else {
+                        next.add(helper.followerId);
+                      }
+                      setSelectedHelperIds(next);
+                    }}
+                    className={`flex items-center gap-2 rounded-full border-2 px-3.5 py-2 text-sm font-medium transition-all duration-150 active:scale-95 ${
+                      isSelected
+                        ? 'border-bold-blue bg-bold-blue text-white shadow-lg shadow-bold-blue/30'
+                        : 'border-periwinkle/30 bg-midnight-black/60 text-off-white/80 hover:border-periwinkle/50'
+                    }`}
+                  >
+                    {helper.followerAvatarIcon ? (
+                      <AvatarIcon iconId={helper.followerAvatarIcon} size="sm" className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full bg-white/20 shrink-0" />
+                    )}
+                    {name}
+                    {isSelected && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedHelperIds.size < helpers.length && (
+              <p className="mt-2 text-xs text-off-white/55">
+                Sending to {selectedHelperIds.size} of {helpers.length} helper{helpers.length > 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="mx-auto max-w-2xl">
