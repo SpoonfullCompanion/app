@@ -1,7 +1,9 @@
 import React from 'react';
-import { Bell, Link2, LogIn, LogOut, Mail, User, Construction } from 'lucide-react';
+import { Bell, Link2, LogIn, LogOut, Mail, Pencil, Check, X, Construction } from 'lucide-react';
 import type { AppSession, Pairing } from '../../types/app';
 import { getNotificationStatus, requestLocalNotificationPermission, scheduleLocalReminder } from '../../services/notifications';
+import AvatarIcon from '../AvatarIcon';
+import AvatarIconPicker from '../AvatarIconPicker';
 
 interface CaregiverAccountScreenProps {
   session: AppSession | null;
@@ -10,6 +12,7 @@ interface CaregiverAccountScreenProps {
   onJoinInviteCode: (code: string) => Promise<string>;
   onLeavePairing: () => Promise<string>;
   onSignOut: () => Promise<void>;
+  onUpdateAvatarIcon: (iconId: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 export default function CaregiverAccountScreen({
@@ -19,10 +22,21 @@ export default function CaregiverAccountScreen({
   onJoinInviteCode,
   onLeavePairing,
   onSignOut,
+  onUpdateAvatarIcon,
 }: CaregiverAccountScreenProps) {
   const [code, setCode] = React.useState('');
   const [message, setMessage] = React.useState('');
   const [notificationMessage, setNotificationMessage] = React.useState('');
+  const [editingIcon, setEditingIcon] = React.useState(false);
+  const [draftIcon, setDraftIcon] = React.useState(session?.avatarIcon ?? 'leaf');
+  const [savingIcon, setSavingIcon] = React.useState(false);
+
+  const handleSaveIcon = async () => {
+    setSavingIcon(true);
+    await onUpdateAvatarIcon(draftIcon);
+    setSavingIcon(false);
+    setEditingIcon(false);
+  };
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +91,53 @@ export default function CaregiverAccountScreen({
 
         {/* Profile */}
         <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Profile</div>
-        <div className="mb-6 space-y-3">
+        <div className="mb-6 space-y-2">
+
+          {/* Avatar icon */}
+          <div className="rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
+            {editingIcon ? (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-off-white/50">Choose your icon</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveIcon()}
+                      disabled={savingIcon}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bold-blue text-white transition-all hover:bg-bold-blue/80 disabled:opacity-40"
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingIcon(false)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-periwinkle/20 text-off-white/60 transition-all hover:border-periwinkle/50 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <AvatarIconPicker selected={draftIcon} onChange={setDraftIcon} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <AvatarIcon iconId={session?.avatarIcon} size="md" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-off-white/50 mb-0.5">Icon</p>
+                  <p className="font-medium text-off-white text-sm">Your profile icon</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setDraftIcon(session?.avatarIcon ?? 'leaf'); setEditingIcon(true); }}
+                  className="ml-3 flex shrink-0 items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-periwinkle transition-all hover:border-periwinkle/50 hover:text-white"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-off-white/60" />
@@ -164,9 +224,8 @@ export default function CaregiverAccountScreen({
             <p className="text-xs font-semibold uppercase tracking-wide text-off-white/50">Planned Features</p>
           </div>
           <div className="space-y-1.5 text-sm text-off-white/50">
-            <div className="flex items-center gap-2"><User className="h-3.5 w-3.5" /><span>Display name</span></div>
             <div className="flex items-center gap-2"><Bell className="h-3.5 w-3.5" /><span>Push notification preferences</span></div>
-            <div className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" /><span>Advanced pairing management</span></div>
+            <div className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" /><span>Connection management</span></div>
           </div>
         </div>
 

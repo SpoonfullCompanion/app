@@ -24,6 +24,7 @@ export interface AppSession {
   email: string | null;
   authMode: AuthMode;
   displayName: string;
+  avatarIcon: string | null;
 }
 
 export interface Pairing {

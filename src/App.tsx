@@ -28,6 +28,7 @@ import {
   sendStatusUpdate,
   signOut,
   subscribeToStatusUpdates,
+  updateAvatarIcon,
   updateDisplayName,
   updateEmail,
   updatePassword,
@@ -240,8 +241,8 @@ function App() {
     return result.message;
   };
 
-  const handleSignUpWithPassword = async (email: string, password: string, role: UserRole, displayName: string) => {
-    const result = await signUpWithPassword(email, password, role, displayName);
+  const handleSignUpWithPassword = async (email: string, password: string, role: UserRole, displayName: string, avatarIcon: string) => {
+    const result = await signUpWithPassword(email, password, role, displayName, avatarIcon);
     if (result.ok) {
       if (result.session) {
         finalizeConnectedAuth(result.session);
@@ -264,6 +265,15 @@ function App() {
   const handleUpdateDisplayName = async (newName: string) => {
     if (!session) return { ok: false, message: 'Not signed in.' };
     const result = await updateDisplayName(session, newName);
+    if (result.ok && result.session) {
+      setSession(result.session);
+    }
+    return result;
+  };
+
+  const handleUpdateAvatarIcon = async (iconId: string) => {
+    if (!session) return { ok: false, message: 'Not signed in.' };
+    const result = await updateAvatarIcon(session, iconId);
     if (result.ok && result.session) {
       setSession(result.session);
     }
@@ -428,6 +438,7 @@ function App() {
         onUpdateDisplayName={handleUpdateDisplayName}
         onUpdateEmail={handleUpdateEmail}
         onUpdatePassword={handleUpdatePassword}
+        onUpdateAvatarIcon={handleUpdateAvatarIcon}
       />
     );
   }
@@ -444,6 +455,7 @@ function App() {
       onLeavePairing={handleLeavePairing}
       onSignOut={handleSignOut}
       onReturnToMain={handleReturnToMain}
+      onUpdateAvatarIcon={handleUpdateAvatarIcon}
     />
   );
 }

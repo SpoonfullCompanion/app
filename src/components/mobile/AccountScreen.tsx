@@ -2,6 +2,8 @@ import React from 'react';
 import { User, Mail, Link2, LogOut, Pencil, Check, X, Lock } from 'lucide-react';
 import type { AppSession } from '../../types/app';
 import { checkDisplayNameAvailable } from '../../services/backend';
+import AvatarIcon from '../AvatarIcon';
+import AvatarIconPicker from '../AvatarIconPicker';
 
 interface AccountScreenProps {
   session: AppSession | null;
@@ -10,9 +12,10 @@ interface AccountScreenProps {
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
+  onUpdateAvatarIcon: (iconId: string) => Promise<{ ok: boolean; message: string }>;
 }
 
-type EditingField = 'displayName' | 'email' | 'password' | null;
+type EditingField = 'displayName' | 'email' | 'password' | 'avatar' | null;
 
 const inputClass =
   'flex-1 min-w-0 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-off-white placeholder-off-white/30 outline-none focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/30';
@@ -64,6 +67,7 @@ export default function AccountScreen({
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,
+  onUpdateAvatarIcon,
 }: AccountScreenProps) {
   const [editing, setEditing] = React.useState<EditingField>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -83,6 +87,9 @@ export default function AccountScreen({
   const [passwordError, setPasswordError] = React.useState('');
   const [passwordSuccess, setPasswordSuccess] = React.useState('');
 
+  // Avatar icon state
+  const [draftIcon, setDraftIcon] = React.useState(session?.avatarIcon ?? 'leaf');
+
   const startEditing = (field: EditingField) => {
     setEditing(field);
     setNameError('');
@@ -93,6 +100,7 @@ export default function AccountScreen({
     if (field === 'displayName') setDraftName(session?.displayName ?? '');
     if (field === 'email') setDraftEmail(session?.email ?? '');
     if (field === 'password') { setNewPassword(''); setConfirmPassword(''); }
+    if (field === 'avatar') setDraftIcon(session?.avatarIcon ?? 'leaf');
   };
 
   const cancelEditing = () => {
@@ -126,6 +134,13 @@ export default function AccountScreen({
     } else {
       setNameError(result.message);
     }
+  };
+
+  const handleSaveAvatar = async () => {
+    setIsSaving(true);
+    const result = await onUpdateAvatarIcon(draftIcon);
+    setIsSaving(false);
+    if (result.ok) cancelEditing();
   };
 
   const handleSaveEmail = async () => {
@@ -172,6 +187,31 @@ export default function AccountScreen({
         {/* Profile section */}
         <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/50">Profile</div>
         <div className="space-y-2 mb-8">
+
+          {/* Avatar icon */}
+          <div className="rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
+            {editing === 'avatar' ? (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-off-white/50">Choose your icon</p>
+                  <div className="flex items-center gap-2">
+                    <SaveButton onClick={() => void handleSaveAvatar()} disabled={isSaving} />
+                    <CancelButton onClick={cancelEditing} />
+                  </div>
+                </div>
+                <AvatarIconPicker selected={draftIcon} onChange={setDraftIcon} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <AvatarIcon iconId={session?.avatarIcon} size="md" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-off-white/50 mb-0.5">Icon</p>
+                  <p className="font-medium text-off-white text-sm">Your profile icon</p>
+                </div>
+                <EditButton onClick={() => startEditing('avatar')} />
+              </div>
+            )}
+          </div>
 
           {/* Display name */}
           <div className="rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">

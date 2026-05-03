@@ -3,9 +3,12 @@ import { appConfig } from '../../lib/appConfig';
 import type { UserRole } from '../../types/app';
 import { UserRound, HeartHandshake, ChevronLeft } from 'lucide-react';
 import { checkDisplayNameAvailable } from '../../services/backend';
+import AvatarIcon from '../AvatarIcon';
+import AvatarIconPicker from '../AvatarIconPicker';
+import { DEFAULT_AVATAR_ICON_ID } from '../../utils/avatarIcons';
 
 interface SignupScreenProps {
-  onSignUpWithPassword: (email: string, password: string, role: UserRole, displayName: string) => Promise<string>;
+  onSignUpWithPassword: (email: string, password: string, role: UserRole, displayName: string, avatarIcon: string) => Promise<string>;
   onBack: () => void;
   statusMessage?: string;
 }
@@ -25,6 +28,7 @@ export default function SignupScreen({
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [displayName, setDisplayName] = React.useState('');
+  const [avatarIcon, setAvatarIcon] = React.useState(DEFAULT_AVATAR_ICON_ID);
   const [displayNameError, setDisplayNameError] = React.useState('');
   const [localStatusMessage, setLocalStatusMessage] = React.useState('');
   const [isError, setIsError] = React.useState(false);
@@ -51,7 +55,7 @@ export default function SignupScreen({
     setLocalStatusMessage('');
     setIsError(false);
     try {
-      const message = await onSignUpWithPassword(email, password, selectedRole, trimmedName);
+      const message = await onSignUpWithPassword(email, password, selectedRole, trimmedName, avatarIcon);
       const isSuccessMessage =
         message.toLowerCase().includes('signed up') ||
         message.toLowerCase().includes('reloading') ||
@@ -168,7 +172,19 @@ export default function SignupScreen({
           </div>
         )}
 
-        <form onSubmit={handleSignUp} className="space-y-4">
+        <form onSubmit={handleSignUp} className="space-y-6">
+          {/* Avatar icon picker */}
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <AvatarIcon iconId={avatarIcon} size="md" />
+              <div>
+                <p className="text-sm font-semibold text-off-white/80">Choose your icon</p>
+                <p className="text-xs text-off-white/40">Pick something that feels like you</p>
+              </div>
+            </div>
+            <AvatarIconPicker selected={avatarIcon} onChange={setAvatarIcon} />
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="signup-display-name">
               Display name

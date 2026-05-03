@@ -34,6 +34,7 @@ function buildConnectedSession(params: {
   email: string | null;
   authMode: 'magic_link' | 'password';
   displayName?: string;
+  avatarIcon?: string | null;
 }) {
   return {
     profileId: params.profileId,
@@ -41,6 +42,7 @@ function buildConnectedSession(params: {
     email: params.email,
     authMode: params.authMode,
     displayName: params.displayName || params.email?.split('@')[0] || formatDisplayName(params.role),
+    avatarIcon: params.avatarIcon ?? null,
   } satisfies AppSession;
 }
 
@@ -200,6 +202,7 @@ async function upsertProfile(session: AppSession) {
     role: session.role,
     email: session.email,
     display_name: session.displayName,
+    avatar_icon: session.avatarIcon ?? null,
   });
 
   if (error) {
@@ -232,6 +235,7 @@ export async function restoreSession() {
       email: data.session.user.email ?? null,
       authMode,
       displayName: profile?.displayName ?? storedSession?.displayName,
+      avatarIcon: profile?.avatarIcon ?? storedSession?.avatarIcon ?? null,
     });
 
     writeStorage(STORAGE_KEYS.session, session);
@@ -282,6 +286,7 @@ export async function signUpWithPassword(
   password: string,
   role: UserRole,
   displayName: string,
+  avatarIcon: string | null = null,
 ) {
   if (!supabase) {
     return { ok: false, message: 'Supabase is not configured.' };
@@ -323,6 +328,7 @@ export async function signUpWithPassword(
       email: data.user?.email ?? data.session.user.email ?? resolvedEmail,
       authMode: 'password',
       displayName: trimmedName,
+      avatarIcon,
     });
     writeStorage(STORAGE_KEYS.session, session);
     void upsertProfile(session).catch((err) => {
@@ -338,7 +344,7 @@ export async function signUpWithPassword(
   };
 }
 
-async function fetchProfile(userId: string): Promise<{ role: UserRole; displayName: string } | null> {
+async function fetchProfile(userId: string): Promise<{ role: UserRole; displayName: string; avatarIcon: string | null } | null> {
   if (!supabase) {
     return null;
   }
@@ -346,7 +352,7 @@ async function fetchProfile(userId: string): Promise<{ role: UserRole; displayNa
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, display_name')
+      .select('role, display_name, avatar_icon')
       .eq('id', userId)
       .maybeSingle();
 
@@ -354,7 +360,11 @@ async function fetchProfile(userId: string): Promise<{ role: UserRole; displayNa
       return null;
     }
 
-    return { role: data.role as UserRole, displayName: data.display_name as string };
+    return {
+      role: data.role as UserRole,
+      displayName: data.display_name as string,
+      avatarIcon: (data.avatar_icon as string | null) ?? null,
+    };
   } catch (error) {
     console.error('Failed to fetch profile', error);
     return null;
@@ -378,6 +388,30 @@ export async function checkDisplayNameAvailable(name: string): Promise<boolean> 
     .maybeSingle();
 
   return !data;
+}
+
+export async function updateAvatarIcon(
+  session: AppSession,
+  iconId: string,
+): Promise<{ ok: boolean; message: string; session?: AppSession }> {
+  if (!supabase) {
+    const updated: AppSession = { ...session, avatarIcon: iconId };
+    writeStorage(STORAGE_KEYS.session, updated);
+    return { ok: true, message: 'Icon updated.', session: updated };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_icon: iconId })
+    .eq('id', session.profileId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  const updated: AppSession = { ...session, avatarIcon: iconId };
+  writeStorage(STORAGE_KEYS.session, updated);
+  return { ok: true, message: 'Icon updated.', session: updated };
 }
 
 export async function updateDisplayName(
@@ -494,6 +528,7 @@ export async function signInWithPassword(email: string, password: string, role?:
     email: data.user.email ?? resolvedEmail,
     authMode: 'password',
     displayName: profile?.displayName ?? storedSession?.displayName,
+    avatarIcon: profile?.avatarIcon ?? storedSession?.avatarIcon ?? null,
   });
   writeStorage(STORAGE_KEYS.session, session);
 
@@ -508,6 +543,7 @@ export async function continueInDemo(role: UserRole) {
     email: null,
     authMode: 'demo',
     displayName: role === 'patient' ? 'Demo patient' : 'Demo caregiver',
+    avatarIcon: role === 'patient' ? 'leaf' : 'heart',
   };
 
   writeStorage(STORAGE_KEYS.session, session);
@@ -543,6 +579,7 @@ export async function restoreSessionFromAuthUser(user: {
     email: user.email ?? null,
     authMode,
     displayName: profile?.displayName ?? storedSession?.displayName,
+    avatarIcon: profile?.avatarIcon ?? storedSession?.avatarIcon ?? null,
   });
 
   writeStorage(STORAGE_KEYS.session, session);

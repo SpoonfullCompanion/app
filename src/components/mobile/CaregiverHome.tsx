@@ -16,6 +16,7 @@ interface CaregiverHomeProps {
   onLeavePairing: () => Promise<string>;
   onSignOut: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
+  onUpdateAvatarIcon: (iconId: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 export default function CaregiverHome({
@@ -28,6 +29,7 @@ export default function CaregiverHome({
   onLeavePairing,
   onSignOut,
   onReturnToMain,
+  onUpdateAvatarIcon,
 }: CaregiverHomeProps) {
   const [activeRoute, setActiveRoute] = React.useState<CaregiverNavRoute>('home');
 
@@ -39,7 +41,7 @@ export default function CaregiverHome({
 
   return (
     <div className="bg-midnight-black">
-      <AppHeader onNavigate={setActiveRoute} activeRoute={activeRoute} />
+      <AppHeader onNavigate={setActiveRoute} activeRoute={activeRoute} avatarIconId={session?.avatarIcon} />
       <div key={activeRoute} className="animate-fade-up">
         {activeRoute === 'home' && (
           <CaregiverFeedScreen
@@ -55,6 +57,7 @@ export default function CaregiverHome({
             onJoinInviteCode={onJoinInviteCode}
             onLeavePairing={onLeavePairing}
             onSignOut={onSignOut}
+            onUpdateAvatarIcon={onUpdateAvatarIcon}
           />
         )}
       </div>

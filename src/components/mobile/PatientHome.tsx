@@ -22,6 +22,7 @@ interface PatientHomeProps {
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
+  onUpdateAvatarIcon: (iconId: string) => Promise<{ ok: boolean; message: string }>;
 }
 
 export default function PatientHome({
@@ -38,6 +39,7 @@ export default function PatientHome({
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,
+  onUpdateAvatarIcon,
 }: PatientHomeProps) {
   const [activeRoute, setActiveRoute] = useState<NavRoute>('home');
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -56,7 +58,7 @@ export default function PatientHome({
 
   return (
     <div className="bg-midnight-black">
-      <AppHeader onNavigate={handleNavigate} activeRoute={activeRoute} />
+      <AppHeader onNavigate={handleNavigate} activeRoute={activeRoute} avatarIconId={session?.avatarIcon} />
       <div key={activeRoute} className="animate-fade-up">
         {activeRoute === 'home' && (
           <HomeScreen
@@ -94,6 +96,7 @@ export default function PatientHome({
             onUpdateDisplayName={onUpdateDisplayName}
             onUpdateEmail={onUpdateEmail}
             onUpdatePassword={onUpdatePassword}
+            onUpdateAvatarIcon={onUpdateAvatarIcon}
           />
         )}
       </div>
