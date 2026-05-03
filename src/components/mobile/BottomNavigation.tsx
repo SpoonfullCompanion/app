@@ -56,7 +56,7 @@ export default function BottomNavigation({ activeRoute, onNavigate, pendingConne
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-none">
+              <span className="text-[12px] font-medium leading-none">
                 {label}
               </span>
             </button>
