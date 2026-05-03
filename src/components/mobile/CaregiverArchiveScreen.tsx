@@ -23,7 +23,7 @@ const PRIORITY_CONFIG: Record<NeedPriority, {
 
 const energyStyles: Record<string, { pill: string; dot: string; bar: string }> = {
   crashing:  { pill: 'bg-red-950/70 border-red-600/50 text-red-200',         dot: 'bg-red-500',    bar: 'bg-red-700'    },
-  low:       { pill: 'bg-orange-950/70 border-orange-600/50 text-orange-200', dot: 'bg-orange-400', bar: 'bg-orange-600' },
+  low:       { pill: 'bg-amber-950/70 border-amber-600/50 text-amber-200',   dot: 'bg-amber-400',  bar: 'bg-amber-600'  },
   resting:   { pill: 'bg-yellow-950/70 border-yellow-600/50 text-yellow-200', dot: 'bg-yellow-400', bar: 'bg-yellow-600' },
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };

@@ -29,7 +29,7 @@ type Tab = 'caregivers' | 'friends' | 'requests';
 
 const energyPillColors: Record<string, string> = {
   crashing: 'bg-red-950/80 border border-red-600/50 text-red-200',
-  low:      'bg-orange-950/80 border border-orange-600/50 text-orange-200',
+  low:      'bg-amber-950/80 border border-amber-600/50 text-amber-200',
   resting:  'bg-yellow-950/80 border border-yellow-600/50 text-yellow-200',
   available:'bg-green-950/80 border border-green-600/50 text-green-200',
 };

@@ -121,12 +121,12 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
                   selectedShadow: 'shadow-red-800/40'
                 },
                 low: {
-                  border: 'border-orange-800/50',
-                  bg: 'bg-orange-900/30',
-                  hover: 'hover:border-orange-700/60 hover:bg-orange-900/40',
-                  selectedBorder: 'border-orange-700',
-                  selectedBg: 'bg-orange-800',
-                  selectedShadow: 'shadow-orange-800/40'
+                  border: 'border-amber-800/50',
+                  bg: 'bg-amber-900/30',
+                  hover: 'hover:border-amber-700/60 hover:bg-amber-900/40',
+                  selectedBorder: 'border-amber-700',
+                  selectedBg: 'bg-amber-800',
+                  selectedShadow: 'shadow-amber-800/40'
                 },
                 resting: {
                   border: 'border-yellow-700/50',
