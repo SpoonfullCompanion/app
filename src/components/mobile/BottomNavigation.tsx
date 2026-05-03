@@ -42,7 +42,7 @@ export default function BottomNavigation({ activeRoute, onNavigate, pendingConne
               className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all duration-150 active:scale-95 ${
                 isActive
                   ? 'bg-bold-blue/20 text-white'
-                  : 'text-off-white/75 hover:text-off-white'
+                  : 'text-white/60 hover:text-white'
               }`}
             >
               <div className="relative">
