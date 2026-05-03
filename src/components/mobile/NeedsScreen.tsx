@@ -267,28 +267,26 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
           </div>
         </div>
 
-        {(hasSelection || sent) && (
-          <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            <div className="mx-auto max-w-2xl">
-              {sent ? (
-                <div className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
-                  <CheckCircle className="h-5 w-5" />
-                  Needs sent
-                </div>
-              ) : (
-                <button
-                  key={pulseKey}
-                  onClick={() => void handleSendNeeds()}
-                  disabled={isSending}
-                  className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
-                >
-                  <Send className="h-5 w-5" />
-                  {isSending ? 'Sending...' : selectedNeeds.size > 0 ? `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}` : 'Send Message'}
-                </button>
-              )}
-            </div>
+        <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="mx-auto max-w-2xl">
+            {sent ? (
+              <div className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
+                <CheckCircle className="h-5 w-5" />
+                Needs sent
+              </div>
+            ) : (
+              <button
+                key={pulseKey}
+                onClick={() => void handleSendNeeds()}
+                disabled={isSending || !hasSelection}
+                className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
+              >
+                <Send className="h-5 w-5" />
+                {isSending ? 'Sending...' : selectedNeeds.size > 0 ? `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}` : 'Send Message'}
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

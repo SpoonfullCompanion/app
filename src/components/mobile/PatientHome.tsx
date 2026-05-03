@@ -34,7 +34,7 @@ export default function PatientHome({
   onOpenPairing,
 }: PatientHomeProps) {
   const [activeRoute, setActiveRoute] = useState<NavRoute>('home');
-  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
 
   const handleNavigate = (route: NavRoute) => {
     setActiveRoute(route);
