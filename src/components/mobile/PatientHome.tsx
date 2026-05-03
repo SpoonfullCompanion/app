@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import BottomNavigation, { type NavRoute } from './BottomNavigation';
+import AppHeader from './AppHeader';
 import HomeScreen from './HomeScreen';
 import StatusScreen from './StatusScreen';
 import NeedsScreen from './NeedsScreen';
@@ -45,6 +46,8 @@ export default function PatientHome({
 
   return (
     <div className="bg-midnight-black">
+      <AppHeader onNavigate={handleNavigate} activeRoute={activeRoute} />
+      <div className="pt-[calc(env(safe-area-inset-top)+56px)]">
       {activeRoute === 'home' && (
         <HomeScreen
           recentUpdates={recentUpdates}
@@ -79,6 +82,7 @@ export default function PatientHome({
           onOpenPairing={onOpenPairing}
         />
       )}
+      </div>
       <BottomNavigation activeRoute={activeRoute} onNavigate={handleNavigate} />
     </div>
   );
