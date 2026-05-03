@@ -2,6 +2,7 @@ import React from 'react';
 import CaregiverBottomNavigation, { type CaregiverNavRoute } from './CaregiverBottomNavigation';
 import CaregiverFeedScreen from './CaregiverFeedScreen';
 import CaregiverAccountScreen from './CaregiverAccountScreen';
+import AppHeader from './AppHeader';
 import type { AppSession, Pairing, StatusUpdate } from '../../types/app';
 
 interface CaregiverHomeProps {
@@ -34,6 +35,7 @@ export default function CaregiverHome({
 
   return (
     <div className="bg-midnight-black">
+      <AppHeader onNavigate={setActiveRoute} activeRoute={activeRoute} />
       {activeRoute === 'home' && (
         <CaregiverFeedScreen
           session={session}

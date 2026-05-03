@@ -1,22 +1,21 @@
 import { User } from 'lucide-react';
-import type { NavRoute } from './BottomNavigation';
 
 interface AppHeaderProps {
-  onNavigate: (route: NavRoute) => void;
-  activeRoute: NavRoute;
+  onNavigate: (route: 'account') => void;
+  activeRoute: string;
 }
 
 export default function AppHeader({ onNavigate, activeRoute }: AppHeaderProps) {
   return (
     <header
-      className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-midnight-black/90 backdrop-blur-md"
+      className="w-full border-b border-white/5 bg-midnight-black"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
         <img
           src="/Spoonfull-Logo-DarkBG.svg"
           alt="Spoonfull"
-          className="h-7 w-auto"
+          className="h-10 w-auto"
         />
         <button
           onClick={() => onNavigate('account')}
