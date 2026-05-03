@@ -207,7 +207,7 @@ export default function LoginScreen({
             <div className="w-full border-t border-periwinkle/15" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-[#1d1d1d] px-4 text-xs text-off-white/40 uppercase tracking-[0.2em]">
+            <span className="bg-[#1d1d1d] px-4 text-xs text-off-white/70 uppercase tracking-[0.2em]">
               Or
             </span>
           </div>
@@ -247,7 +247,7 @@ export default function LoginScreen({
           <button
             type="button"
             onClick={onContinueDemo}
-            className="text-xs text-off-white/35 underline underline-offset-2 hover:text-off-white/60 transition-colors"
+            className="text-xs text-off-white/65 underline underline-offset-2 hover:text-off-white transition-colors"
           >
             Continue in demo mode
           </button>

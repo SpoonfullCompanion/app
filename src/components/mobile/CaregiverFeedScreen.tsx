@@ -99,12 +99,12 @@ function UpdateFeedCard({
           {/* Header */}
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-[0.2em] text-off-white/40">
+              <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
                 {isNeedsOnly ? 'Needs' : 'Status'}
               </span>
               {!isSeen && <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />}
             </div>
-            <span className="text-xs text-off-white/35">{formatDistanceToNow(update.sentAt)}</span>
+            <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
           </div>
 
           {/* Energy */}
@@ -139,7 +139,7 @@ function UpdateFeedCard({
                   <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
                   <div className="py-2 pr-3">
                     <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                    <p className="mt-0.5 text-xs text-white/55">{priority.sublabel}</p>
+                    <p className="mt-0.5 text-xs text-white/80">{priority.sublabel}</p>
                   </div>
                 </div>
               );
@@ -183,7 +183,7 @@ function UpdateFeedCard({
                         {need.label}
                       </span>
                     </div>
-                    {checked && <span className="text-xs text-green-500/70 shrink-0">Done</span>}
+                    {checked && <span className="text-xs text-green-400 shrink-0">Done</span>}
                   </button>
                 );
               })}
@@ -196,7 +196,7 @@ function UpdateFeedCard({
               {symptoms.map(symptom => {
                 const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
-                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-2.5 py-1 text-sm text-off-white/60">
+                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-2.5 py-1 text-sm text-off-white/80">
                     {Icon && <Icon className="h-3.5 w-3.5" />}
                     {symptom.label}
                   </div>
@@ -211,8 +211,8 @@ function UpdateFeedCard({
           {hasResponse ? (
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
-              <p className="text-sm text-off-white/60">
-                You replied: <span className="text-off-white/80 italic">{response!.message}</span>
+              <p className="text-sm text-off-white/80">
+                You replied: <span className="text-off-white italic">{response!.message}</span>
               </p>
             </div>
           ) : (
@@ -220,7 +220,7 @@ function UpdateFeedCard({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setExpanded(v => !v)}
-                  className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/60 transition-all hover:border-periwinkle/50 hover:text-off-white/80 active:scale-95"
+                  className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/80 transition-all hover:border-periwinkle/50 hover:text-off-white active:scale-95"
                 >
                   Respond
                   {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -235,7 +235,7 @@ function UpdateFeedCard({
                         key={msg}
                         onClick={() => void handleQuickReply(msg)}
                         disabled={sending}
-                        className="rounded-lg border border-periwinkle/25 bg-periwinkle/10 px-3 py-1.5 text-xs text-off-white/80 transition-all hover:bg-periwinkle/20 active:scale-95 disabled:opacity-50"
+                        className="rounded-lg border border-periwinkle/25 bg-periwinkle/10 px-3 py-1.5 text-xs text-off-white transition-all hover:bg-periwinkle/20 active:scale-95 disabled:opacity-50"
                       >
                         {msg}
                       </button>
@@ -248,7 +248,7 @@ function UpdateFeedCard({
                       onChange={e => setCustomNote(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') void handleSendNote(); }}
                       placeholder="Write a note…"
-                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-off-white/30 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
+                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-off-white/50 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
                     />
                     <button
                       onClick={() => void handleSendNote()}
@@ -417,7 +417,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
               )}
             </div>
             {isMultiPatient && patientIds.length > 1 && (
-              <p className="mt-0.5 text-xs text-off-white/40">
+              <p className="mt-0.5 text-xs text-off-white/70">
                 {patientIds.length} patients
               </p>
             )}
@@ -425,7 +425,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
           <button
             onClick={() => void loadFeed(true)}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/50 transition-all hover:border-periwinkle/40 hover:text-off-white/80 disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -434,8 +434,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
 
         {updates.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/40" />
-            <p className="text-sm text-off-white/70">No updates yet</p>
+            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
+            <p className="text-sm text-off-white/90">No updates yet</p>
             {activeConnections.length === 0 ? (
               <button
                 onClick={onNavigateToConnections}
@@ -444,7 +444,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                 Connect with a patient to see their updates here
               </button>
             ) : (
-              <p className="mt-1 text-xs text-off-white/50">Patient updates will appear here once they send one</p>
+              <p className="mt-1 text-xs text-off-white/70">Patient updates will appear here once they send one</p>
             )}
           </div>
         ) : isMultiPatient && patientIds.length > 1 ? (

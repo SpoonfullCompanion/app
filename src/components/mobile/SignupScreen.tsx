@@ -132,7 +132,7 @@ export default function SignupScreen({
             </button>
           </div>
 
-          <p className="mt-8 text-center text-xs text-off-white/40">
+          <p className="mt-8 text-center text-xs text-off-white/70">
             Choose a role to continue setting up your account.
           </p>
         </div>
@@ -179,7 +179,7 @@ export default function SignupScreen({
               <AvatarIcon iconId={avatarIcon} size="md" />
               <div>
                 <p className="text-sm font-semibold text-off-white/80">Choose your icon</p>
-                <p className="text-xs text-off-white/40">Pick something that feels like you</p>
+                <p className="text-xs text-off-white/70">Pick something that feels like you</p>
               </div>
             </div>
             <AvatarIconPicker selected={avatarIcon} onChange={setAvatarIcon} />

@@ -27,7 +27,7 @@ export default function Stepper({ currentStep, totalSteps, onBack }: StepperProp
             className={`h-2 flex-1 rounded-full transition-colors ${
               i <= currentStep
                 ? 'bg-green-500'
-                : 'bg-off-white/20'
+                : 'bg-off-white/35'
             }`}
           />
         ))}

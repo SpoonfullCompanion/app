@@ -104,7 +104,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
 
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            Energy Level <span className="text-off-white/40 normal-case font-normal">(optional)</span>
+            Energy Level <span className="text-off-white/60 normal-case font-normal">(optional)</span>
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {ENERGY_STATUSES.map((energy) => {
@@ -175,7 +175,7 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
 
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            Symptoms <span className="text-off-white/40 normal-case font-normal">(optional)</span>
+            Symptoms <span className="text-off-white/60 normal-case font-normal">(optional)</span>
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {SYMPTOMS.map((symptom) => {

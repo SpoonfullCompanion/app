@@ -65,7 +65,7 @@ export default function PatientPairingScreen({
 
         {inviteCode ? (
           <div className="mb-8 rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-5">
-            <p className="mb-1 text-xs text-off-white/50">Share this with your helper</p>
+            <p className="mb-1 text-xs text-off-white/75">Share this with your helper</p>
             <div className="mt-3 flex items-center justify-between gap-4">
               <span className="text-4xl font-bold tracking-[0.3em] text-periwinkle">{inviteCode}</span>
               <button
@@ -76,7 +76,7 @@ export default function PatientPairingScreen({
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <p className="mt-3 text-xs text-off-white/50">
+            <p className="mt-3 text-xs text-off-white/75">
               They enter this code in helper mode to pair with you.
             </p>
             <button
@@ -123,7 +123,7 @@ export default function PatientPairingScreen({
               onKeyDown={(e) => { if (e.key === 'Enter') void handleJoin(); }}
               placeholder="A3F2K9"
               maxLength={6}
-              className="flex-1 rounded-xl border border-periwinkle/30 bg-midnight-black/60 px-4 py-3 text-center text-xl font-bold tracking-[0.3em] text-off-white placeholder:text-off-white/25 focus:border-periwinkle/60 focus:outline-none"
+              className="flex-1 rounded-xl border border-periwinkle/30 bg-midnight-black/60 px-4 py-3 text-center text-xl font-bold tracking-[0.3em] text-off-white placeholder:text-off-white/55 focus:border-periwinkle/60 focus:outline-none"
             />
             <button
               onClick={() => void handleJoin()}

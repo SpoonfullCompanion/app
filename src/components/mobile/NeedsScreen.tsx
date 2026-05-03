@@ -190,7 +190,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
               onChange={(e) => setCustomNote(e.target.value)}
               placeholder="Type a custom message or note here..."
               rows={3}
-              className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-zinc-100/40 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30"
+              className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-zinc-100/60 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30"
             />
             <button
               onClick={handleSpeakNote}
@@ -204,7 +204,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
 
         <div className="mt-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            How urgent? <span className="text-off-white/40 normal-case font-normal">(optional)</span>
+            How urgent? <span className="text-off-white/60 normal-case font-normal">(optional)</span>
           </h2>
           <div className="flex flex-col gap-3">
             {PRIORITIES.map((priority) => {
@@ -224,7 +224,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
                     <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-off-white'}`}>
                       {priority.label}
                     </p>
-                    <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-off-white/50'}`}>
+                    <p className={`text-xs ${isSelected ? 'text-white/90' : 'text-off-white/70'}`}>
                       {priority.sublabel}
                     </p>
                   </div>
@@ -236,7 +236,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
 
         <div className="mt-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-off-white/80">
-            Appreciation <span className="text-off-white/40 normal-case font-normal">(optional)</span>
+            Appreciation <span className="text-off-white/60 normal-case font-normal">(optional)</span>
           </h2>
           <div className="flex flex-col gap-3">
             {APPRECIATION.map((item) => {

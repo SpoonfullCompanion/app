@@ -73,10 +73,10 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
         <div className="p-4">
           {/* Header row */}
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-[0.2em] text-off-white/40">
+            <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
               {isNeedsOnly ? 'Needs' : 'Status'}
             </span>
-            <span className="text-xs text-off-white/35">
+            <span className="text-xs text-off-white/60">
               {formatDistanceToNow(update.sentAt)}
             </span>
           </div>
@@ -118,7 +118,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
                   <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
                   <div className="py-2 pr-3">
                     <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                    <p className="mt-0.5 text-xs text-white/55">{priority.sublabel}</p>
+                    <p className="mt-0.5 text-xs text-white/80">{priority.sublabel}</p>
                   </div>
                 </div>
               );
@@ -154,7 +154,7 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
               {symptoms.map(symptom => {
                 const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
                 return (
-                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-2.5 py-1 text-sm text-off-white/60">
+                  <div key={symptom.id} className="flex items-center gap-1.5 rounded-lg bg-periwinkle/10 px-2.5 py-1 text-sm text-off-white/80">
                     {Icon && <Icon className="h-3.5 w-3.5" />}
                     {symptom.label}
                   </div>
@@ -170,8 +170,8 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             <div className="flex items-start gap-2.5">
               <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
               <div>
-                <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/40">Helper replied</p>
-                <p className="text-sm text-off-white/80 italic">{response!.message}</p>
+                <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/70">Helper replied</p>
+                <p className="text-sm text-off-white italic">{response!.message}</p>
               </div>
             </div>
           ) : isSeen ? (
@@ -181,8 +181,8 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
-              <EyeOff className="h-3.5 w-3.5 text-off-white/40" />
-              <p className="text-xs text-off-white/50">Waiting for helper...</p>
+              <EyeOff className="h-3.5 w-3.5 text-off-white/60" />
+              <p className="text-xs text-off-white/70">Waiting for helper...</p>
             </div>
           )}
         </div>
@@ -232,7 +232,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white">Connect a helper</p>
-              <p className="text-xs text-off-white/55 mt-0.5">Your updates won't reach anyone until you add a helper</p>
+              <p className="text-xs text-off-white/80 mt-0.5">Your updates won't reach anyone until you add a helper</p>
             </div>
             <ChevronRight className="h-4 w-4 text-bold-blue/60 shrink-0" />
           </button>
@@ -242,7 +242,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
         <div className="mb-8">
           <div className="mb-4">
             <p className="text-sm font-semibold text-off-white/80">Recent Updates</p>
-            <p className="text-xs text-off-white/40">What you sent your helper</p>
+            <p className="text-xs text-off-white/70">What you sent your helper</p>
           </div>
 
           {recentUpdates.length > 0 ? (
@@ -253,8 +253,8 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
             </div>
           ) : (
             <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-10 text-center">
-              <p className="text-sm text-off-white/40">No updates sent yet</p>
-              <p className="mt-1 text-xs text-off-white/25">Use Status or Needs below to communicate</p>
+              <p className="text-sm text-off-white/80">No updates sent yet</p>
+              <p className="mt-1 text-xs text-off-white/60">Use Status or Needs below to communicate</p>
             </div>
           )}
         </div>
@@ -263,7 +263,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
         <div className="mb-3">
           <div className="mb-4">
             <p className="text-sm font-semibold text-off-white/80">Communicate</p>
-            <p className="text-xs text-off-white/40">Tap a card to send a message</p>
+            <p className="text-xs text-off-white/70">Tap a card to send a message</p>
           </div>
 
           <div className="space-y-3">
@@ -278,7 +278,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
                 </div>
                 <div className="flex-1">
                   <h2 className="mb-0.5 text-lg font-bold text-white">Needs</h2>
-                  <p className="text-sm leading-relaxed text-white/75">Tell your helper what you need right now</p>
+                  <p className="text-sm leading-relaxed text-white/90">Tell your helper what you need right now</p>
                 </div>
                 <ChevronRight className="h-5 w-5 text-white/50 transition-transform group-hover:translate-x-0.5" />
               </div>
@@ -294,7 +294,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
                 </div>
                 <div className="flex-1">
                   <h2 className="mb-0.5 text-base font-semibold text-white">Status</h2>
-                  <p className="text-xs leading-relaxed text-white/65">Update your energy level and how you are feeling</p>
+                  <p className="text-xs leading-relaxed text-white/85">Update your energy level and how you are feeling</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-white/30 transition-transform group-hover:translate-x-0.5" />
               </div>
@@ -310,7 +310,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
                 </div>
                 <div className="flex-1">
                   <h2 className="mb-0.5 text-base font-semibold text-white">Hospital Mode</h2>
-                  <p className="text-xs leading-relaxed text-white/65">Quick phrases for hospital staff and visitors</p>
+                  <p className="text-xs leading-relaxed text-white/85">Quick phrases for hospital staff and visitors</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-white/30 transition-transform group-hover:translate-x-0.5" />
               </div>

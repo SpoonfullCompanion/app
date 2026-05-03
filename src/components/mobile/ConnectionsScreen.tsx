@@ -119,7 +119,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
         {/* Search bar */}
         <div className="mb-5">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-off-white/40" />
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-off-white/60" />
             <input
               type="text"
               value={query}
@@ -127,7 +127,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               placeholder="Search helpers by display name…"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-sm text-off-white placeholder-off-white/30 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
+              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-sm text-off-white placeholder-off-white/55 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
             />
             {isSearching && (
               <Loader className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-periwinkle/60" />
@@ -138,7 +138,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
           {query.trim() && !isSearching && (
             <div className="mt-2 space-y-1.5">
               {searchResults.length === 0 ? (
-                <p className="px-1 py-3 text-sm text-off-white/40">No users found matching &ldquo;{query}&rdquo;</p>
+                <p className="px-1 py-3 text-sm text-off-white/80">No users found matching &ldquo;{query}&rdquo;</p>
               ) : (
                 searchResults.map((result) => (
                   <div
@@ -148,7 +148,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                     <AvatarIcon iconId={result.avatarIcon} size="sm" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-off-white text-sm truncate">{result.displayName}</p>
-                      <p className="text-xs text-off-white/40">Helper</p>
+                      <p className="text-xs text-off-white/70">Helper</p>
                     </div>
                     {requestMessages[result.profileId] ? (
                       <span className="text-xs text-periwinkle">{requestMessages[result.profileId]}</span>
@@ -180,7 +180,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
               tab === 'caregivers'
                 ? 'bg-bold-blue/20 text-white'
-                : 'text-off-white/50 hover:text-off-white/80'
+                : 'text-off-white/70 hover:text-off-white'
             }`}
           >
             Helpers
@@ -195,7 +195,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             className={`relative flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
               tab === 'requests'
                 ? 'bg-bold-blue/20 text-white'
-                : 'text-off-white/50 hover:text-off-white/80'
+                : 'text-off-white/70 hover:text-off-white'
             }`}
           >
             Requests
@@ -216,9 +216,9 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
           <div className="space-y-2">
             {activeConnections.length === 0 ? (
               <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-                <Users className="mx-auto mb-3 h-8 w-8 text-off-white/20" />
-                <p className="text-sm text-off-white/40">No helpers connected</p>
-                <p className="mt-1 text-xs text-off-white/25">Search by display name above to invite a helper</p>
+                <Users className="mx-auto mb-3 h-8 w-8 text-off-white/50" />
+                <p className="text-sm text-off-white/90">No helpers connected</p>
+                <p className="mt-1 text-xs text-off-white/65">Search by display name above to invite a helper</p>
               </div>
             ) : (
               activeConnections.map((conn) => (
@@ -239,7 +239,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                   <button
                     onClick={() => void handleRemove(conn.id)}
                     disabled={removingId === conn.id}
-                    className="flex items-center gap-1 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-off-white/50 transition-all hover:border-red-500/40 hover:text-red-400 disabled:opacity-40"
+                    className="flex items-center gap-1 rounded-full border border-periwinkle/20 px-3 py-1 text-xs text-off-white/70 transition-all hover:border-red-500/40 hover:text-red-400 disabled:opacity-40"
                   >
                     {removingId === conn.id ? (
                       <Loader className="h-3 w-3 animate-spin" />
@@ -257,9 +257,9 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
           <div className="space-y-2">
             {pendingRequests.length === 0 ? (
               <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-                <Clock className="mx-auto mb-3 h-8 w-8 text-off-white/20" />
-                <p className="text-sm text-off-white/40">No pending requests</p>
-                <p className="mt-1 text-xs text-off-white/25">Connection requests will appear here</p>
+                <Clock className="mx-auto mb-3 h-8 w-8 text-off-white/50" />
+                <p className="text-sm text-off-white/90">No pending requests</p>
+                <p className="mt-1 text-xs text-off-white/65">Connection requests will appear here</p>
               </div>
             ) : (
               pendingRequests.map((conn) => {
@@ -276,8 +276,8 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-off-white text-sm truncate">{otherName}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <Link2 className="h-3 w-3 text-periwinkle/60" />
-                          <p className="text-xs text-periwinkle/70">
+                          <Link2 className="h-3 w-3 text-periwinkle" />
+                          <p className="text-xs text-periwinkle">
                             {theyRequested ? 'Wants to be your helper' : 'Invite sent — waiting for them'}
                           </p>
                         </div>
@@ -311,7 +311,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                       <button
                         onClick={() => void handleRemove(conn.id)}
                         disabled={removingId === conn.id}
-                        className="text-xs text-off-white/40 underline underline-offset-2 hover:text-off-white/70"
+                        className="text-xs text-off-white/70 underline underline-offset-2 hover:text-off-white"
                       >
                         Cancel invite
                       </button>
