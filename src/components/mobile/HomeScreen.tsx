@@ -12,10 +12,31 @@ interface HomeScreenProps {
   onNavigate: (route: NavRoute) => void;
 }
 
-const PRIORITY_CONFIG: Record<NeedPriority, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
-  when_you_can: { label: 'When you can', icon: Clock, className: 'bg-teal-700/80 border-teal-500/60 text-white' },
-  soon: { label: 'Soon', icon: Hourglass, className: 'bg-amber-700/80 border-amber-500/60 text-white' },
-  asap: { label: 'Need ASAP', icon: Zap, className: 'bg-red-700/80 border-red-500/60 text-white' },
+const PRIORITY_CONFIG: Record<NeedPriority, { label: string; sublabel: string; icon: React.ComponentType<{ className?: string }>; banner: string; stripe: string; iconClass: string }> = {
+  when_you_can: {
+    label: 'When you can',
+    sublabel: 'No rush',
+    icon: Clock,
+    banner: 'bg-teal-900/60 border-teal-600/40',
+    stripe: 'bg-teal-500',
+    iconClass: 'text-teal-300',
+  },
+  soon: {
+    label: 'Soon',
+    sublabel: 'Within the next hour',
+    icon: Hourglass,
+    banner: 'bg-amber-900/60 border-amber-600/40',
+    stripe: 'bg-amber-400',
+    iconClass: 'text-amber-300',
+  },
+  asap: {
+    label: 'Need ASAP',
+    sublabel: 'Please stop what you\'re doing',
+    icon: Zap,
+    banner: 'bg-red-900/70 border-red-500/50',
+    stripe: 'bg-red-500',
+    iconClass: 'text-red-300',
+  },
 };
 
 const energyStyles: Record<string, { pill: string; dot: string; bar: string; stripe: string }> = {
@@ -87,13 +108,17 @@ function UpdateCard({ update, response }: { update: StatusUpdate; response: Care
             );
           })()}
 
-          {/* Priority */}
+          {/* Priority banner */}
           {priority && (() => {
             const PriorityIcon = priority.icon;
             return (
-              <div className={`mb-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-semibold ${priority.className}`}>
-                <PriorityIcon className="h-3 w-3" />
-                {priority.label}
+              <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
+                <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
+                <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
+                <div className="py-2 pr-3">
+                  <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
+                  <p className="mt-0.5 text-xs text-white/55">{priority.sublabel}</p>
+                </div>
               </div>
             );
           })()}
