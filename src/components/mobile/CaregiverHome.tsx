@@ -32,9 +32,16 @@ export default function CaregiverHome({
   onUpdateAvatarIcon,
 }: CaregiverHomeProps) {
   const [activeRoute, setActiveRoute] = React.useState<CaregiverNavRoute>('home');
+  // Track unseen count for the nav badge — derived from what the feed reports back
+  const [unseenCount, setUnseenCount] = React.useState(0);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeRoute]);
+
+  // Clear badge when user navigates to feed
+  React.useEffect(() => {
+    if (activeRoute === 'home') setUnseenCount(0);
   }, [activeRoute]);
 
   if (!session) return null;
@@ -46,7 +53,7 @@ export default function CaregiverHome({
         {activeRoute === 'home' && (
           <CaregiverFeedScreen
             session={session}
-            updates={recentUpdates}
+            legacyUpdates={recentUpdates}
           />
         )}
         {activeRoute === 'account' && (
@@ -64,6 +71,7 @@ export default function CaregiverHome({
       <CaregiverBottomNavigation
         activeRoute={activeRoute}
         onNavigate={setActiveRoute}
+        unseenCount={activeRoute === 'home' ? 0 : unseenCount}
       />
 
       {showReturnToMain && (
