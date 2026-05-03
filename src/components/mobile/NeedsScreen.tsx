@@ -135,15 +135,14 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onN
               Needs
             </p>
             <p className="text-sm text-white">
-              Tap to speak, or select your needs to notify to your helper.{' '}
-              In the hospital?{' '}
-              <button
-                onClick={() => onNavigate('hospital')}
-                className="text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
-              >
-                Try Hospital Mode.
-              </button>
+              Tap to speak, or select your needs to notify to your helper.
             </p>
+            <button
+              onClick={() => onNavigate('hospital')}
+              className="mt-1 text-sm text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
+            >
+              In the hospital? Try Hospital Mode.
+            </button>
           </div>
           <button
             onClick={onToggleTTS}
