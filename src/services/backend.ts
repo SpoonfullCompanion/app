@@ -916,22 +916,26 @@ export async function removeConnection(
   return { ok: true, message: 'Connection removed.' };
 }
 
-/** Get all active connections for a patient (their caregivers + patient friends). */
+/** Get all connections for a patient: rows where they are the patient (helpers following them)
+ *  plus rows where they are the follower (patient_friend connections they initiated). */
 export async function getPatientConnections(session: AppSession): Promise<Connection[]> {
   if (!supabase || session.authMode === 'demo') return [];
 
-  const { data, error } = await supabase
-    .from('connections')
-    .select(`
-      *,
-      follower:profiles!connections_follower_id_fkey(display_name, avatar_icon)
-    `)
-    .eq('patient_id', session.profileId)
-    .order('created_at', { ascending: false });
+  const [asPatientRes, asFollowerRes] = await Promise.all([
+    supabase
+      .from('connections')
+      .select('*, follower:profiles!connections_follower_id_fkey(display_name, avatar_icon)')
+      .eq('patient_id', session.profileId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('connections')
+      .select('*, patient:profiles!connections_patient_id_fkey(display_name, avatar_icon)')
+      .eq('follower_id', session.profileId)
+      .eq('connection_type', 'patient_friend')
+      .order('created_at', { ascending: false }),
+  ]);
 
-  if (error || !data) return [];
-
-  return data.map((row) => {
+  const asPatient: Connection[] = (asPatientRes.data ?? []).map((row) => {
     const follower = row.follower as Record<string, unknown> | null;
     return {
       id: row.id,
@@ -945,6 +949,30 @@ export async function getPatientConnections(session: AppSession): Promise<Connec
       followerDisplayName: follower?.display_name as string | undefined,
       followerAvatarIcon: follower?.avatar_icon as string | null | undefined,
     };
+  });
+
+  const asFollower: Connection[] = (asFollowerRes.data ?? []).map((row) => {
+    const patient = row.patient as Record<string, unknown> | null;
+    return {
+      id: row.id,
+      patientId: row.patient_id,
+      followerId: row.follower_id,
+      connectionType: row.connection_type as Connection['connectionType'],
+      status: row.status as Connection['status'],
+      requestedBy: row.requested_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      patientDisplayName: patient?.display_name as string | undefined,
+      patientAvatarIcon: patient?.avatar_icon as string | null | undefined,
+    };
+  });
+
+  // Deduplicate by id in case of overlap
+  const seen = new Set<string>();
+  return [...asPatient, ...asFollower].filter((c) => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
   });
 }
 

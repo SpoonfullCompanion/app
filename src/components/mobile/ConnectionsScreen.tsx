@@ -83,7 +83,9 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
   const handleRequest = async (target: SearchResult) => {
     setRequestingId(target.profileId);
     const connectionType = target.role === 'caregiver' ? 'caregiver' : 'patient_friend';
-    const result = await requestConnection(session, target.profileId, connectionType, true);
+    // For patient_friend: current user is the follower, target is the patient whose updates they'll see
+    const asPatient = connectionType === 'caregiver';
+    const result = await requestConnection(session, target.profileId, connectionType, asPatient);
     setRequestMessages((prev) => ({ ...prev, [target.profileId]: result.message }));
     setRequestingId(null);
     if (result.ok) {
@@ -222,19 +224,23 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                 <p className="mt-1 text-xs text-off-white/65">Search by display name above to invite a helper</p>
               </div>
             ) : (
-              activeConnections.map((conn) => (
+              activeConnections.map((conn) => {
+                const iAmPatient = conn.patientId === session.profileId;
+                const otherName = iAmPatient ? (conn.followerDisplayName ?? 'Unknown') : (conn.patientDisplayName ?? 'Unknown');
+                const otherIcon = iAmPatient ? conn.followerAvatarIcon : conn.patientAvatarIcon;
+                return (
                 <div
                   key={conn.id}
                   className="flex items-center gap-3 rounded-xl border border-dark-blue/50 bg-midnight-black/50 px-4 py-3"
                 >
-                  <AvatarIcon iconId={conn.followerAvatarIcon} size="sm" />
+                  <AvatarIcon iconId={otherIcon} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-off-white text-sm truncate">
-                      {conn.followerDisplayName ?? 'Unknown'}
+                      {otherName}
                     </p>
                     <div className="flex items-center gap-1 mt-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-                      <span className="text-xs text-green-400">Active helper</span>
+                      <span className="text-xs text-green-400">{conn.connectionType === 'caregiver' ? 'Active helper' : 'Patient friend'}</span>
                     </div>
                   </div>
                   <button
@@ -250,7 +256,8 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                     Remove
                   </button>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         ) : (
@@ -265,8 +272,11 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             ) : (
               pendingRequests.map((conn) => {
                 const theyRequested = conn.requestedBy !== session.profileId;
-                const otherName = conn.followerDisplayName ?? 'Unknown';
-                const otherIcon = conn.followerAvatarIcon;
+                const iAmPatient = conn.patientId === session.profileId;
+                const otherName = iAmPatient
+                  ? (conn.followerDisplayName ?? 'Unknown')
+                  : (conn.patientDisplayName ?? 'Unknown');
+                const otherIcon = iAmPatient ? conn.followerAvatarIcon : conn.patientAvatarIcon;
                 return (
                   <div
                     key={conn.id}
