@@ -1205,7 +1205,7 @@ export async function searchProfiles(
   const { data, error } = await supabase
     .from('profiles')
     .select('id, display_name, role, avatar_icon')
-    .ilike('display_name', `${query.trim()}%`)
+    .ilike('display_name', `%${query.trim()}%`)
     .neq('id', session.profileId)
     .limit(10);
 
