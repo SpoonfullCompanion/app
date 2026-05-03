@@ -47,9 +47,9 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
-function UpdateCard({ update, response, onArchive, archiving, helperMap }: {
+function UpdateCard({ update, responses, onArchive, archiving, helperMap }: {
   update: StatusUpdate;
-  response: CaregiverResponse | null;
+  responses: CaregiverResponse[];
   onArchive: (id: string) => void;
   archiving: boolean;
   helperMap: Map<string, string>;
@@ -68,8 +68,10 @@ function UpdateCard({ update, response, onArchive, archiving, helperMap }: {
     : null;
   const energyStyle = energy ? (energyStyles[energy.id] ?? energyStyles.resting) : null;
   const isNeedsOnly = !energy && needs.length > 0 && symptoms.length === 0;
-  const isSeen = Boolean(response?.seenAt);
-  const hasNote = Boolean(response?.message);
+
+  const replied = responses.filter(r => r.message);
+  const seenOnly = responses.filter(r => r.seenAt && !r.message);
+  const anyActivity = responses.length > 0;
 
   return (
     <div className="flex overflow-hidden rounded-2xl border border-periwinkle/20 bg-midnight-black/60 shadow-lg">
@@ -202,25 +204,27 @@ function UpdateCard({ update, response, onArchive, archiving, helperMap }: {
         </div>
 
         {/* Helper response footer — shown on all update types */}
-        <div className="border-t border-white/5 px-4 py-3">
-          {hasNote ? (
-            <div className="flex items-start gap-2.5">
+        <div className="border-t border-white/5 px-4 py-3 space-y-2">
+          {replied.map(r => (
+            <div key={r.id} className="flex items-start gap-2.5">
               <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
               <div>
                 <p className="mb-0.5 text-[10px] uppercase tracking-[0.15em] text-off-white/70">
-                  {response!.caregiverDisplayName ?? 'Helper'} replied
+                  {r.caregiverDisplayName ?? 'Helper'} replied
                 </p>
-                <p className="text-sm text-off-white italic">{response!.message}</p>
+                <p className="text-sm text-off-white italic">{r.message}</p>
               </div>
             </div>
-          ) : isSeen ? (
+          ))}
+          {seenOnly.length > 0 && (
             <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
               <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
               <p className="text-xs font-medium text-green-300">
-                {response!.caregiverDisplayName ?? 'Helper'} saw this
+                Seen by {seenOnly.map(r => r.caregiverDisplayName ?? 'Helper').join(', ')}
               </p>
             </div>
-          ) : (
+          )}
+          {!anyActivity && (
             <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
               <EyeOff className="h-3.5 w-3.5 text-off-white/60" />
               <p className="text-xs text-off-white/70">Waiting for helper...</p>
@@ -233,7 +237,7 @@ function UpdateCard({ update, response, onArchive, archiving, helperMap }: {
 }
 
 export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeScreenProps) {
-  const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
+  const [responses, setResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [hasActiveConnections, setHasActiveConnections] = React.useState<boolean | null>(null);
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
   const [archivingId, setArchivingId] = React.useState<string | null>(null);
@@ -332,7 +336,7 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
                 <UpdateCard
                   key={update.id}
                   update={update}
-                  response={responses[update.id] ?? null}
+                  responses={responses[update.id] ?? []}
                   onArchive={handleArchive}
                   archiving={archivingId === update.id}
                   helperMap={helperMap}

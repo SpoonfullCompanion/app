@@ -1295,31 +1295,62 @@ export async function getPatientArchivedUpdates(session: AppSession): Promise<St
 
 export async function getResponsesForPatient(
   statusUpdateIds: string[],
-): Promise<Record<string, CaregiverResponse>> {
+): Promise<Record<string, CaregiverResponse[]>> {
   if (!supabase || !statusUpdateIds.length) return {};
 
   const { data, error } = await supabase
     .from('caregiver_responses')
     .select('*, caregiver:profiles!caregiver_responses_caregiver_id_fkey(display_name)')
     .in('status_update_id', statusUpdateIds)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
 
   if (error || !data) return {};
 
-  const map: Record<string, CaregiverResponse> = {};
+  const map: Record<string, CaregiverResponse[]> = {};
   for (const row of data) {
-    if (!map[row.status_update_id]) {
-      const caregiver = row.caregiver as Record<string, unknown> | null;
-      map[row.status_update_id] = {
-        id: row.id,
-        statusUpdateId: row.status_update_id,
-        caregiverId: row.caregiver_id,
-        caregiverDisplayName: (caregiver?.display_name as string) ?? undefined,
-        message: row.message,
-        seenAt: row.seen_at,
-        createdAt: row.created_at,
-      };
-    }
+    const caregiver = row.caregiver as Record<string, unknown> | null;
+    const response: CaregiverResponse = {
+      id: row.id,
+      statusUpdateId: row.status_update_id,
+      caregiverId: row.caregiver_id,
+      caregiverDisplayName: (caregiver?.display_name as string) ?? undefined,
+      message: row.message,
+      seenAt: row.seen_at,
+      createdAt: row.created_at,
+    };
+    if (!map[row.status_update_id]) map[row.status_update_id] = [];
+    map[row.status_update_id].push(response);
+  }
+  return map;
+}
+
+export async function getAllResponsesForUpdates(
+  statusUpdateIds: string[],
+): Promise<Record<string, CaregiverResponse[]>> {
+  if (!supabase || !statusUpdateIds.length) return {};
+
+  const { data, error } = await supabase
+    .from('caregiver_responses')
+    .select('*, caregiver:profiles!caregiver_responses_caregiver_id_fkey(display_name)')
+    .in('status_update_id', statusUpdateIds)
+    .order('created_at', { ascending: true });
+
+  if (error || !data) return {};
+
+  const map: Record<string, CaregiverResponse[]> = {};
+  for (const row of data) {
+    const caregiver = row.caregiver as Record<string, unknown> | null;
+    const response: CaregiverResponse = {
+      id: row.id,
+      statusUpdateId: row.status_update_id,
+      caregiverId: row.caregiver_id,
+      caregiverDisplayName: (caregiver?.display_name as string) ?? undefined,
+      message: row.message,
+      seenAt: row.seen_at,
+      createdAt: row.created_at,
+    };
+    if (!map[row.status_update_id]) map[row.status_update_id] = [];
+    map[row.status_update_id].push(response);
   }
   return map;
 }

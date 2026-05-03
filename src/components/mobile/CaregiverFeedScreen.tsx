@@ -1,11 +1,12 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import {
   archiveUpdate,
+  getAllResponsesForUpdates,
   getArchivedUpdateIds,
   getFollowerConnections,
   getResponsesForUpdates,
@@ -49,12 +50,16 @@ const QUICK_REPLIES_NEEDS = ['On it!', 'Be there soon', 'Coming in 10 minutes'];
 function UpdateFeedCard({
   update,
   response,
+  allResponses,
+  helperDisplayNames,
   isArchived,
   onRespond,
   onToggleArchive,
 }: {
   update: StatusUpdate;
   response: CaregiverResponse | null;
+  allResponses: CaregiverResponse[];
+  helperDisplayNames: Map<string, string>;
   isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
   onToggleArchive: (updateId: string) => void;
@@ -79,6 +84,15 @@ function UpdateFeedCard({
   const isNeedsOnly = !energy && needs.length > 0 && symptoms.length === 0;
   const isSeen = Boolean(response?.seenAt);
   const hasResponse = Boolean(response?.message);
+
+  // Other caregivers' responses (excluding this caregiver's own row)
+  const othersReplied = allResponses.filter(r => r.caregiverId !== response?.caregiverId && r.message);
+  const othersSeen = allResponses.filter(r => r.caregiverId !== response?.caregiverId && r.seenAt && !r.message);
+
+  // "Sent to" names for targeted updates
+  const sentToNames = (update.targetedFollowerIds ?? [])
+    .map(id => helperDisplayNames.get(id))
+    .filter(Boolean) as string[];
 
   const handleQuickReply = async (msg: string) => {
     setSending(true);
@@ -233,10 +247,18 @@ function UpdateFeedCard({
             </div>
           )}
 
+          {/* Sent to — visible when update was targeted to specific helpers */}
+          {sentToNames.length > 0 && (
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-off-white/50">
+              <SendHorizonal className="h-3 w-3 shrink-0" />
+              <span>Sent to: {sentToNames.join(', ')}</span>
+            </div>
+          )}
+
         </div>
 
         {/* Response area */}
-        <div className="border-t border-white/5 px-4 pb-4 pt-3">
+        <div className="border-t border-white/5 px-4 pb-4 pt-3 space-y-3">
           {hasResponse ? (
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
@@ -257,7 +279,7 @@ function UpdateFeedCard({
               </div>
 
               {expanded && (
-                <div className="mt-3 space-y-2">
+                <div className="space-y-2">
                   <div className="flex flex-wrap gap-2">
                     {(isNeedsOnly ? QUICK_REPLIES_NEEDS : QUICK_REPLIES_STATUS).map(msg => (
                       <button
@@ -290,6 +312,29 @@ function UpdateFeedCard({
                 </div>
               )}
             </>
+          )}
+
+          {/* Other helpers' responses */}
+          {(othersReplied.length > 0 || othersSeen.length > 0) && (
+            <div className="border-t border-white/5 pt-2.5 space-y-1.5">
+              {othersReplied.map(r => (
+                <div key={r.id} className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-periwinkle/60" />
+                  <p className="text-xs text-off-white/60">
+                    <span className="font-medium text-off-white/75">{r.caregiverDisplayName ?? 'Helper'}</span> replied:{' '}
+                    <span className="italic">{r.message}</span>
+                  </p>
+                </div>
+              ))}
+              {othersSeen.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Eye className="h-3.5 w-3.5 shrink-0 text-off-white/40" />
+                  <p className="text-xs text-off-white/50">
+                    Seen by {othersSeen.map(r => r.caregiverDisplayName ?? 'Helper').join(', ')}
+                  </p>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -329,6 +374,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
+  const [allResponses, setAllResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
   const [removingFromFeed, setRemovingFromFeed] = React.useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -385,6 +431,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       });
     }).catch(console.error);
 
+    getAllResponsesForUpdates(ids).then(setAllResponses).catch(console.error);
+
     const unseenIds = ids.filter(id => !responses[id]?.seenAt);
     if (unseenIds.length) {
       const now = new Date().toISOString();
@@ -432,12 +480,18 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     const result = await sendCaregiverResponse(session.profileId, updateId, message);
     if (result) {
       setResponses(prev => ({ ...prev, [updateId]: result }));
+      setAllResponses(prev => {
+        const existing = (prev[updateId] ?? []).filter(r => r.caregiverId !== session.profileId);
+        return { ...prev, [updateId]: [...existing, result] };
+      });
     } else {
       const now = new Date().toISOString();
-      setResponses(prev => ({
-        ...prev,
-        [updateId]: { id: crypto.randomUUID(), statusUpdateId: updateId, caregiverId: session.profileId, message, seenAt: now, createdAt: now },
-      }));
+      const fallback: CaregiverResponse = { id: crypto.randomUUID(), statusUpdateId: updateId, caregiverId: session.profileId, message, seenAt: now, createdAt: now };
+      setResponses(prev => ({ ...prev, [updateId]: fallback }));
+      setAllResponses(prev => {
+        const existing = (prev[updateId] ?? []).filter(r => r.caregiverId !== session.profileId);
+        return { ...prev, [updateId]: [...existing, fallback] };
+      });
     }
   };
 
@@ -446,6 +500,16 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const patientMap = new Map<string, { displayName: string; avatarIcon: string | null | undefined }>(
     activeConnections.map(c => [c.patientId, { displayName: c.patientDisplayName ?? 'Patient', avatarIcon: c.patientAvatarIcon }])
   );
+
+  // Map of follower ID → display name for "Sent to" labels on cards
+  const helperDisplayNames = React.useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of activeConnections) {
+      m.set(c.followerId, c.followerDisplayName ?? 'Helper');
+    }
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connections]);
 
   // Determine if we have multiple distinct patients in the feed
   const patientIds = [...new Set(updates.map(u => u.patientId))];
@@ -534,6 +598,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                         <UpdateFeedCard
                           update={update}
                           response={responses[update.id] ?? null}
+                          allResponses={allResponses[update.id] ?? []}
+                          helperDisplayNames={helperDisplayNames}
                           isArchived={archivedIds.has(update.id)}
                           onRespond={handleRespond}
                           onToggleArchive={handleToggleArchive}
@@ -570,6 +636,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                   <UpdateFeedCard
                     update={update}
                     response={responses[update.id] ?? null}
+                    allResponses={allResponses[update.id] ?? []}
+                    helperDisplayNames={helperDisplayNames}
                     isArchived={archivedIds.has(update.id)}
                     onRespond={handleRespond}
                     onToggleArchive={handleToggleArchive}
