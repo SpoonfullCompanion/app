@@ -213,17 +213,10 @@ function UpdateFeedCard({
             {/* Quick reply bar */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => void handleQuickReply('Got it')}
-                disabled={sending}
-                className="rounded-full border border-bold-blue/40 bg-bold-blue/20 px-4 py-1.5 text-sm font-medium text-off-white transition-all hover:bg-bold-blue/30 active:scale-95 disabled:opacity-50"
-              >
-                Got it
-              </button>
-              <button
                 onClick={() => setExpanded(v => !v)}
                 className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/60 transition-all hover:border-periwinkle/50 hover:text-off-white/80 active:scale-95"
               >
-                Note
+                Respond
                 {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
               </button>
             </div>
