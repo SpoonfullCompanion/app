@@ -2,7 +2,7 @@ import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Archive, X } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
-import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
+import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import {
   getArchivedUpdates,
@@ -110,11 +110,12 @@ function ArchivedUpdateCard({
           </div>
 
           {/* Message / appreciation text */}
-          {update.messageText && (
-            <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
-              {update.messageText}
-            </p>
-          )}
+          {update.messageText && (() => {
+            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
+            return stripped ? (
+              <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">{stripped}</p>
+            ) : null;
+          })()}
 
           {/* Energy */}
           {energy && energyStyle && (() => {

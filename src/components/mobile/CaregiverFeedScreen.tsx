@@ -2,7 +2,7 @@ import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal, CheckCircle2 } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
-import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
+import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import {
   archiveUpdate,
@@ -224,11 +224,12 @@ function UpdateFeedCard({
           )}
 
           {/* Message / appreciation text */}
-          {update.messageText && (
-            <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
-              {update.messageText}
-            </p>
-          )}
+          {update.messageText && (() => {
+            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
+            return stripped ? (
+              <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">{stripped}</p>
+            ) : null;
+          })()}
 
           {/* Needs */}
           {needs.length > 0 && (

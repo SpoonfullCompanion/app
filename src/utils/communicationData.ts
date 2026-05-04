@@ -46,6 +46,20 @@ export const ENERGY_STATUSES: EnergyStatus[] = [
   },
 ];
 
+export const stripNeedSpeechFromMessage = (message: string, selectedNeeds: string[]): string => {
+  let result = message;
+  for (const id of selectedNeeds) {
+    const need = NEEDS.find(n => n.id === id);
+    if (!need) continue;
+    const escaped = need.speech.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Remove "speech. " (with trailing space/period) or standalone "speech" at boundaries
+    result = result.replace(new RegExp(`${escaped}\\. ?`, 'gi'), '');
+    result = result.replace(new RegExp(`${escaped}`, 'gi'), '');
+  }
+  // Clean up leftover leading/trailing punctuation and whitespace
+  return result.trim().replace(/^[.\s]+/, '').trim();
+};
+
 export const SYMPTOMS: Symptom[] = [
   { id: 'pain', label: 'Pain', icon: 'Zap', text: 'I am in pain' },
   { id: 'headache', label: 'Head hurts', icon: 'Brain', text: 'My head hurts' },

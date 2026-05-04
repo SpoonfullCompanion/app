@@ -3,7 +3,7 @@ import * as LucideIcons from 'lucide-react';
 import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
-import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
+import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds, markUpdateResolved, unmarkUpdateResolved } from '../../services/backend';
 
@@ -232,11 +232,12 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
           )}
 
           {/* Custom note / appreciation text */}
-          {update.messageText && (
-            <p className="text-sm leading-relaxed text-off-white/75 whitespace-pre-wrap">
-              {update.messageText}
-            </p>
-          )}
+          {update.messageText && (() => {
+            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
+            return stripped ? (
+              <p className="text-sm leading-relaxed text-off-white/75 whitespace-pre-wrap">{stripped}</p>
+            ) : null;
+          })()}
         </div>
 
         {/* Helper response footer — shown on all update types */}
