@@ -49,28 +49,27 @@ function ArchivedCard({
   const hasNote = Boolean(response?.message);
 
   return (
-    <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
+    <div className={`relative flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
       removing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
     } border-periwinkle/20`}>
       {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
+      <button
+        onClick={() => onUnarchive(update.id)}
+        disabled={removing}
+        className="absolute right-2 top-2 rounded-lg p-1.5 text-off-white/40 transition-all hover:text-off-white/70 active:scale-90 disabled:opacity-30 z-10"
+        title="Remove from archive"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
       <div className="flex-1 min-w-0">
         <div className="p-4">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex items-center gap-2 pr-8">
             <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
               {isNeedsOnly ? 'Needs' : 'Status'}
             </span>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
-              <button
-                onClick={() => onUnarchive(update.id)}
-                disabled={removing}
-                className="text-off-white/30 transition-colors hover:text-off-white/70 active:scale-90 disabled:opacity-30"
-                title="Remove from archive"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
           </div>
 
           {update.messageText && (() => {
