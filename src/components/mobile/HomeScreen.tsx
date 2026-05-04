@@ -282,7 +282,9 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
   const [localUpdates, setLocalUpdates] = React.useState<StatusUpdate[]>(recentUpdatesProp);
 
   React.useEffect(() => {
-    setLocalUpdates(recentUpdatesProp);
+    setLocalUpdates(recentUpdatesProp.filter(u => !archivedIds.has(u.id)));
+  // archivedIds intentionally excluded — we only want prop changes to drive this
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recentUpdatesProp]);
 
   // Map of follower profile ID -> display name for "Sent to" labels

@@ -390,9 +390,15 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
   const [allResponses, setAllResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
+  const archivedIdsRef = React.useRef<Set<string>>(new Set());
   const [removingFromFeed, setRemovingFromFeed] = React.useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [hasLoaded, setHasLoaded] = React.useState(false);
+
+  // Keep ref in sync so loadFeed always sees latest optimistic archives
+  React.useEffect(() => {
+    archivedIdsRef.current = archivedIds;
+  }, [archivedIds]);
 
   const loadFeed = React.useCallback(async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);
@@ -403,11 +409,11 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
         getArchivedUpdateIds(session.profileId),
       ]);
       setConnections(conns);
-      setArchivedIds(archived);
-      const archivedSet = new Set(archived);
-      const visibleUpdates = (freshUpdates.length > 0 ? freshUpdates : legacyUpdates)
-        .filter(u => !archivedSet.has(u.id));
-      setUpdates(visibleUpdates);
+      // Merge DB-fetched archived IDs with any optimistically-archived IDs already tracked
+      const merged = new Set([...archivedIdsRef.current, ...archived]);
+      setArchivedIds(merged);
+      const source = freshUpdates.length > 0 ? freshUpdates : legacyUpdates;
+      setUpdates(source.filter(u => !merged.has(u.id)));
     } catch {
       setUpdates(legacyUpdates);
     } finally {
