@@ -336,13 +336,14 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
   const handleMarkResolved = async (update: StatusUpdate) => {
     if (!session || session.authMode === 'demo') return;
+    // Optimistically archive immediately so card leaves the feed
+    setArchivedIds(prev => new Set([...prev, update.id]));
     setLocalUpdates(prev => prev.map(u =>
       u.id === update.id
         ? { ...u, resolvedAt: new Date().toISOString(), resolvedBy: session.profileId }
         : u
     ));
-    await markUpdateResolved(update.id, session.profileId, update.patientId);
-    setArchivedIds(prev => new Set([...prev, update.id]));
+    await markUpdateResolved(update.id, session.profileId, update.patientId ?? session.profileId);
   };
 
   const handleUnresolve = async (updateId: string) => {
