@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -69,14 +69,6 @@ function UpdateFeedCard({
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
   const [sending, setSending] = React.useState(false);
-  const [checkedNeeds, setCheckedNeeds] = React.useState<Set<string>>(new Set());
-
-  const toggleNeed = (id: string) =>
-    setCheckedNeeds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
 
   const energy = update.energyStatus ? ENERGY_STATUSES.find(e => e.id === update.energyStatus) : null;
   const needs = (update.selectedNeeds ?? []).map(id => NEEDS.find(n => n.id === id)).filter(Boolean) as typeof NEEDS;
@@ -200,35 +192,14 @@ function UpdateFeedCard({
 
           {/* Needs */}
           {needs.length > 0 && (
-            <div className="mb-2 space-y-1.5">
+            <div className="mb-2 flex flex-wrap gap-1.5">
               {needs.map(need => {
                 const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-                const checked = checkedNeeds.has(need.id);
                 return (
-                  <button
-                    key={need.id}
-                    onClick={() => toggleNeed(need.id)}
-                    className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.98] ${
-                      checked
-                        ? 'border-green-600/40 bg-green-950/40'
-                        : 'border-bold-blue/40 bg-bold-blue/15'
-                    }`}
-                  >
-                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                      checked
-                        ? 'border-green-400 bg-green-400'
-                        : 'border-periwinkle/50 bg-transparent'
-                    }`}>
-                      {checked && <Check className="h-3 w-3 text-midnight-black" strokeWidth={3} />}
-                    </div>
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {Icon && <Icon className={`h-4 w-4 shrink-0 transition-colors ${checked ? 'text-green-400' : 'text-periwinkle'}`} />}
-                      <span className={`text-sm font-semibold transition-colors ${checked ? 'text-green-300 line-through decoration-green-600/60' : 'text-white'}`}>
-                        {need.label}
-                      </span>
-                    </div>
-                    {checked && <span className="text-xs text-green-400 shrink-0">Done</span>}
-                  </button>
+                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue px-2.5 py-1 text-sm font-semibold text-white">
+                    {Icon && <Icon className="h-3.5 w-3.5" />}
+                    {need.label}
+                  </div>
                 );
               })}
             </div>
