@@ -120,7 +120,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 className="rounded-lg p-1.5 text-off-white/50 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
                 title="Archive"
               >
-                <Archive className="h-7 w-7" />
+                <Archive className="h-5 w-5" />
               </button>
               <button
                 onClick={handleToggleResolve}
@@ -130,7 +130,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 }`}
                 title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
-                <CheckCircle2 className="h-7 w-7" />
+                <CheckCircle2 className="h-5 w-5" />
               </button>
             </div>
           </div>

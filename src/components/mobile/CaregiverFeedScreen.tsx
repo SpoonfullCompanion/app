@@ -141,7 +141,7 @@ function UpdateFeedCard({
                 }`}
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
-                <Archive className="h-7 w-7" />
+                <Archive className="h-5 w-5" />
               </button>
             </div>
           </div>
