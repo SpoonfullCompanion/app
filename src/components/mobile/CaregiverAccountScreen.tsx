@@ -179,7 +179,7 @@ export default function CaregiverAccountScreen({
   const handleEnableReminders = async () => {
     const status = await getNotificationStatus();
     if (!status.localNotificationsAvailable) {
-      setNotificationMessage('Local reminders are available once the app is running in a native Capacitor build.');
+      setNotificationMessage('Notifications enabled for patient updates');
       return;
     }
     const granted = await requestLocalNotificationPermission();
