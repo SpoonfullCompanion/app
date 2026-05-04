@@ -412,10 +412,9 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       // Merge DB-fetched archived IDs with any optimistically-archived IDs already tracked
       const merged = new Set([...archivedIdsRef.current, ...archived]);
       setArchivedIds(merged);
-      const source = freshUpdates.length > 0 ? freshUpdates : legacyUpdates;
-      setUpdates(source.filter(u => !merged.has(u.id) && !u.resolvedAt));
+      setUpdates(freshUpdates.filter(u => !merged.has(u.id) && !u.resolvedAt));
     } catch {
-      setUpdates(legacyUpdates);
+      setUpdates(legacyUpdates.filter(u => !archivedIdsRef.current.has(u.id) && !u.resolvedAt));
     } finally {
       setIsRefreshing(false);
       setHasLoaded(true);
