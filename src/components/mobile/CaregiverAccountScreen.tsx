@@ -190,8 +190,8 @@ export default function CaregiverAccountScreen({
     await scheduleLocalReminder();
     setNotificationMessage(
       status.pushConfigured
-        ? 'Local reminder scheduled.'
-        : 'Local reminder scheduled. Remote push is disabled until OneSignal is configured.',
+        ? 'App Notifications'
+        : 'App Notifications on. Remote push is disabled until OneSignal is configured.',
     );
   };
 
