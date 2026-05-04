@@ -282,9 +282,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
   const [localUpdates, setLocalUpdates] = React.useState<StatusUpdate[]>(recentUpdatesProp);
 
   React.useEffect(() => {
-    setLocalUpdates(recentUpdatesProp.filter(u => !archivedIds.has(u.id)));
-  // archivedIds intentionally excluded — we only want prop changes to drive this
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setLocalUpdates(recentUpdatesProp);
   }, [recentUpdatesProp]);
 
   // Map of follower profile ID -> display name for "Sent to" labels
@@ -338,14 +336,13 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
   const handleMarkResolved = async (update: StatusUpdate) => {
     if (!session || session.authMode === 'demo') return;
-    // Optimistically archive immediately so card leaves the feed
-    setArchivedIds(prev => new Set([...prev, update.id]));
     setLocalUpdates(prev => prev.map(u =>
       u.id === update.id
         ? { ...u, resolvedAt: new Date().toISOString(), resolvedBy: session.profileId }
         : u
     ));
-    await markUpdateResolved(update.id, session.profileId, update.patientId ?? session.profileId);
+    await markUpdateResolved(update.id, session.profileId, update.patientId);
+    setArchivedIds(prev => new Set([...prev, update.id]));
   };
 
   const handleUnresolve = async (updateId: string) => {
