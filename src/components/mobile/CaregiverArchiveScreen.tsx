@@ -253,7 +253,7 @@ function ArchivedUpdateCard({
                       onChange={e => setCustomNote(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') void handleSendNote(); }}
                       placeholder="Write a note…"
-                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-off-white/50 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
+                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-white placeholder-off-white/50 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
                     />
                     <button
                       onClick={() => void handleSendNote()}

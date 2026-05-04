@@ -112,7 +112,7 @@ export default function CaregiverConnectionsScreen({
               placeholder="Search patients by display name…"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-sm text-off-white placeholder-off-white/55 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
+              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-base text-off-white placeholder-off-white/55 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
             />
             {isSearching && (
               <Loader className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-periwinkle/60" />
