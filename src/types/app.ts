@@ -62,6 +62,8 @@ export interface StatusUpdate {
   needPriority?: NeedPriority | null;
   /** null = broadcast to all active helpers; non-null = targeted helper profile IDs */
   targetedFollowerIds?: string[] | null;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
   /** Denormalized — populated on friend feed updates */
   patientDisplayName?: string;
   patientAvatarIcon?: string | null;

@@ -1,11 +1,11 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, CheckCircle, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
-import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds } from '../../services/backend';
+import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds, markUpdateResolved, unmarkUpdateResolved } from '../../services/backend';
 
 interface HomeScreenProps {
   session: AppSession | null;
@@ -47,13 +47,27 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
-function UpdateCard({ update, responses, onArchive, archiving, helperMap }: {
+function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMarkResolved, onUnresolve }: {
   update: StatusUpdate;
   responses: CaregiverResponse[];
   onArchive: (id: string) => void;
   archiving: boolean;
   helperMap: Map<string, string>;
+  onMarkResolved: (update: StatusUpdate) => Promise<void>;
+  onUnresolve: (updateId: string) => Promise<void>;
 }) {
+  const [resolving, setResolving] = React.useState(false);
+  const isResolved = Boolean(update.resolvedAt);
+
+  const handleToggleResolve = async () => {
+    setResolving(true);
+    if (isResolved) {
+      await onUnresolve(update.id);
+    } else {
+      await onMarkResolved(update);
+    }
+    setResolving(false);
+  };
   const energy = update.energyStatus
     ? ENERGY_STATUSES.find(e => e.id === update.energyStatus)
     : null;
@@ -74,20 +88,32 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap }: {
   const anyActivity = responses.length > 0;
 
   return (
-    <div className="flex overflow-hidden rounded-2xl border border-periwinkle/20 bg-midnight-black/60 shadow-lg">
+    <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
+      isResolved ? 'border-green-700/40 opacity-70' : 'border-periwinkle/20'
+    }`}>
       {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
       <div className="flex-1 min-w-0">
         <div className="p-4">
           {/* Header row */}
-          <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
               {isNeedsOnly ? 'Needs' : 'Status'}
             </span>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span className="text-xs text-off-white/60">
                 {formatDistanceToNow(update.sentAt)}
               </span>
+              <button
+                onClick={handleToggleResolve}
+                disabled={resolving}
+                className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
+                  isResolved ? 'text-green-400' : 'text-off-white/40 hover:text-green-400'
+                }`}
+                title={isResolved ? 'Mark unresolved' : 'Mark as done'}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </button>
               <button
                 onClick={() => onArchive(update.id)}
                 disabled={archiving}
@@ -98,6 +124,13 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap }: {
               </button>
             </div>
           </div>
+          {isResolved && (
+            <div className="flex items-center gap-1 mt-1 mb-3">
+              <CheckCircle className="h-3 w-3 text-green-400" />
+              <span className="text-xs text-green-400">Resolved</span>
+            </div>
+          )}
+          {!isResolved && <div className="mb-3" />}
 
           {/* Energy */}
           {energy && energyStyle && (() => {
@@ -236,12 +269,17 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap }: {
   );
 }
 
-export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeScreenProps) {
+export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, onNavigate }: HomeScreenProps) {
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [hasActiveConnections, setHasActiveConnections] = React.useState<boolean | null>(null);
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
   const [archivingId, setArchivingId] = React.useState<string | null>(null);
   const [helpers, setHelpers] = React.useState<Connection[]>([]);
+  const [localUpdates, setLocalUpdates] = React.useState<StatusUpdate[]>(recentUpdatesProp);
+
+  React.useEffect(() => {
+    setLocalUpdates(recentUpdatesProp);
+  }, [recentUpdatesProp]);
 
   // Map of follower profile ID -> display name for "Sent to" labels
   const helperMap = React.useMemo(() => {
@@ -253,10 +291,10 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
   }, [helpers]);
 
   const fetchResponses = React.useCallback(() => {
-    if (!recentUpdates.length) return;
-    const ids = recentUpdates.map(u => u.id);
+    if (!localUpdates.length) return;
+    const ids = localUpdates.map(u => u.id);
     getResponsesForPatient(ids).then(setResponses).catch(console.error);
-  }, [recentUpdates]);
+  }, [localUpdates]);
 
   React.useEffect(() => {
     fetchResponses();
@@ -292,7 +330,26 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
     setArchivingId(null);
   };
 
-  const visibleUpdates = recentUpdates.filter(u => !archivedIds.has(u.id));
+  const handleMarkResolved = async (update: StatusUpdate) => {
+    if (!session || session.authMode === 'demo') return;
+    setLocalUpdates(prev => prev.map(u =>
+      u.id === update.id
+        ? { ...u, resolvedAt: new Date().toISOString(), resolvedBy: session.profileId }
+        : u
+    ));
+    await markUpdateResolved(update.id, session.profileId, update.patientId);
+    setArchivedIds(prev => new Set([...prev, update.id]));
+  };
+
+  const handleUnresolve = async (updateId: string) => {
+    if (!session || session.authMode === 'demo') return;
+    setLocalUpdates(prev => prev.map(u =>
+      u.id === updateId ? { ...u, resolvedAt: null, resolvedBy: null } : u
+    ));
+    await unmarkUpdateResolved(updateId);
+  };
+
+  const visibleUpdates = localUpdates.filter(u => !archivedIds.has(u.id));
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
@@ -340,6 +397,8 @@ export default function HomeScreen({ session, recentUpdates, onNavigate }: HomeS
                   onArchive={handleArchive}
                   archiving={archivingId === update.id}
                   helperMap={helperMap}
+                  onMarkResolved={handleMarkResolved}
+                  onUnresolve={handleUnresolve}
                 />
               ))}
             </div>

@@ -657,6 +657,8 @@ function mapStatusRecord(data: Record<string, unknown>): StatusUpdate {
     delivery: data.delivery as 'sent' | 'draft',
     needPriority: (data.need_priority as StatusUpdate['needPriority']) ?? null,
     targetedFollowerIds: (data.targeted_follower_ids as string[] | null) ?? null,
+    resolvedAt: (data.resolved_at as string | null) ?? null,
+    resolvedBy: (data.resolved_by as string | null) ?? null,
   };
 }
 
@@ -1292,6 +1294,41 @@ export async function getPatientArchivedUpdates(session: AppSession): Promise<St
 }
 
 // ─── End Patient Archive ──────────────────────────────────────────────────────
+
+// ─── Resolve ──────────────────────────────────────────────────────────────────
+
+/**
+ * Mark an update resolved and archive it for both the helper and patient side.
+ * patientId is needed to write the patient archive entry.
+ */
+export async function markUpdateResolved(
+  updateId: string,
+  resolvedByProfileId: string,
+  patientId: string,
+): Promise<void> {
+  if (!supabase) return;
+
+  await supabase
+    .from('status_updates')
+    .update({ resolved_at: new Date().toISOString(), resolved_by: resolvedByProfileId })
+    .eq('id', updateId);
+
+  await Promise.all([
+    archiveUpdate(resolvedByProfileId, updateId),
+    archivePatientUpdate(patientId, updateId),
+  ]);
+}
+
+export async function unmarkUpdateResolved(updateId: string): Promise<void> {
+  if (!supabase) return;
+
+  await supabase
+    .from('status_updates')
+    .update({ resolved_at: null, resolved_by: null })
+    .eq('id', updateId);
+}
+
+// ─── End Resolve ──────────────────────────────────────────────────────────────
 
 // ─── End Archive ──────────────────────────────────────────────────────────────
 
