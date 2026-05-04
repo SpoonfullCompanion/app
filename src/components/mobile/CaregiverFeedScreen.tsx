@@ -51,6 +51,7 @@ function UpdateFeedCard({
   update,
   response,
   allResponses,
+  currentProfileId,
   helperDisplayNames,
   isArchived,
   onRespond,
@@ -59,6 +60,7 @@ function UpdateFeedCard({
   update: StatusUpdate;
   response: CaregiverResponse | null;
   allResponses: CaregiverResponse[];
+  currentProfileId: string;
   helperDisplayNames: Map<string, string>;
   isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
@@ -86,8 +88,8 @@ function UpdateFeedCard({
   const hasResponse = Boolean(response?.message);
 
   // Other caregivers' responses (excluding this caregiver's own row)
-  const othersReplied = allResponses.filter(r => r.caregiverId !== response?.caregiverId && r.message);
-  const othersSeen = allResponses.filter(r => r.caregiverId !== response?.caregiverId && r.seenAt && !r.message);
+  const othersReplied = allResponses.filter(r => r.caregiverId !== currentProfileId && r.message?.trim());
+  const othersSeen = allResponses.filter(r => r.caregiverId !== currentProfileId && r.seenAt && !r.message?.trim());
 
   // "Sent to" names for targeted updates
   const sentToNames = (update.targetedFollowerIds ?? [])
@@ -599,6 +601,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                           update={update}
                           response={responses[update.id] ?? null}
                           allResponses={allResponses[update.id] ?? []}
+                          currentProfileId={session.profileId}
                           helperDisplayNames={helperDisplayNames}
                           isArchived={archivedIds.has(update.id)}
                           onRespond={handleRespond}
@@ -637,6 +640,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                     update={update}
                     response={responses[update.id] ?? null}
                     allResponses={allResponses[update.id] ?? []}
+                    currentProfileId={session.profileId}
                     helperDisplayNames={helperDisplayNames}
                     isArchived={archivedIds.has(update.id)}
                     onRespond={handleRespond}

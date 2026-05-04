@@ -69,8 +69,8 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap }: {
   const energyStyle = energy ? (energyStyles[energy.id] ?? energyStyles.resting) : null;
   const isNeedsOnly = !energy && needs.length > 0 && symptoms.length === 0;
 
-  const replied = responses.filter(r => r.message);
-  const seenOnly = responses.filter(r => r.seenAt && !r.message);
+  const replied = responses.filter(r => r.message?.trim());
+  const seenOnly = responses.filter(r => r.seenAt && !r.message?.trim());
   const anyActivity = responses.length > 0;
 
   return (
