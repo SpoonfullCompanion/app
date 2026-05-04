@@ -413,7 +413,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       const merged = new Set([...archivedIdsRef.current, ...archived]);
       setArchivedIds(merged);
       const source = freshUpdates.length > 0 ? freshUpdates : legacyUpdates;
-      setUpdates(source.filter(u => !merged.has(u.id)));
+      setUpdates(source.filter(u => !merged.has(u.id) && !u.resolvedAt));
     } catch {
       setUpdates(legacyUpdates);
     } finally {
