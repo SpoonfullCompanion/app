@@ -688,6 +688,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                     isArchived={archivedIds.has(update.id)}
                     onRespond={handleRespond}
                     onToggleArchive={handleToggleArchive}
+                    onMarkResolved={handleMarkResolved}
+                    onUnresolve={handleUnresolve}
                   />
                 </div>
               ))}
