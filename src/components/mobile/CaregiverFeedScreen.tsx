@@ -338,16 +338,18 @@ function PatientSectionHeader({
   unseenCount: number;
 }) {
   return (
-    <div className="flex items-center gap-3 mb-3 mt-6 first:mt-0">
-      <AvatarIcon iconId={avatarIcon} size="sm" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-off-white truncate">{displayName}</p>
+    <div className="flex flex-col items-center mb-5 mt-8 first:mt-0">
+      <AvatarIcon iconId={avatarIcon} size="lg" />
+      <div className="mt-2.5 flex items-center gap-2">
+        <p className="text-base font-semibold text-off-white">{displayName}</p>
+        {unseenCount > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+            {unseenCount}
+          </span>
+        )}
       </div>
-      {unseenCount > 0 && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-          {unseenCount}
-        </span>
-      )}
+      <p className="mt-0.5 text-xs text-off-white/45 tracking-wide">Patient</p>
+      <div className="mt-4 w-full h-px bg-periwinkle/10" />
     </div>
   );
 }
