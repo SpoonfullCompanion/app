@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal, CheckCircle2 } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -11,11 +11,9 @@ import {
   getFollowerConnections,
   getResponsesForUpdates,
   getUpdatesForConnectedPatients,
-  markUpdateResolved,
   markUpdatesSeen,
   sendCaregiverResponse,
   unarchiveUpdate,
-  unmarkUpdateResolved,
 } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 
@@ -67,28 +65,12 @@ function UpdateFeedCard({
   isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
   onToggleArchive: (updateId: string) => void;
-  onMarkResolved: (update: StatusUpdate) => Promise<void>;
-  onUnresolve: (updateId: string) => Promise<void>;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
   const [sending, setSending] = React.useState(false);
-  const [resolving, setResolving] = React.useState(false);
 
   const isResolved = Boolean(update.resolvedAt);
-  const resolvedByName = update.resolvedBy
-    ? (helperDisplayNames.get(update.resolvedBy) ?? (update.resolvedBy === currentProfileId ? 'You' : 'Someone'))
-    : null;
-
-  const handleToggleResolve = async () => {
-    setResolving(true);
-    if (isResolved) {
-      await onUnresolve(update.id);
-    } else {
-      await onMarkResolved(update);
-    }
-    setResolving(false);
-  };
 
   const energy = update.energyStatus ? ENERGY_STATUSES.find(e => e.id === update.energyStatus) : null;
   const needs = (update.selectedNeeds ?? []).map(id => NEEDS.find(n => n.id === id)).filter(Boolean) as typeof NEEDS;
@@ -146,9 +128,7 @@ function UpdateFeedCard({
                 {isResolved && (
                   <>
                     <span className="text-off-white/30">·</span>
-                    <span className="text-xs text-green-400">
-                      {resolvedByName ? `Resolved by ${resolvedByName}` : 'Resolved'}
-                    </span>
+                    <span className="text-xs text-green-400">Resolved</span>
                   </>
                 )}
               </div>
@@ -162,16 +142,6 @@ function UpdateFeedCard({
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
                 <Archive className="h-7 w-7" />
-              </button>
-              <button
-                onClick={handleToggleResolve}
-                disabled={resolving}
-                className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
-                  isResolved ? 'text-green-400' : 'text-off-white/35 hover:text-green-400'
-                }`}
-                title={isResolved ? 'Mark unresolved' : 'Mark as done'}
-              >
-                <CheckCircle2 className="h-7 w-7" />
               </button>
             </div>
           </div>
@@ -490,35 +460,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     }
   };
 
-  const handleMarkResolved = async (update: StatusUpdate) => {
-    // Optimistically update resolved state in local list
-    setUpdates(prev => prev.map(u =>
-      u.id === update.id
-        ? { ...u, resolvedAt: new Date().toISOString(), resolvedBy: session.profileId }
-        : u
-    ));
-    // Archive for both sides, then animate out
-    await markUpdateResolved(update.id, session.profileId, update.patientId);
-    setArchivedIds(prev => new Set(prev).add(update.id));
-    setRemovingFromFeed(prev => new Set(prev).add(update.id));
-    setTimeout(() => {
-      setUpdates(prev => prev.filter(u => u.id !== update.id));
-      setRemovingFromFeed(prev => {
-        const next = new Set(prev);
-        next.delete(update.id);
-        return next;
-      });
-    }, 300);
-    onArchiveChanged?.();
-  };
-
-  const handleUnresolve = async (updateId: string) => {
-    setUpdates(prev => prev.map(u =>
-      u.id === updateId ? { ...u, resolvedAt: null, resolvedBy: null } : u
-    ));
-    await unmarkUpdateResolved(updateId);
-  };
-
   const handleRespond = async (updateId: string, message: string) => {
     const result = await sendCaregiverResponse(session.profileId, updateId, message);
     if (result) {
@@ -647,8 +588,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                           isArchived={archivedIds.has(update.id)}
                           onRespond={handleRespond}
                           onToggleArchive={handleToggleArchive}
-                          onMarkResolved={handleMarkResolved}
-                          onUnresolve={handleUnresolve}
                         />
                       </div>
                     ))}
