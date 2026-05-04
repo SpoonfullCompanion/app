@@ -120,7 +120,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 className="rounded-lg p-1.5 text-off-white/50 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
                 title="Archive"
               >
-                <Archive className="h-4 w-4" />
+                <Archive className="h-7 w-7" />
               </button>
               <button
                 onClick={handleToggleResolve}

@@ -161,7 +161,7 @@ function UpdateFeedCard({
                 }`}
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
-                <Archive className="h-4 w-4" />
+                <Archive className="h-7 w-7" />
               </button>
               <button
                 onClick={handleToggleResolve}
