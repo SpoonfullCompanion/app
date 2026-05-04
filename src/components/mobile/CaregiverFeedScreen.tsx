@@ -133,21 +133,31 @@ function UpdateFeedCard({
       <div className="flex-1 min-w-0">
         <div className="p-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
-                {isNeedsOnly ? 'Needs' : 'Status'}
-              </span>
-              {!isSeen && <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />}
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
+                  {isNeedsOnly ? 'Needs' : 'Status'}
+                </span>
+                {!isSeen && <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />}
+              </div>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
+                {isResolved && (
+                  <>
+                    <span className="text-off-white/30">·</span>
+                    <span className="text-xs text-green-400">
+                      {resolvedByName ? `Resolved by ${resolvedByName}` : 'Resolved'}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
+            <div className="flex shrink-0 items-center gap-0.5">
               <button
                 onClick={() => onToggleArchive(update.id)}
                 className={`rounded-lg p-1.5 transition-all active:scale-90 ${
-                  isArchived
-                    ? 'text-bold-blue'
-                    : 'text-off-white/60 hover:text-off-white'
+                  isArchived ? 'text-bold-blue' : 'text-off-white/50 hover:text-off-white'
                 }`}
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
@@ -156,24 +166,15 @@ function UpdateFeedCard({
               <button
                 onClick={handleToggleResolve}
                 disabled={resolving}
-                className={`rounded-lg p-1.5 transition-all active:scale-90 disabled:opacity-50 ${
-                  isResolved ? 'text-green-400' : 'text-off-white/40 hover:text-green-400'
+                className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
+                  isResolved ? 'text-green-400' : 'text-off-white/35 hover:text-green-400'
                 }`}
                 title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
-                <CheckCircle2 className="h-6 w-6" />
+                <CheckCircle2 className="h-7 w-7" />
               </button>
             </div>
           </div>
-          {isResolved && (
-            <div className="flex items-center gap-1 mb-3 mt-1">
-              <CheckCircle className="h-3 w-3 text-green-400" />
-              <span className="text-xs text-green-400">
-                {resolvedByName ? `Resolved by ${resolvedByName}` : 'Resolved'}
-              </span>
-            </div>
-          )}
-          {!isResolved && <div className="mb-3" />}
 
           {/* Energy */}
           {energy && energyStyle && (() => {

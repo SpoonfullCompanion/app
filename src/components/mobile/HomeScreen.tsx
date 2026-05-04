@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, CheckCircle, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
@@ -96,41 +96,44 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
       <div className="flex-1 min-w-0">
         <div className="p-4">
           {/* Header row */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
-              {isNeedsOnly ? 'Needs' : 'Status'}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-off-white/60">
-                {formatDistanceToNow(update.sentAt)}
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div>
+              <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
+                {isNeedsOnly ? 'Needs' : 'Status'}
               </span>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="text-xs text-off-white/60">
+                  {formatDistanceToNow(update.sentAt)}
+                </span>
+                {isResolved && (
+                  <>
+                    <span className="text-off-white/30">·</span>
+                    <span className="text-xs text-green-400">Resolved</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-0.5">
               <button
                 onClick={() => onArchive(update.id)}
                 disabled={archiving}
-                className="rounded-lg p-1 text-off-white/55 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
+                className="rounded-lg p-1.5 text-off-white/50 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
                 title="Archive"
               >
-                <Archive className="h-3.5 w-3.5" />
+                <Archive className="h-4 w-4" />
               </button>
               <button
                 onClick={handleToggleResolve}
                 disabled={resolving}
                 className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
-                  isResolved ? 'text-green-400' : 'text-off-white/40 hover:text-green-400'
+                  isResolved ? 'text-green-400' : 'text-off-white/35 hover:text-green-400'
                 }`}
                 title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle2 className="h-7 w-7" />
               </button>
             </div>
           </div>
-          {isResolved && (
-            <div className="flex items-center gap-1 mt-1 mb-3">
-              <CheckCircle className="h-3 w-3 text-green-400" />
-              <span className="text-xs text-green-400">Resolved</span>
-            </div>
-          )}
-          {!isResolved && <div className="mb-3" />}
 
           {/* Energy */}
           {energy && energyStyle && (() => {
