@@ -105,6 +105,14 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 {formatDistanceToNow(update.sentAt)}
               </span>
               <button
+                onClick={() => onArchive(update.id)}
+                disabled={archiving}
+                className="rounded-lg p-1 text-off-white/55 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
+                title="Archive"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+              <button
                 onClick={handleToggleResolve}
                 disabled={resolving}
                 className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
@@ -112,15 +120,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 }`}
                 title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={() => onArchive(update.id)}
-                disabled={archiving}
-                className="text-off-white/55 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
-                title="Archive"
-              >
-                <Archive className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-5 w-5" />
               </button>
             </div>
           </div>

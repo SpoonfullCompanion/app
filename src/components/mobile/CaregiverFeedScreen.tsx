@@ -143,16 +143,6 @@ function UpdateFeedCard({
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
               <button
-                onClick={handleToggleResolve}
-                disabled={resolving}
-                className={`rounded-lg p-1.5 transition-all active:scale-90 disabled:opacity-50 ${
-                  isResolved ? 'text-green-400' : 'text-off-white/40 hover:text-green-400'
-                }`}
-                title={isResolved ? 'Mark unresolved' : 'Mark as done'}
-              >
-                <CheckCircle2 className="h-4 w-4" />
-              </button>
-              <button
                 onClick={() => onToggleArchive(update.id)}
                 className={`rounded-lg p-1.5 transition-all active:scale-90 ${
                   isArchived
@@ -162,6 +152,16 @@ function UpdateFeedCard({
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
                 <Archive className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleToggleResolve}
+                disabled={resolving}
+                className={`rounded-lg p-1.5 transition-all active:scale-90 disabled:opacity-50 ${
+                  isResolved ? 'text-green-400' : 'text-off-white/40 hover:text-green-400'
+                }`}
+                title={isResolved ? 'Mark unresolved' : 'Mark as done'}
+              >
+                <CheckCircle2 className="h-6 w-6" />
               </button>
             </div>
           </div>
