@@ -3,7 +3,6 @@ import * as LucideIcons from 'lucide-react';
 import { Clock, Hourglass, Zap, MessageSquare, X, ArchiveX, EyeOff, MessageCircle, CheckCircle2 } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
-import { stripNeedsFromMessage } from '../../utils/messageComposer';
 import { formatDistanceToNow } from './time';
 import { getPatientArchivedUpdates, unarchivePatientUpdate, getResponsesForPatient } from '../../services/backend';
 
@@ -74,9 +73,9 @@ function ArchivedCard({
             </div>
           </div>
 
-          {update.messageText && stripNeedsFromMessage(update.messageText) && (
+          {update.messageText && (
             <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">
-              {stripNeedsFromMessage(update.messageText)}
+              {update.messageText}
             </p>
           )}
 

@@ -118,10 +118,6 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
       const needsArray = Array.from(selectedNeeds);
       const parts: string[] = [];
 
-      const needMessages = needsArray
-        .map(id => NEEDS.find(n => n.id === id)?.speech)
-        .filter(Boolean) as string[];
-      if (needMessages.length > 0) parts.push(needMessages.join('. '));
       if (customNote.trim()) parts.push(customNote.trim());
 
       const appreciationMessages = Array.from(selectedAppreciation)
