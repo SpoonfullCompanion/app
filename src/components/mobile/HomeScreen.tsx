@@ -4,6 +4,7 @@ import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRig
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS } from '../../utils/communicationData';
+import { stripNeedsFromMessage } from '../../utils/messageComposer';
 import { formatDistanceToNow } from './time';
 import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds, markUpdateResolved, unmarkUpdateResolved } from '../../services/backend';
 
@@ -232,9 +233,9 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
           )}
 
           {/* Custom note / appreciation text */}
-          {update.messageText && (
+          {update.messageText && stripNeedsFromMessage(update.messageText) && (
             <p className="text-sm leading-relaxed text-off-white/75 whitespace-pre-wrap">
-              {update.messageText}
+              {stripNeedsFromMessage(update.messageText)}
             </p>
           )}
         </div>

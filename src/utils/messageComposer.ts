@@ -39,6 +39,11 @@ export const composeMessage = (
   return message;
 };
 
+export const stripNeedsFromMessage = (message: string): string => {
+  // Remove the "I need:\n• ...\n• ...\n\n" block
+  return message.replace(/I need:\n(•[^\n]*\n)*/g, '').replace(/\n{3,}/g, '\n\n').trim();
+};
+
 export const copyToClipboard = async (text: string): Promise<boolean> => {
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
