@@ -223,14 +223,6 @@ function UpdateFeedCard({
             )
           )}
 
-          {/* Message / appreciation text */}
-          {update.messageText && (() => {
-            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
-            return stripped ? (
-              <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">{stripped}</p>
-            ) : null;
-          })()}
-
           {/* Needs */}
           {needs.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
@@ -245,6 +237,14 @@ function UpdateFeedCard({
               })}
             </div>
           )}
+
+          {/* Message / appreciation text */}
+          {update.messageText && (() => {
+            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
+            return stripped ? (
+              <p className="mt-2 mb-1 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">{stripped}</p>
+            ) : null;
+          })()}
 
           {/* Symptoms */}
           {symptoms.length > 0 && (
