@@ -8,11 +8,24 @@
   html {
     scroll-behavior: smooth;
     background-color: #1D1D1D;
+    /* Extend background behind iPhone status bar */
+    height: 100%;
   }
 
   body {
     font-family: 'Montserrat', system-ui, sans-serif;
     line-height: 1.6;
+    background-color: #1D1D1D;
+    min-height: 100%;
+    min-height: 100dvh;
+  }
+
+  #root {
+    min-height: 100%;
+    min-height: 100dvh;
+    /* Push content below the status bar while background fills behind it */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
     background-color: #1D1D1D;
   }
   

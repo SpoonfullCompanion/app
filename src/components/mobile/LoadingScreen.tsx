@@ -7,7 +7,7 @@ export function LoadingScreen() {
         <img
           src="/Spoonfull-Logo-DarkBG.svg"
           alt="Spoonfull"
-          className="w-40 h-auto opacity-90 md:w-48"
+          className="w-52 h-auto opacity-90 md:w-60"
         />
       </div>
 
