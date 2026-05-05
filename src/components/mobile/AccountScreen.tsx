@@ -17,7 +17,7 @@ interface AccountScreenProps {
 type EditingField = 'displayName' | 'email' | 'password' | 'avatar' | null;
 
 const inputClass =
-  'flex-1 min-w-0 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-off-white placeholder-off-white/30 outline-none focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/30';
+  'flex-1 min-w-0 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-off-white placeholder-off-white/30 outline-none focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/30';
 
 function SaveButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
   return (

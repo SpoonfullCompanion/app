@@ -41,9 +41,13 @@
     min-width: 44px;
   }
 
-  /* Prevent iOS WKWebView auto-zoom on input focus (requires font-size >= 16px) */
+  /* Prevent iOS WKWebView auto-zoom on input focus.
+     !important is required because Tailwind's text-* utilities (e.g. .text-sm = 14px)
+     are class selectors (specificity 0,1,0) and would otherwise beat the type selector
+     here (0,0,1). max(16px, 1em) preserves any larger size set upstream so accessibility
+     font scaling still passes through. */
   input, textarea, select {
-    font-size: max(16px, 1em);
+    font-size: max(16px, 1em) !important;
   }
   
   /* Reduce motion for users who prefer it */

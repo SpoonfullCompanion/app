@@ -143,7 +143,7 @@ export default function HospitalTTSScreen({ ttsEnabled }: HospitalTTSScreenProps
             onChange={(e) => setCustomText(e.target.value)}
             placeholder="Type a custom message or note here..."
             rows={3}
-            className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-sm text-white placeholder-zinc-100/60 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30 resize-none"
+            className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-white placeholder-zinc-100/60 focus:border-bold-blue focus:outline-none focus:ring-2 focus:ring-bold-blue/30 resize-none"
           />
           <button
             onClick={handleCustomSpeak}
