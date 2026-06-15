@@ -390,7 +390,7 @@ export default function CaregiverAccountScreen({
               <p className="text-xs text-off-white/50">
                 {isNative
                   ? 'Get notified when a patient sends you a message'
-                  : 'Requires the native iOS or Android app'}
+                  : 'Toggle notifications on or off from your mobile device'}
               </p>
             </div>
             <button
