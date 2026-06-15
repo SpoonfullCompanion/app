@@ -1,9 +1,10 @@
 import React from 'react';
-import { User, Mail, LogOut, Pencil, Check, X, Lock } from 'lucide-react';
+import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff } from 'lucide-react';
 import type { AppSession } from '../../types/app';
-import { checkDisplayNameAvailable } from '../../services/backend';
+import { checkDisplayNameAvailable, loadPushPreference, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
+import { enablePush, disablePush } from '../../services/push';
 
 interface AccountScreenProps {
   session: AppSession | null;
@@ -87,6 +88,43 @@ export default function AccountScreen({
 
   // Avatar icon state
   const [draftIcon, setDraftIcon] = React.useState(session?.avatarIcon ?? 'leaf');
+
+  // Push notification preference
+  const [pushEnabled, setPushEnabled] = React.useState(false);
+  const [pushLoading, setPushLoading] = React.useState(false);
+  const [pushHint, setPushHint] = React.useState('');
+
+  React.useEffect(() => {
+    if (!session?.profileId) return;
+    void loadPushPreference(session.profileId).then(setPushEnabled);
+  }, [session?.profileId]);
+
+  const handleTogglePush = async () => {
+    if (!session?.profileId || pushLoading) return;
+    setPushLoading(true);
+    setPushHint('');
+
+    if (!pushEnabled) {
+      const result = await enablePush(session.profileId);
+      if (!result.ok) {
+        setPushHint(
+          result.reason === 'denied'
+            ? 'Enable notifications in your device Settings to receive alerts.'
+            : 'Push notifications are available in the Spoonfull mobile app.',
+        );
+        setPushLoading(false);
+        return;
+      }
+      await savePushPreference(session.profileId, true);
+      setPushEnabled(true);
+    } else {
+      await disablePush();
+      await savePushPreference(session.profileId, false);
+      setPushEnabled(false);
+    }
+
+    setPushLoading(false);
+  };
 
   const startEditing = (field: EditingField) => {
     setEditing(field);
@@ -327,6 +365,36 @@ export default function AccountScreen({
             </div>
           </div>
 
+        </div>
+
+        {/* Notifications section */}
+        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/50">Notifications</div>
+        <div className="mb-8 rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
+          <div className="flex items-center gap-3">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${pushEnabled ? 'bg-bold-blue/20' : 'bg-dark-blue/40'}`}>
+              {pushEnabled
+                ? <Bell className="h-5 w-5 text-bold-blue" />
+                : <BellOff className="h-5 w-5 text-off-white/40" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-off-white text-sm">Caregiver reply alerts</p>
+              <p className="text-xs text-off-white/50">Get notified when a helper responds to your update</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleTogglePush()}
+              disabled={pushLoading}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${pushEnabled ? 'bg-bold-blue' : 'bg-dark-blue'}`}
+              aria-checked={pushEnabled}
+              role="switch"
+              aria-label="Toggle caregiver reply notifications"
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${pushEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
+          {pushHint && <p className="mt-3 text-xs text-off-white/50">{pushHint}</p>}
         </div>
 
         {/* Session section */}

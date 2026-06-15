@@ -7,21 +7,25 @@ on:
     inputs:
       hide_header_chrome:
         description: "Hide the header chrome for a cleaner demo build"
-        required: true
+        required: false
         default: true
         type: boolean
 
 concurrency:
   group: testflight-${{ github.ref }}
-  cancel-in-progress: true
+  # Don't cancel an in-flight TestFlight upload when another push lands — a
+  # racing push used to kill manual/keyword runs midway. Let each run finish.
+  cancel-in-progress: false
 
 jobs:
   upload:
     runs-on: macos-26
     timeout-minutes: 60
+    # Manual runs ("Run workflow") always deploy. A push deploys only when any
+    # commit in the push has "testflight" in its message.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      contains(github.event.head_commit.message, 'testflight')
+      contains(join(github.event.commits.*.message, ' '), 'testflight')
     env:
       IOS_APP_IDENTIFIER: com.spoonfull.app
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

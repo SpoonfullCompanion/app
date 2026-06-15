@@ -1,0 +1,11 @@
+# Supabase CLI configuration.
+#
+# The remote project ref is passed on the command line in CI
+# (`supabase functions deploy send-push --project-ref <ref>`, derived from
+# VITE_SUPABASE_URL), so `project_id` below is only a local identifier.
+project_id = "spoonfull"
+
+[functions.send-push]
+# Require a valid Supabase JWT to invoke. The app calls this function while
+# authenticated, and the function additionally verifies the caller owns the row.
+verify_jwt = true

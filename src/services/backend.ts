@@ -637,6 +637,10 @@ export async function sendStatusUpdate(session: AppSession, submission: Communic
 
     if (error) {
       console.error('Failed to insert status update', error);
+    } else if (appConfig.hasOneSignal && session.authMode !== 'demo') {
+      void supabase.functions
+        .invoke('send-push', { body: { type: 'status_update', recordId: update.id } })
+        .catch((pushError) => console.error('send-push invoke failed', pushError));
     }
   }
 
@@ -814,6 +818,12 @@ export async function sendCaregiverResponse(
   if (error || !data) {
     console.error('Failed to send caregiver response', error);
     return null;
+  }
+
+  if (appConfig.hasOneSignal) {
+    void supabase.functions
+      .invoke('send-push', { body: { type: 'caregiver_response', recordId: data.id } })
+      .catch((pushError) => console.error('send-push invoke failed', pushError));
   }
 
   return {

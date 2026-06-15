@@ -27,6 +27,7 @@ import {
   updateEmail,
   updatePassword,
 } from './services/backend';
+import { initPush, loginPush, logoutPush } from './services/push';
 
 function App() {
   const [showSignup, setShowSignup] = React.useState(false);
@@ -125,9 +126,17 @@ function App() {
   }, []);
 
   React.useEffect(() => {
+    void initPush();
+  }, []);
+
+  React.useEffect(() => {
     if (!session) {
       setRecentUpdates([]);
       return;
+    }
+
+    if (session.authMode !== 'demo') {
+      void loginPush(session.profileId);
     }
 
     void getRecentUpdates(session)
@@ -252,6 +261,7 @@ function App() {
 
   const handleSignOut = async () => {
     await signOut();
+    void logoutPush();
     setSession(null);
     setRecentUpdates([]);
     setAuthMessage('');
@@ -259,6 +269,7 @@ function App() {
 
   const handleReturnToMain = async () => {
     await signOut();
+    void logoutPush();
     setSession(null);
     setShowSignup(false);
     setShowDemoRoleSelection(false);

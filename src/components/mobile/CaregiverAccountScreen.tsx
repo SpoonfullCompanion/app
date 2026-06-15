@@ -2,7 +2,7 @@ import React from 'react';
 import { Bell, BellOff, LogOut, Mail, Pencil, Check, X, User, Lock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { AppSession } from '../../types/app';
-import { checkOSNotificationPermission, requestOSNotificationPermission } from '../../services/notifications';
+import { enablePush, disablePush } from '../../services/push';
 import { checkDisplayNameAvailable, loadPushPreference, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
@@ -108,18 +108,20 @@ export default function CaregiverAccountScreen({
     setPushHint('');
 
     if (!pushEnabled) {
-      const alreadyGranted = await checkOSNotificationPermission();
-      if (!alreadyGranted) {
-        const granted = await requestOSNotificationPermission();
-        if (!granted) {
-          setPushHint('Enable notifications in your device Settings to receive alerts.');
-          setPushLoading(false);
-          return;
-        }
+      const result = await enablePush(session.profileId);
+      if (!result.ok) {
+        setPushHint(
+          result.reason === 'denied'
+            ? 'Enable notifications in your device Settings to receive alerts.'
+            : 'Push notifications are available in the Spoonfull mobile app.',
+        );
+        setPushLoading(false);
+        return;
       }
       await savePushPreference(session.profileId, true);
       setPushEnabled(true);
     } else {
+      await disablePush();
       await savePushPreference(session.profileId, false);
       setPushEnabled(false);
     }
