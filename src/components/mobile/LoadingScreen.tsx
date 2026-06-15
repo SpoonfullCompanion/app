@@ -2,26 +2,20 @@ import React from 'react';
 
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen w-full bg-[#1D1D1D] flex flex-col items-center px-6">
-      <div className="pt-16 md:pt-20">
-        <img
-          src="/Spoonfull-Logo-DarkBG.svg"
-          alt="Spoonfull"
-          className="w-52 h-auto opacity-90 md:w-60"
-        />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center gap-6">
+    <div className="min-h-screen w-full bg-[#1D1D1D] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-8">
         <div className="glow-animation">
           <img
             src="/spoonfull-icon.SVG"
             alt="Spoonfull"
-            className="pulse-animation w-24 h-auto md:w-28 lg:w-32"
+            className="pulse-animation w-20 h-auto"
           />
         </div>
-        <p className="text-[#7894FF] text-lg font-medium animate-pulse">
-          Loading...
-        </p>
+        <div className="flex gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#7894FF] animate-bounce [animation-delay:0ms]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#7894FF] animate-bounce [animation-delay:150ms]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#7894FF] animate-bounce [animation-delay:300ms]" />
+        </div>
       </div>
     </div>
   );
