@@ -1,8 +1,9 @@
 import React from 'react';
-import { Bell, LogOut, Mail, Pencil, Check, X, User, Lock } from 'lucide-react';
+import { Bell, BellOff, LogOut, Mail, Pencil, Check, X, User, Lock } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import type { AppSession } from '../../types/app';
-import { getNotificationStatus, requestLocalNotificationPermission, scheduleLocalReminder } from '../../services/notifications';
-import { checkDisplayNameAvailable } from '../../services/backend';
+import { checkOSNotificationPermission, requestOSNotificationPermission } from '../../services/notifications';
+import { checkDisplayNameAvailable, loadPushPreference, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
 
@@ -91,7 +92,40 @@ export default function CaregiverAccountScreen({
   // Avatar
   const [draftIcon, setDraftIcon] = React.useState(session?.avatarIcon ?? 'leaf');
 
-  const [notificationMessage, setNotificationMessage] = React.useState('');
+  const [pushEnabled, setPushEnabled] = React.useState(false);
+  const [pushLoading, setPushLoading] = React.useState(false);
+  const [pushHint, setPushHint] = React.useState('');
+  const isNative = Capacitor.isNativePlatform();
+
+  React.useEffect(() => {
+    if (!session?.profileId) return;
+    void loadPushPreference(session.profileId).then(setPushEnabled);
+  }, [session?.profileId]);
+
+  const handleTogglePush = async () => {
+    if (!session?.profileId || pushLoading) return;
+    setPushLoading(true);
+    setPushHint('');
+
+    if (!pushEnabled) {
+      const alreadyGranted = await checkOSNotificationPermission();
+      if (!alreadyGranted) {
+        const granted = await requestOSNotificationPermission();
+        if (!granted) {
+          setPushHint('Enable notifications in your device Settings to receive alerts.');
+          setPushLoading(false);
+          return;
+        }
+      }
+      await savePushPreference(session.profileId, true);
+      setPushEnabled(true);
+    } else {
+      await savePushPreference(session.profileId, false);
+      setPushEnabled(false);
+    }
+
+    setPushLoading(false);
+  };
 
   const startEditing = (field: EditingField) => {
     setEditing(field);
@@ -174,25 +208,6 @@ export default function CaregiverAccountScreen({
     } else {
       setPasswordError(result.message);
     }
-  };
-
-  const handleEnableReminders = async () => {
-    const status = await getNotificationStatus();
-    if (!status.localNotificationsAvailable) {
-      setNotificationMessage('Notifications enabled for patient updates');
-      return;
-    }
-    const granted = await requestLocalNotificationPermission();
-    if (!granted) {
-      setNotificationMessage('Notification permission was not granted.');
-      return;
-    }
-    await scheduleLocalReminder();
-    setNotificationMessage(
-      status.pushConfigured
-        ? 'App Notifications'
-        : 'App Notifications on. Remote push is disabled until OneSignal is configured.',
-    );
   };
 
   return (
@@ -360,20 +375,41 @@ export default function CaregiverAccountScreen({
           </div>
         </div>
 
-        {/* Reminders */}
+        {/* Notifications */}
         <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/60">Notifications</div>
         <div className="mb-8 rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
-          <button
-            onClick={() => void handleEnableReminders()}
-            className="flex w-full items-center gap-3 text-left"
-          >
-            <Bell className="h-5 w-5 shrink-0 text-off-white/60" />
-            <div className="flex-1">
-              <p className="font-medium text-off-white">Enable reminders</p>
-              <p className="text-xs text-off-white/50">Schedule local check-in reminders</p>
+          <div className="flex items-center gap-3">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${pushEnabled ? 'bg-bold-blue/20' : 'bg-dark-blue/40'}`}>
+              {pushEnabled
+                ? <Bell className="h-5 w-5 text-bold-blue" />
+                : <BellOff className="h-5 w-5 text-off-white/40" />
+              }
             </div>
-          </button>
-          {notificationMessage && <p className="mt-3 text-xs text-off-white/70">{notificationMessage}</p>}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-off-white text-sm">Patient update alerts</p>
+              <p className="text-xs text-off-white/50">
+                {isNative
+                  ? 'Get notified when a patient sends you a message'
+                  : 'Requires the native iOS or Android app'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleTogglePush()}
+              disabled={!isNative || pushLoading}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${pushEnabled ? 'bg-bold-blue' : 'bg-dark-blue'}`}
+              aria-checked={pushEnabled}
+              role="switch"
+              aria-label="Toggle patient update notifications"
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${pushEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
+          {pushHint && (
+            <p className="mt-3 text-xs text-off-white/50">{pushHint}</p>
+          )}
         </div>
 
         {/* Sign out */}

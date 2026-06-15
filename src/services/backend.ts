@@ -754,6 +754,30 @@ export function subscribeToStatusUpdates(
   };
 }
 
+export async function loadPushPreference(profileId: string): Promise<boolean> {
+  if (!supabase) return false;
+
+  const { data, error } = await supabase
+    .from('notification_preferences')
+    .select('push_enabled')
+    .eq('user_id', profileId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return data.push_enabled;
+}
+
+export async function savePushPreference(profileId: string, enabled: boolean): Promise<void> {
+  if (!supabase) return;
+
+  await supabase
+    .from('notification_preferences')
+    .upsert(
+      { user_id: profileId, push_enabled: enabled, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' },
+    );
+}
+
 export async function markUpdatesSeen(caregiverId: string, statusUpdateIds: string[]): Promise<void> {
   if (!supabase || !statusUpdateIds.length) return;
 
