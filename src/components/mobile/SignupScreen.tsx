@@ -1,7 +1,7 @@
 import React from 'react';
 import { appConfig } from '../../lib/appConfig';
 import type { UserRole } from '../../types/app';
-import { UserRound, HeartHandshake, ChevronLeft } from 'lucide-react';
+import { UserRound, HeartHandshake, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { checkDisplayNameAvailable } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
@@ -33,6 +33,7 @@ export default function SignupScreen({
   const [localStatusMessage, setLocalStatusMessage] = React.useState('');
   const [isError, setIsError] = React.useState(false);
   const [isBusy, setIsBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const handleDisplayNameBlur = async () => {
     const trimmed = displayName.trim();
@@ -225,14 +226,25 @@ export default function SignupScreen({
             <label className="block text-sm font-semibold text-off-white/80 mb-1.5" htmlFor="signup-password">
               Password
             </label>
-            <input
-              id="signup-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 6 characters"
-              className={inputClass}
-            />
+            <div className="relative">
+              <input
+                id="signup-password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className={`${inputClass} pr-12`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-off-white/40 hover:text-off-white transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
 
           <button
