@@ -27,6 +27,10 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       contains(join(github.event.commits.*.message, ' '), 'testflight')
     env:
+      # CocoaPods (invoked by `npx cap sync ios`) needs a UTF-8 locale, or
+      # `pod install` aborts with an Encoding::CompatibilityError.
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
       IOS_APP_IDENTIFIER: com.spoonfull.app
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}

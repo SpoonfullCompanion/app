@@ -27,7 +27,7 @@ end
 
 def build_options
   options = {
-    project: File.join(PROJECT_ROOT, "ios/App/App.xcodeproj"),
+    workspace: File.join(PROJECT_ROOT, "ios/App/App.xcworkspace"),
     scheme: "App",
     clean: true,
     export_method: "app-store"
