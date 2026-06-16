@@ -68,7 +68,12 @@ platform :ios do
         sh("npm install")
       end
       sh("npm run build")
-      sh("npx cap sync ios")
+      # `cap sync` runs `pod install`; run it outside Fastlane's Bundler
+      # environment, or CocoaPods inherits BUNDLE_GEMFILE/RUBYOPT and dies with
+      # Bundler::GemNotFound looking for Fastlane's gems.
+      Bundler.with_unbundled_env do
+        sh("npx cap sync ios")
+      end
     end
   end
 
