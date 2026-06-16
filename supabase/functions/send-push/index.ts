@@ -68,9 +68,10 @@ async function sendToOneSignal(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      // Classic REST API keys use the "Basic" scheme. If you generated a new
-      // OneSignal API key that requires "Key <token>", change this header.
-      Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
+      // OneSignal's current "App API Key" (Settings → Keys & IDs) uses the "Key"
+      // scheme. If you're using an older legacy REST API key, change this to
+      // `Basic ${ONESIGNAL_REST_API_KEY}`.
+      Authorization: `Key ${ONESIGNAL_REST_API_KEY}`,
     },
     body: JSON.stringify({
       app_id: ONESIGNAL_APP_ID,
