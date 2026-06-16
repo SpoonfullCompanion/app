@@ -25,6 +25,23 @@ def app_store_connect_api_key_from_env
   )
 end
 
+# Apply manual signing to the App target ONLY. With CocoaPods, the Pods project
+# has its own framework targets (Capacitor, Pods-App, ...) that don't support
+# provisioning profiles, so signing must not be forced globally.
+def configure_app_signing
+  return unless provisioning_profile_name
+
+  update_code_signing_settings(
+    use_automatic_signing: false,
+    path: File.join(PROJECT_ROOT, "ios/App/App.xcodeproj"),
+    team_id: ENV["APPLE_TEAM_ID"],
+    code_sign_identity: "iPhone Distribution",
+    profile_name: provisioning_profile_name,
+    targets: ["App"],
+    build_configurations: ["Release"]
+  )
+end
+
 def build_options
   options = {
     workspace: File.join(PROJECT_ROOT, "ios/App/App.xcworkspace"),
@@ -41,10 +58,9 @@ def build_options
   end
 
   if provisioning_profile_name
-    xcargs << "CODE_SIGN_STYLE=Manual"
-    xcargs << "CODE_SIGN_IDENTITY=\"iPhone Distribution\""
-    xcargs << "PROVISIONING_PROFILE_SPECIFIER=\"#{provisioning_profile_name}\""
-
+    # NB: signing is applied per-target in configure_app_signing, NOT here.
+    # A global PROVISIONING_PROFILE_SPECIFIER would also hit the Pods framework
+    # targets and fail with "does not support provisioning profiles".
     options[:export_options] = {
       signingStyle: "manual",
       provisioningProfiles: {
@@ -82,6 +98,7 @@ platform :ios do
     prepare
     api_key = app_store_connect_api_key_from_env
 
+    configure_app_signing
     build_app(build_options)
 
     upload_to_testflight(
@@ -96,6 +113,7 @@ platform :ios do
     UI.user_error!("Missing App Store Connect API key env vars.") unless api_key
 
     prepare
+    configure_app_signing
     build_app(build_options)
 
     upload_to_testflight(
