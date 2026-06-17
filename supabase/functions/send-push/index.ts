@@ -83,11 +83,21 @@ async function sendToOneSignal(
     }),
   });
   const result = await res.json().catch(() => ({}));
+  console.log('[send-push] OneSignal status', res.status, 'body', JSON.stringify(result));
   if (!res.ok) {
-    console.error('OneSignal API error', result);
+    console.error('[send-push] OneSignal API error', result);
     return json({ error: 'OneSignal send failed', details: result }, 502);
   }
-  return json({ ok: true, sent: externalIds.length, oneSignalId: result.id });
+  // result.recipients is OneSignal's count of actually-subscribed targets.
+  // recipients=0 with an "All included players are not subscribed" error means
+  // the external_id exists but has no subscribed push device.
+  return json({
+    ok: true,
+    requested: externalIds.length,
+    oneSignalId: result.id,
+    oneSignalRecipients: result.recipients,
+    oneSignalErrors: result.errors,
+  });
 }
 
 Deno.serve(async (req: Request) => {
@@ -140,7 +150,15 @@ Deno.serve(async (req: Request) => {
     }
 
     const recipients = await pushEnabledIds(admin, followerIds);
-    if (!recipients.length) return json({ ok: true, sent: 0 });
+    console.log(
+      '[send-push] status_update', recordId,
+      'patient', update.patient_id,
+      'activeFollowers', followerIds.length, JSON.stringify(followerIds),
+      'pushEnabledRecipients', recipients.length, JSON.stringify(recipients),
+    );
+    if (!recipients.length) {
+      return json({ ok: true, sent: 0, reason: 'no push-enabled recipients', activeFollowers: followerIds.length });
+    }
 
     const name = await displayName(admin, update.patient_id);
     const heading = name ? `${name} sent an update` : 'New update';
@@ -173,7 +191,10 @@ Deno.serve(async (req: Request) => {
     if (!update) return json({ error: 'Parent update not found' }, 404);
 
     const recipients = await pushEnabledIds(admin, [update.patient_id as string]);
-    if (!recipients.length) return json({ ok: true, sent: 0 });
+    console.log('[send-push] caregiver_response', recordId, 'patient', update.patient_id, 'pushEnabledRecipients', recipients.length);
+    if (!recipients.length) {
+      return json({ ok: true, sent: 0, reason: 'patient not push-enabled' });
+    }
 
     const name = await displayName(admin, resp.caregiver_id);
     const heading = name ? `${name} replied` : 'New reply';
