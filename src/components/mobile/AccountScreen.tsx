@@ -1,10 +1,10 @@
 import React from 'react';
 import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff } from 'lucide-react';
 import type { AppSession } from '../../types/app';
-import { checkDisplayNameAvailable, loadPushPreference, savePushPreference } from '../../services/backend';
+import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
-import { enablePush, disablePush } from '../../services/push';
+import { enablePush, disablePush, isPushActive } from '../../services/push';
 
 interface AccountScreenProps {
   session: AppSession | null;
@@ -96,7 +96,7 @@ export default function AccountScreen({
 
   React.useEffect(() => {
     if (!session?.profileId) return;
-    void loadPushPreference(session.profileId).then(setPushEnabled);
+    void isPushActive().then(setPushEnabled);
   }, [session?.profileId]);
 
   const handleTogglePush = async () => {

@@ -20,6 +20,7 @@ import {
   signUpWithPassword,
   sendMagicLink,
   sendStatusUpdate,
+  savePushPreference,
   signOut,
   subscribeToStatusUpdates,
   updateAvatarIcon,
@@ -27,12 +28,13 @@ import {
   updateEmail,
   updatePassword,
 } from './services/backend';
-import { initPush, loginPush, logoutPush } from './services/push';
+import { initPush, logoutPush, reconcilePush } from './services/push';
 
 function App() {
   const [showSignup, setShowSignup] = React.useState(false);
   const [showDemoRoleSelection, setShowDemoRoleSelection] = React.useState(false);
   const [session, setSession] = React.useState<AppSession | null>(null);
+  const sessionRef = React.useRef(session);
   const [recentUpdates, setRecentUpdates] = React.useState<StatusUpdate[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [authMessage, setAuthMessage] = React.useState('');
@@ -126,7 +128,25 @@ function App() {
   }, []);
 
   React.useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  React.useEffect(() => {
     void initPush();
+  }, []);
+
+  // Re-reconcile push when the app returns to foreground (e.g. user just
+  // enabled notifications in iOS Settings and switched back).
+  React.useEffect(() => {
+    if (!isNativeApp()) return;
+    const listener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      const s = sessionRef.current;
+      if (!isActive || !s || s.authMode === 'demo') return;
+      void reconcilePush(s.profileId)
+        .then((enabled) => savePushPreference(s.profileId, enabled))
+        .catch((err) => console.error('Push reconcile on resume failed', err));
+    });
+    return () => { void listener.then((l) => l.remove()); };
   }, []);
 
   React.useEffect(() => {
@@ -136,7 +156,9 @@ function App() {
     }
 
     if (session.authMode !== 'demo') {
-      void loginPush(session.profileId);
+      void reconcilePush(session.profileId)
+        .then((enabled) => savePushPreference(session.profileId, enabled))
+        .catch((error) => console.error('Push reconcile failed', error));
     }
 
     void getRecentUpdates(session)

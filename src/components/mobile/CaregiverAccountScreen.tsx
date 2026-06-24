@@ -2,8 +2,8 @@ import React from 'react';
 import { Bell, BellOff, LogOut, Mail, Pencil, Check, X, User, Lock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import type { AppSession } from '../../types/app';
-import { enablePush, disablePush } from '../../services/push';
-import { checkDisplayNameAvailable, loadPushPreference, savePushPreference } from '../../services/backend';
+import { enablePush, disablePush, isPushActive } from '../../services/push';
+import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
 
@@ -99,7 +99,7 @@ export default function CaregiverAccountScreen({
 
   React.useEffect(() => {
     if (!session?.profileId) return;
-    void loadPushPreference(session.profileId).then(setPushEnabled);
+    void isPushActive().then(setPushEnabled);
   }, [session?.profileId]);
 
   const handleTogglePush = async () => {

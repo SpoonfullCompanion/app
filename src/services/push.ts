@@ -78,19 +78,86 @@ export async function logoutPush(): Promise<void> {
 export type EnablePushResult = { ok: boolean; reason?: 'unsupported' | 'denied' };
 
 /**
- * Turn push on for a user: request permission, then register their External ID.
- * `unsupported` means we're on web/demo or OneSignal isn't configured; `denied`
- * means the OS permission prompt was declined.
+ * Turn push on: request OS permission, opt the device's push subscription in,
+ * and register the External ID. `unsupported` means web/demo or OneSignal isn't
+ * configured; `denied` means the OS prompt was declined.
  */
 export async function enablePush(profileId: string): Promise<EnablePushResult> {
   if (!pushAvailable()) return { ok: false, reason: 'unsupported' };
   const granted = await requestPushPermission();
   if (!granted) return { ok: false, reason: 'denied' };
+  const OneSignal = await loadOneSignal();
+  OneSignal?.User.pushSubscription.optIn();
   await loginPush(profileId);
   return { ok: true };
 }
 
-/** Turn push off for the current device. */
+/** Mute push for this device (opt out) without changing the OS permission. */
 export async function disablePush(): Promise<void> {
-  await logoutPush();
+  const OneSignal = await loadOneSignal();
+  OneSignal?.User.pushSubscription.optOut();
+}
+
+/**
+ * Whether this device will actually receive push right now: OS permission
+ * granted AND the OneSignal subscription opted in. This is the real state the
+ * Settings toggle should show — not just a stored preference.
+ */
+export async function isPushActive(): Promise<boolean> {
+  const OneSignal = await loadOneSignal();
+  if (!OneSignal) return false;
+  await initPush();
+  try {
+    const native = await OneSignal.Notifications.permissionNative();
+    // OSNotificationPermission: 2=Authorized, 3=Provisional, 4=Ephemeral.
+    if (native !== 2 && native !== 3 && native !== 4) return false;
+    return await OneSignal.User.pushSubscription.getOptedInAsync();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Reconcile push state on launch; returns whether push is effectively active so
+ * the caller can persist it to notification_preferences (which the server uses
+ * to decide who to notify).
+ *
+ * - Permission not yet determined: show the OS prompt once; opt in if granted.
+ * - Already granted + opted in: register the External ID.
+ * - Denied or opted out: not active.
+ *
+ * Fixes the case where a user has iOS notifications on but the app never
+ * recorded push_enabled=true, so the server silently skipped them.
+ */
+export async function reconcilePush(profileId: string): Promise<boolean> {
+  if (!pushAvailable()) return false;
+  const OneSignal = await loadOneSignal();
+  if (!OneSignal) return false;
+  await initPush();
+
+  let granted: boolean;
+  try {
+    const native = await OneSignal.Notifications.permissionNative();
+    if (native === 0) {
+      // NotDetermined → first-launch prompt.
+      granted = await OneSignal.Notifications.requestPermission(true);
+      if (granted) OneSignal.User.pushSubscription.optIn();
+    } else {
+      granted = native === 2 || native === 3 || native === 4;
+    }
+  } catch {
+    return false;
+  }
+  if (!granted) return false;
+
+  let optedIn = true;
+  try {
+    optedIn = await OneSignal.User.pushSubscription.getOptedInAsync();
+  } catch {
+    optedIn = true;
+  }
+  if (!optedIn) return false;
+
+  OneSignal.login(profileId);
+  return true;
 }
