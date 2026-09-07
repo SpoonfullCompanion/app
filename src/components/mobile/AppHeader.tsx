@@ -1,7 +1,7 @@
 import AvatarIcon from '../AvatarIcon';
 
 interface AppHeaderProps {
-  onNavigate: (route: 'account') => void;
+  onNavigate: (route: 'account' | 'home') => void;
   activeRoute: string;
   avatarIconId?: string | null;
 }
@@ -13,11 +13,17 @@ export default function AppHeader({ onNavigate, activeRoute, avatarIconId }: App
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-        <img
-          src="/Spoonfull-Logo-DarkBG.svg"
-          alt="Spoonfull"
-          className="h-10 w-auto"
-        />
+        <button
+          onClick={() => onNavigate('home')}
+          className="transition-opacity hover:opacity-80 active:scale-[0.98]"
+          aria-label="Go to feed"
+        >
+          <img
+            src="/Spoonfull-Logo-DarkBG.svg"
+            alt="Spoonfull"
+            className="h-10 w-auto"
+          />
+        </button>
         <button
           onClick={() => onNavigate('account')}
           className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors ${
