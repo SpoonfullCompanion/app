@@ -1337,22 +1337,34 @@ export async function getPatientArchivedUpdates(session: AppSession): Promise<St
 export async function markUpdateCompleted(
   updateId: string,
   completedByProfileId: string,
-): Promise<void> {
-  if (!supabase) return;
+): Promise<boolean> {
+  if (!supabase) return false;
 
-  await supabase
+  const { error } = await supabase
     .from('status_updates')
     .update({ completed_at: new Date().toISOString(), completed_by: completedByProfileId })
     .eq('id', updateId);
+
+  if (error) {
+    console.error('Failed to mark update completed', error);
+    return false;
+  }
+  return true;
 }
 
-export async function unmarkUpdateCompleted(updateId: string): Promise<void> {
-  if (!supabase) return;
+export async function unmarkUpdateCompleted(updateId: string): Promise<boolean> {
+  if (!supabase) return false;
 
-  await supabase
+  const { error } = await supabase
     .from('status_updates')
     .update({ completed_at: null, completed_by: null })
     .eq('id', updateId);
+
+  if (error) {
+    console.error('Failed to unmark update completed', error);
+    return false;
+  }
+  return true;
 }
 
 /** Get completed updates for a caregiver's connected patients, ordered by most recently completed. */

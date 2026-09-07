@@ -336,20 +336,24 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
   const handleMarkCompleted = async (update: StatusUpdate) => {
     if (!session || session.authMode === 'demo') return;
-    setLocalUpdates(prev => prev.map(u =>
-      u.id === update.id
-        ? { ...u, completedAt: new Date().toISOString(), completedBy: session.profileId }
-        : u
-    ));
-    await markUpdateCompleted(update.id, session.profileId);
+    const success = await markUpdateCompleted(update.id, session.profileId);
+    if (success) {
+      setLocalUpdates(prev => prev.map(u =>
+        u.id === update.id
+          ? { ...u, completedAt: new Date().toISOString(), completedBy: session.profileId }
+          : u
+      ));
+    }
   };
 
   const handleUncomplete = async (updateId: string) => {
     if (!session || session.authMode === 'demo') return;
-    setLocalUpdates(prev => prev.map(u =>
-      u.id === updateId ? { ...u, completedAt: null, completedBy: null } : u
-    ));
-    await unmarkUpdateCompleted(updateId);
+    const success = await unmarkUpdateCompleted(updateId);
+    if (success) {
+      setLocalUpdates(prev => prev.map(u =>
+        u.id === updateId ? { ...u, completedAt: null, completedBy: null } : u
+      ));
+    }
   };
 
   const visibleUpdates = localUpdates.filter(u => !archivedIds.has(u.id));

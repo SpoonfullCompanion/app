@@ -68,7 +68,7 @@ function UpdateFeedCard({
   isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
   onToggleArchive: (updateId: string) => void;
-  onComplete: (updateId: string) => void;
+  onComplete: (updateId: string) => Promise<void>;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
@@ -474,7 +474,9 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     }
   };
 
-  const handleComplete = (updateId: string) => {
+  const handleComplete = async (updateId: string) => {
+    const success = await markUpdateCompleted(updateId, session.profileId);
+    if (!success) return;
     setRemovingFromFeed(prev => new Set(prev).add(updateId));
     setTimeout(() => {
       setUpdates(prev => prev.filter(u => u.id !== updateId));
@@ -484,7 +486,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
         return next;
       });
     }, 300);
-    void markUpdateCompleted(updateId, session.profileId).then(() => onCompletedChanged?.());
+    onCompletedChanged?.();
   };
 
   const handleRespond = async (updateId: string, message: string) => {

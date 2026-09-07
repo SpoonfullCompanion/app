@@ -47,7 +47,7 @@ function CompletedUpdateCard({
   response: CaregiverResponse | null;
   completerName: string | null;
   onRespond: (updateId: string, message: string) => Promise<void>;
-  onReopen: (updateId: string) => void;
+  onReopen: (updateId: string) => Promise<void>;
   removing: boolean;
 }) {
   const [expanded, setExpanded] = React.useState(false);
@@ -311,18 +311,18 @@ export default function CaregiverCompletedScreen({ session, refreshToken }: Care
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.profileId, refreshToken]);
 
-  const handleReopen = (updateId: string) => {
+  const handleReopen = async (updateId: string) => {
+    const success = await unmarkUpdateCompleted(updateId);
+    if (!success) return;
     setRemovingIds(prev => new Set(prev).add(updateId));
-    void unmarkUpdateCompleted(updateId).then(() => {
-      setTimeout(() => {
-        setUpdates(prev => prev.filter(u => u.id !== updateId));
-        setRemovingIds(prev => {
-          const next = new Set(prev);
-          next.delete(updateId);
-          return next;
-        });
-      }, 300);
-    });
+    setTimeout(() => {
+      setUpdates(prev => prev.filter(u => u.id !== updateId));
+      setRemovingIds(prev => {
+        const next = new Set(prev);
+        next.delete(updateId);
+        return next;
+      });
+    }, 300);
   };
 
   const handleRespond = async (updateId: string, message: string) => {
