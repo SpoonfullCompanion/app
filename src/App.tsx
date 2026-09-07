@@ -304,7 +304,12 @@ function App() {
       return;
     }
 
-    await sendStatusUpdate(session, submission);
+    const update = await sendStatusUpdate(session, submission);
+    setRecentUpdates((prev) => {
+      const next = prev.filter((u) => u.id !== update.id);
+      next.unshift(update);
+      return next;
+    });
     setRecentUpdates(await getRecentUpdates(session));
   };
 
