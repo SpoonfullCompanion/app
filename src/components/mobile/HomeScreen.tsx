@@ -89,10 +89,10 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
   const anyActivity = responses.length > 0;
 
   return (
-    <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
+    <div className={`flex flex-col overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
       isResolved ? 'border-green-700/40 opacity-70' : 'border-periwinkle/20'
     }`}>
-      {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
+      {isNeedsOnly && <div className="h-1 bg-periwinkle" />}
 
       <div className="flex-1 min-w-0">
         <div className="p-4">

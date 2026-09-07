@@ -83,10 +83,10 @@ function ArchivedUpdateCard({
   };
 
   return (
-    <div className={`relative flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
+    <div className={`relative flex flex-col overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
       removing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
     } border-periwinkle/20`}>
-      {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
+      {isNeedsOnly && <div className="h-1 bg-periwinkle" />}
 
       <button
         onClick={() => onUnarchive(update.id)}
