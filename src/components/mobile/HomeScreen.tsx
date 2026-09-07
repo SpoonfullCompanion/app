@@ -5,7 +5,7 @@ import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
-import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds, markUpdateCompleted, unmarkUpdateCompleted } from '../../services/backend';
+import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds, markUpdateResolved, unmarkUpdateResolved } from '../../services/backend';
 
 interface HomeScreenProps {
   session: AppSession | null;
@@ -47,26 +47,26 @@ const energyStyles: Record<string, { pill: string; dot: string; bar: string }> =
   available: { pill: 'bg-green-950/70 border-green-600/50 text-green-200',    dot: 'bg-green-400',  bar: 'bg-green-600'  },
 };
 
-function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMarkCompleted, onUncomplete }: {
+function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMarkResolved, onUnresolve }: {
   update: StatusUpdate;
   responses: CaregiverResponse[];
   onArchive: (id: string) => void;
   archiving: boolean;
   helperMap: Map<string, string>;
-  onMarkCompleted: (update: StatusUpdate) => Promise<void>;
-  onUncomplete: (updateId: string) => Promise<void>;
+  onMarkResolved: (update: StatusUpdate) => Promise<void>;
+  onUnresolve: (updateId: string) => Promise<void>;
 }) {
-  const [completing, setCompleting] = React.useState(false);
-  const isCompleted = Boolean(update.completedAt);
+  const [resolving, setResolving] = React.useState(false);
+  const isResolved = Boolean(update.resolvedAt);
 
-  const handleToggleComplete = async () => {
-    setCompleting(true);
-    if (isCompleted) {
-      await onUncomplete(update.id);
+  const handleToggleResolve = async () => {
+    setResolving(true);
+    if (isResolved) {
+      await onUnresolve(update.id);
     } else {
-      await onMarkCompleted(update);
+      await onMarkResolved(update);
     }
-    setCompleting(false);
+    setResolving(false);
   };
   const energy = update.energyStatus
     ? ENERGY_STATUSES.find(e => e.id === update.energyStatus)
@@ -89,7 +89,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
 
   return (
     <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
-      isCompleted ? 'border-green-700/40 opacity-70' : 'border-periwinkle/20'
+      isResolved ? 'border-green-700/40 opacity-70' : 'border-periwinkle/20'
     }`}>
       {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
@@ -105,10 +105,10 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 <span className="text-xs text-off-white/60">
                   {formatDistanceToNow(update.sentAt)}
                 </span>
-                {isCompleted && (
+                {isResolved && (
                   <>
                     <span className="text-off-white/30">·</span>
-                    <span className="text-xs text-green-400">Completed</span>
+                    <span className="text-xs text-green-400">Resolved</span>
                   </>
                 )}
               </div>
@@ -123,12 +123,12 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 <Archive className="h-5 w-5" />
               </button>
               <button
-                onClick={handleToggleComplete}
-                disabled={completing}
+                onClick={handleToggleResolve}
+                disabled={resolving}
                 className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
-                  isCompleted ? 'text-green-400' : 'text-off-white/35 hover:text-green-400'
+                  isResolved ? 'text-green-400' : 'text-off-white/35 hover:text-green-400'
                 }`}
-                title={isCompleted ? 'Mark incomplete' : 'Mark complete'}
+                title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
                 <CheckCircle2 className="h-5 w-5" />
               </button>
@@ -334,26 +334,23 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
     setArchivingId(null);
   };
 
-  const handleMarkCompleted = async (update: StatusUpdate) => {
+  const handleMarkResolved = async (update: StatusUpdate) => {
     if (!session || session.authMode === 'demo') return;
-    const success = await markUpdateCompleted(update.id, session.profileId);
-    if (success) {
-      setLocalUpdates(prev => prev.map(u =>
-        u.id === update.id
-          ? { ...u, completedAt: new Date().toISOString(), completedBy: session.profileId }
-          : u
-      ));
-    }
+    setLocalUpdates(prev => prev.map(u =>
+      u.id === update.id
+        ? { ...u, resolvedAt: new Date().toISOString(), resolvedBy: session.profileId }
+        : u
+    ));
+    await markUpdateResolved(update.id, session.profileId, update.patientId);
+    setArchivedIds(prev => new Set([...prev, update.id]));
   };
 
-  const handleUncomplete = async (updateId: string) => {
+  const handleUnresolve = async (updateId: string) => {
     if (!session || session.authMode === 'demo') return;
-    const success = await unmarkUpdateCompleted(updateId);
-    if (success) {
-      setLocalUpdates(prev => prev.map(u =>
-        u.id === updateId ? { ...u, completedAt: null, completedBy: null } : u
-      ));
-    }
+    setLocalUpdates(prev => prev.map(u =>
+      u.id === updateId ? { ...u, resolvedAt: null, resolvedBy: null } : u
+    ));
+    await unmarkUpdateResolved(updateId);
   };
 
   const visibleUpdates = localUpdates.filter(u => !archivedIds.has(u.id));
@@ -404,8 +401,8 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
                   onArchive={handleArchive}
                   archiving={archivingId === update.id}
                   helperMap={helperMap}
-                  onMarkCompleted={handleMarkCompleted}
-                  onUncomplete={handleUncomplete}
+                  onMarkResolved={handleMarkResolved}
+                  onUnresolve={handleUnresolve}
                 />
               ))}
             </div>

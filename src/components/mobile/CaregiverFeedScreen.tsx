@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, CheckCircle2, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -8,11 +8,9 @@ import {
   archiveUpdate,
   getAllResponsesForUpdates,
   getArchivedUpdateIds,
-  getCompletedUpdateIdsForCaregiver,
   getFollowerConnections,
   getResponsesForUpdates,
   getUpdatesForConnectedPatients,
-  markUpdateCompleted,
   markUpdatesSeen,
   sendCaregiverResponse,
   unarchiveUpdate,
@@ -25,7 +23,6 @@ interface CaregiverFeedScreenProps {
   legacyUpdates: StatusUpdate[];
   onNavigateToConnections?: () => void;
   onArchiveChanged?: () => void;
-  onCompletedChanged?: () => void;
 }
 
 const PRIORITY_CONFIG: Record<NeedPriority, {
@@ -68,13 +65,12 @@ function UpdateFeedCard({
   isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
   onToggleArchive: (updateId: string) => void;
-  onComplete: (updateId: string) => Promise<void>;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
   const [sending, setSending] = React.useState(false);
 
-  const isCompleted = Boolean(update.completedAt);
+  const isResolved = Boolean(update.resolvedAt);
 
   const energy = update.energyStatus ? ENERGY_STATUSES.find(e => e.id === update.energyStatus) : null;
   const needs = (update.selectedNeeds ?? []).map(id => NEEDS.find(n => n.id === id)).filter(Boolean) as typeof NEEDS;
@@ -112,7 +108,7 @@ function UpdateFeedCard({
 
   return (
     <div className={`flex overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all ${
-      isCompleted ? 'border-green-700/40 opacity-70' : isSeen ? 'border-periwinkle/20' : 'border-bold-blue/50 shadow-bold-blue/10'
+      isResolved ? 'border-green-700/40 opacity-70' : isSeen ? 'border-periwinkle/20' : 'border-bold-blue/50 shadow-bold-blue/10'
     }`}>
       {isNeedsOnly && <div className="w-1 shrink-0 bg-periwinkle" />}
 
@@ -129,10 +125,10 @@ function UpdateFeedCard({
               </div>
               <div className="mt-0.5 flex items-center gap-1.5">
                 <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
-                {isCompleted && (
+                {isResolved && (
                   <>
                     <span className="text-off-white/30">·</span>
-                    <span className="text-xs text-green-400">Completed</span>
+                    <span className="text-xs text-green-400">Resolved</span>
                   </>
                 )}
               </div>
@@ -146,13 +142,6 @@ function UpdateFeedCard({
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
                 <Archive className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => onComplete(update.id)}
-                className="rounded-lg p-1.5 text-off-white/50 transition-all hover:text-green-400 active:scale-90"
-                title="Mark complete"
-              >
-                <CheckCircle2 className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -367,7 +356,7 @@ function PatientSectionHeader({
 
 // ─── Main feed ────────────────────────────────────────────────────────────────
 
-export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections, onArchiveChanged, onCompletedChanged }: CaregiverFeedScreenProps) {
+export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections, onArchiveChanged }: CaregiverFeedScreenProps) {
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
@@ -380,17 +369,16 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const loadFeed = React.useCallback(async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);
     try {
-      const [conns, freshUpdates, archived, completedIds] = await Promise.all([
+      const [conns, freshUpdates, archived] = await Promise.all([
         getFollowerConnections(session),
         getUpdatesForConnectedPatients(session, 30),
         getArchivedUpdateIds(session.profileId),
-        getCompletedUpdateIdsForCaregiver(session),
       ]);
       setConnections(conns);
       setArchivedIds(archived);
-      const hiddenSet = new Set([...archived, ...completedIds]);
+      const archivedSet = new Set(archived);
       const visibleUpdates = (freshUpdates.length > 0 ? freshUpdates : legacyUpdates)
-        .filter(u => !hiddenSet.has(u.id));
+        .filter(u => !archivedSet.has(u.id));
       setUpdates(visibleUpdates);
     } catch {
       setUpdates(legacyUpdates);
@@ -472,21 +460,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     } else {
       void unarchiveUpdate(session.profileId, updateId).then(() => onArchiveChanged?.());
     }
-  };
-
-  const handleComplete = async (updateId: string) => {
-    const success = await markUpdateCompleted(updateId, session.profileId);
-    if (!success) return;
-    setRemovingFromFeed(prev => new Set(prev).add(updateId));
-    setTimeout(() => {
-      setUpdates(prev => prev.filter(u => u.id !== updateId));
-      setRemovingFromFeed(prev => {
-        const next = new Set(prev);
-        next.delete(updateId);
-        return next;
-      });
-    }, 300);
-    onCompletedChanged?.();
   };
 
   const handleRespond = async (updateId: string, message: string) => {
@@ -617,7 +590,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                           isArchived={archivedIds.has(update.id)}
                           onRespond={handleRespond}
                           onToggleArchive={handleToggleArchive}
-                          onComplete={handleComplete}
                         />
                       </div>
                     ))}
@@ -657,7 +629,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                     isArchived={archivedIds.has(update.id)}
                     onRespond={handleRespond}
                     onToggleArchive={handleToggleArchive}
-                    onComplete={handleComplete}
                   />
                 </div>
               ))}
