@@ -43,7 +43,7 @@ export default function StatusSummaryCard({ update, emptyMessage }: StatusSummar
     <div className="rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-off-white/60">
-          Latest Status
+          My Status
         </h2>
         <p className="text-xs text-off-white/50">{formatDistanceToNow(update.sentAt)}</p>
       </div>

@@ -45,7 +45,7 @@ export default function LatestStatusSummary({ update }: LatestStatusSummaryProps
     <div className="rounded-xl border border-periwinkle/20 bg-midnight-black/50 p-3.5">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-off-white/50">
-          Latest Status
+          My Status
         </p>
         <p className="text-[10px] text-off-white/40">{formatDistanceToNow(update.sentAt)}</p>
       </div>
