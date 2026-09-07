@@ -605,28 +605,22 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
 
-        {/* Header with avatar patient selector */}
+        {/* Header with patient selector */}
         <div className="mb-4 flex items-start justify-between">
           <div className="relative" ref={pickerRef}>
-            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
+            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Patient</p>
             {allPatientIds.length > 0 && selectedPatientId && patientMap.has(selectedPatientId) ? (
               <button
                 onClick={() => setPickerOpen(v => !v)}
-                className="flex items-center gap-2.5 rounded-2xl border border-periwinkle/20 bg-midnight-black/40 px-2.5 py-2 transition-all hover:border-periwinkle/40 active:scale-[0.98]"
+                className="flex items-center gap-1.5 transition-opacity hover:opacity-80 active:scale-[0.98]"
               >
-                <AvatarIcon iconId={patientMap.get(selectedPatientId)?.avatarIcon} size="md" />
-                <div className="flex flex-col items-start">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-base font-semibold text-white">{patientMap.get(selectedPatientId)?.displayName ?? 'Patient'}</span>
-                    {totalUnseen > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-                        {totalUnseen}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[11px] text-off-white/50">{allPatientIds.length} patient{allPatientIds.length !== 1 ? 's' : ''} connected</span>
-                </div>
-                <ChevronDown className={`ml-1 h-4 w-4 text-off-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
+                <span className="text-base font-semibold text-white">{patientMap.get(selectedPatientId)?.displayName ?? 'Patient'}</span>
+                {totalUnseen > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+                    {totalUnseen}
+                  </span>
+                )}
+                <ChevronDown className={`h-4 w-4 text-off-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
               </button>
             ) : (
               <p className="text-base font-semibold text-white">Patient Updates</p>
