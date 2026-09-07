@@ -392,10 +392,24 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
         )}
 
         {/* Latest Status Summary */}
-        {latestStatus && (
+        {latestStatus ? (
           <div className="mb-6">
             <LatestStatusSummary update={latestStatus} />
           </div>
+        ) : (
+          <button
+            onClick={() => onNavigate('status')}
+            className="group mb-6 flex w-full items-center gap-4 rounded-2xl border border-bold-blue/30 bg-bold-blue/10 px-5 py-5 text-left transition-all hover:border-bold-blue/50 hover:bg-bold-blue/15 active:scale-[0.98]"
+          >
+            <div className="rounded-full bg-bold-blue/20 p-3 shrink-0">
+              <Activity className="h-6 w-6 text-bold-blue" strokeWidth={2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white">No recent status</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-off-white/80">Add your energy level and how you're feeling</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-bold-blue/50 transition-transform group-hover:translate-x-0.5 shrink-0" />
+          </button>
         )}
 
         {/* Recent needs section */}
