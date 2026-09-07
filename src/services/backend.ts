@@ -705,7 +705,21 @@ export async function getRecentUpdates(session: AppSession, limit = 10): Promise
 
   const remoteUpdates = data.map(mapStatusRecord);
   remoteUpdates.forEach(addStatusUpdate);
-  return remoteUpdates;
+
+  // Merge local + remote, dedup by ID, sort newest first, and respect limit.
+  // This ensures updates that were just sent (and may not be visible in the
+  // remote query yet due to read-after-write timing) are never lost.
+  const seen = new Set<string>();
+  const merged = [...remoteUpdates, ...localUpdates]
+    .filter((u) => {
+      if (seen.has(u.id)) return false;
+      seen.add(u.id);
+      return true;
+    })
+    .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+    .slice(0, limit);
+
+  return merged;
 }
 
 export function subscribeToStatusUpdates(
