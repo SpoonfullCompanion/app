@@ -99,10 +99,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
           {/* Header row */}
           <div className="mb-3 flex items-start justify-between gap-2">
             <div>
-              <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
-                {isNeedsOnly ? 'Needs' : 'Status'}
-              </span>
-              <div className="mt-0.5 flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <span className="text-xs text-off-white/60">
                   {formatDistanceToNow(update.sentAt)}
                 </span>
@@ -418,19 +415,6 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
         {/* Recent needs section */}
         <div className="mb-8">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <p className="text-sm font-semibold text-off-white/80">Recent Needs</p>
-              <p className="text-xs text-off-white/70">What you sent your helper</p>
-            </div>
-            <button
-              onClick={() => onNavigate('archive' as NavRoute)}
-              className="text-xs text-off-white/65 hover:text-off-white/90 transition-colors"
-            >
-              View archive
-            </button>
-          </div>
-
           {needsUpdates.length > 0 ? (
             <div className="space-y-3">
               {needsUpdates.map((update) => (
