@@ -406,13 +406,12 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
           {friendCount > 0 && (
             <button
               onClick={() => onNavigate('friends-status' as NavRoute)}
-              className="group flex w-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-periwinkle/20 bg-midnight-black/50 px-2 py-3 text-center transition-all hover:border-periwinkle/40 hover:bg-midnight-black/70 active:scale-[0.98]"
+              className="group flex w-24 flex-col items-center justify-center gap-1.5 rounded-xl border border-periwinkle/20 bg-midnight-black/50 px-2 py-3 text-center transition-all hover:border-periwinkle/40 hover:bg-midnight-black/70 active:scale-[0.98]"
             >
               <div className="rounded-full bg-periwinkle/15 p-2">
                 <Heart className="h-4 w-4 text-periwinkle" />
               </div>
-              <span className="text-xs font-medium text-off-white/80">Friends</span>
-              <span className="text-[10px] text-off-white/50">{friendCount}</span>
+              <span className="text-xs font-medium leading-tight text-off-white/80">Friends<br />Status</span>
             </button>
           )}
         </div>
