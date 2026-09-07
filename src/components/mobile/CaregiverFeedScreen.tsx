@@ -16,6 +16,7 @@ import {
   unarchiveUpdate,
 } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
+import LatestStatusSummary from './LatestStatusSummary';
 
 interface CaregiverFeedScreenProps {
   session: AppSession;
@@ -332,10 +333,12 @@ function PatientSectionHeader({
   displayName,
   avatarIcon,
   unseenCount,
+  latestStatus,
 }: {
   displayName: string;
   avatarIcon: string | null | undefined;
   unseenCount: number;
+  latestStatus: StatusUpdate | null;
 }) {
   return (
     <div className="flex flex-col items-center mb-5 mt-8 first:mt-0">
@@ -349,6 +352,9 @@ function PatientSectionHeader({
         )}
       </div>
       <p className="mt-0.5 text-xs text-off-white/45 tracking-wide">Patient</p>
+      <div className="mt-3 w-full">
+        <LatestStatusSummary update={latestStatus} />
+      </div>
       <div className="mt-4 w-full h-px bg-periwinkle/10" />
     </div>
   );
@@ -497,17 +503,33 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connections]);
 
+  // Split updates: status updates (energy/symptoms only, no needs) vs needs updates
+  const isStatusUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length === 0;
+  const isNeedsUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length > 0;
+
+  const statusUpdates = updates.filter(isStatusUpdate);
+  const needsUpdates = updates.filter(isNeedsUpdate);
+
+  // Find latest status update per patient
+  const latestStatusByPatient = new Map<string, StatusUpdate | null>();
+  for (const u of statusUpdates) {
+    const existing = latestStatusByPatient.get(u.patientId);
+    if (!existing || new Date(u.sentAt) > new Date(existing.sentAt)) {
+      latestStatusByPatient.set(u.patientId, u);
+    }
+  }
+
   // Determine if we have multiple distinct patients in the feed
   const patientIds = [...new Set(updates.map(u => u.patientId))];
   const isMultiPatient = patientIds.length > 1 || (patientIds.length === 1 && patientMap.has(patientIds[0]));
 
-  // Group updates by patient, preserving chronological order across groups
+  // Group needs updates by patient, preserving chronological order across groups
   const grouped: Array<{ patientId: string; updateList: StatusUpdate[] }> = [];
   for (const pid of patientIds) {
-    grouped.push({ patientId: pid, updateList: updates.filter(u => u.patientId === pid) });
+    grouped.push({ patientId: pid, updateList: needsUpdates.filter(u => u.patientId === pid) });
   }
 
-  const totalUnseen = updates.filter(u => !responses[u.id]?.seenAt).length;
+  const totalUnseen = needsUpdates.filter(u => !responses[u.id]?.seenAt).length;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
@@ -568,32 +590,40 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                     displayName={patient?.displayName ?? 'Patient'}
                     avatarIcon={patient?.avatarIcon}
                     unseenCount={sectionUnseen}
+                    latestStatus={latestStatusByPatient.get(patientId) ?? null}
                   />
-                  <div className="space-y-3">
-                    {updateList.map((update, i) => (
-                      <div
-                        key={update.id}
-                        className="animate-slide-up overflow-hidden transition-all duration-300"
-                        style={{
-                          animationDelay: `${i * 40}ms`,
-                          opacity: removingFromFeed.has(update.id) ? 0 : 1,
-                          maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
-                          marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
-                        }}
-                      >
-                        <UpdateFeedCard
-                          update={update}
-                          response={responses[update.id] ?? null}
-                          allResponses={allResponses[update.id] ?? []}
-                          currentProfileId={session.profileId}
-                          helperDisplayNames={helperDisplayNames}
-                          isArchived={archivedIds.has(update.id)}
-                          onRespond={handleRespond}
-                          onToggleArchive={handleToggleArchive}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  {updateList.length > 0 ? (
+                    <div className="space-y-3">
+                      {updateList.map((update, i) => (
+                        <div
+                          key={update.id}
+                          className="animate-slide-up overflow-hidden transition-all duration-300"
+                          style={{
+                            animationDelay: `${i * 40}ms`,
+                            opacity: removingFromFeed.has(update.id) ? 0 : 1,
+                            maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
+                            marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
+                          }}
+                        >
+                          <UpdateFeedCard
+                            update={update}
+                            response={responses[update.id] ?? null}
+                            allResponses={allResponses[update.id] ?? []}
+                            currentProfileId={session.profileId}
+                            helperDisplayNames={helperDisplayNames}
+                            isArchived={archivedIds.has(update.id)}
+                            onRespond={handleRespond}
+                            onToggleArchive={handleToggleArchive}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dark-blue/20 bg-midnight-black/30 px-4 py-6 text-center">
+                      <p className="text-sm text-off-white/70">No needs right now</p>
+                      <p className="mt-0.5 text-xs text-off-white/50">Check back when the patient sends a request</p>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -606,33 +636,41 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                 displayName={patientMap.get(patientIds[0])!.displayName}
                 avatarIcon={patientMap.get(patientIds[0])!.avatarIcon}
                 unseenCount={0}
+                latestStatus={latestStatusByPatient.get(patientIds[0]) ?? null}
               />
             )}
-            <div className="space-y-3">
-              {updates.map((update, i) => (
-                <div
-                  key={update.id}
-                  className="animate-slide-up overflow-hidden transition-all duration-300"
-                  style={{
-                    animationDelay: `${i * 50}ms`,
-                    opacity: removingFromFeed.has(update.id) ? 0 : 1,
-                    maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
-                    marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
-                  }}
-                >
-                  <UpdateFeedCard
-                    update={update}
-                    response={responses[update.id] ?? null}
-                    allResponses={allResponses[update.id] ?? []}
-                    currentProfileId={session.profileId}
-                    helperDisplayNames={helperDisplayNames}
-                    isArchived={archivedIds.has(update.id)}
-                    onRespond={handleRespond}
-                    onToggleArchive={handleToggleArchive}
-                  />
-                </div>
-              ))}
-            </div>
+            {needsUpdates.length > 0 ? (
+              <div className="space-y-3">
+                {needsUpdates.map((update, i) => (
+                  <div
+                    key={update.id}
+                    className="animate-slide-up overflow-hidden transition-all duration-300"
+                    style={{
+                      animationDelay: `${i * 50}ms`,
+                      opacity: removingFromFeed.has(update.id) ? 0 : 1,
+                      maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
+                      marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
+                    }}
+                  >
+                    <UpdateFeedCard
+                      update={update}
+                      response={responses[update.id] ?? null}
+                      allResponses={allResponses[update.id] ?? []}
+                      currentProfileId={session.profileId}
+                      helperDisplayNames={helperDisplayNames}
+                      isArchived={archivedIds.has(update.id)}
+                      onRespond={handleRespond}
+                      onToggleArchive={handleToggleArchive}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dark-blue/20 bg-midnight-black/30 px-4 py-6 text-center">
+                <p className="text-sm text-off-white/70">No needs right now</p>
+                <p className="mt-0.5 text-xs text-off-white/50">Check back when the patient sends a request</p>
+              </div>
+            )}
           </div>
         )}
       </div>

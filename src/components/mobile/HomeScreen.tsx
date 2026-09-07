@@ -6,6 +6,7 @@ import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpd
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import { getResponsesForPatient, getPatientConnections, getActiveHelpers, archivePatientUpdate, getPatientArchivedUpdateIds, markUpdateResolved, unmarkUpdateResolved } from '../../services/backend';
+import LatestStatusSummary from './LatestStatusSummary';
 
 interface HomeScreenProps {
   session: AppSession | null;
@@ -355,6 +356,18 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
   const visibleUpdates = localUpdates.filter(u => !archivedIds.has(u.id));
 
+  // Split: status updates (no needs) vs needs updates
+  const isStatusUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length === 0;
+  const statusUpdates = visibleUpdates.filter(isStatusUpdate);
+  const needsUpdates = visibleUpdates.filter(u => !isStatusUpdate(u));
+
+  // Latest status = most recent status update by timestamp
+  const latestStatus = statusUpdates.length > 0
+    ? statusUpdates.reduce((latest, u) =>
+        new Date(u.sentAt) > new Date(latest.sentAt) ? u : latest
+      )
+    : null;
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
@@ -376,11 +389,18 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
           </button>
         )}
 
-        {/* Recent updates section */}
+        {/* Latest Status Summary */}
+        {latestStatus && (
+          <div className="mb-6">
+            <LatestStatusSummary update={latestStatus} />
+          </div>
+        )}
+
+        {/* Recent needs section */}
         <div className="mb-8">
           <div className="mb-4 flex items-end justify-between">
             <div>
-              <p className="text-sm font-semibold text-off-white/80">Recent Updates</p>
+              <p className="text-sm font-semibold text-off-white/80">Recent Needs</p>
               <p className="text-xs text-off-white/70">What you sent your helper</p>
             </div>
             <button
@@ -391,9 +411,9 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
             </button>
           </div>
 
-          {visibleUpdates.length > 0 ? (
+          {needsUpdates.length > 0 ? (
             <div className="space-y-3">
-              {visibleUpdates.map((update) => (
+              {needsUpdates.map((update) => (
                 <UpdateCard
                   key={update.id}
                   update={update}
@@ -408,8 +428,8 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
             </div>
           ) : (
             <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-10 text-center">
-              <p className="text-sm text-off-white/80">No updates sent yet</p>
-              <p className="mt-1 text-xs text-off-white/60">Use Status or Needs below to communicate</p>
+              <p className="text-sm text-off-white/80">No needs sent yet</p>
+              <p className="mt-1 text-xs text-off-white/60">Use Needs below to send a request to your helper</p>
             </div>
           )}
         </div>
