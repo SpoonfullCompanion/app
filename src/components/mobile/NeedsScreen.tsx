@@ -144,7 +144,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
       setSelectedAppreciation(new Set());
       setSent(true);
       if (onSent) {
-        window.setTimeout(onSent, 1500);
+        window.setTimeout(onSent, 2000);
       }
     } finally {
       setIsSending(false);
@@ -388,25 +388,30 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
 
         <div className="fixed inset-x-0 bottom-20 px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="mx-auto max-w-2xl">
-            {sent ? (
-              <div className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
-                <CheckCircle className="h-5 w-5" />
-                Needs sent
-              </div>
-            ) : (
-              <button
-                key={pulseKey}
-                onClick={() => void handleSendNeeds()}
-                disabled={isSending || !hasSelection}
-                className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
-              >
-                <Send className="h-5 w-5" />
-                {isSending ? 'Sending...' : selectedNeeds.size > 0 ? `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}` : 'Send Message'}
-              </button>
-            )}
+            <button
+              key={pulseKey}
+              onClick={() => void handleSendNeeds()}
+              disabled={isSending || !hasSelection || sent}
+              className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
+            >
+              <Send className="h-5 w-5" />
+              {isSending ? 'Sending...' : selectedNeeds.size > 0 ? `Send ${selectedNeeds.size} Need${selectedNeeds.size > 1 ? 's' : ''}` : 'Send Message'}
+            </button>
           </div>
         </div>
       </div>
+
+      {sent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight-black/90 backdrop-blur-sm animate-fade-up">
+          <div className="flex flex-col items-center gap-5">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-600 shadow-2xl shadow-green-900/50">
+              <CheckCircle className="h-12 w-12 text-white" strokeWidth={2.5} />
+            </div>
+            <p className="text-xl font-bold text-white">Needs sent</p>
+            <p className="text-sm text-off-white/70">Taking you to your feed…</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
