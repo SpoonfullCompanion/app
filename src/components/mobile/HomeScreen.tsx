@@ -163,31 +163,6 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
             );
           })()}
 
-          {/* Priority banner (needs-only) */}
-          {isNeedsOnly && (
-            priority ? (() => {
-              const PriorityIcon = priority.icon;
-              return (
-                <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
-                  <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
-                  <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
-                  <div className="py-2 pr-3">
-                    <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                    <p className="mt-0.5 text-xs text-white/80">{priority.sublabel}</p>
-                  </div>
-                </div>
-              );
-            })() : (
-              <div className="mb-3 flex items-center gap-3 overflow-hidden rounded-lg border bg-periwinkle/10 border-periwinkle/25">
-                <div className="w-1 self-stretch shrink-0 bg-periwinkle/50" />
-                <MessageSquare className="h-5 w-5 shrink-0 text-periwinkle/70" />
-                <div className="py-2 pr-3">
-                  <p className="text-sm font-bold text-white leading-none">Need request</p>
-                </div>
-              </div>
-            )
-          )}
-
           {/* Needs */}
           {needs.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
@@ -238,6 +213,17 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
             return stripped ? (
               <p className="text-sm leading-relaxed text-off-white/75 whitespace-pre-wrap">{stripped}</p>
             ) : null;
+          })()}
+
+          {/* Priority label (needs-only) — subtle, below content */}
+          {isNeedsOnly && priority && (() => {
+            const PriorityIcon = priority.icon;
+            return (
+              <div className="mt-3 flex items-center gap-1.5">
+                <PriorityIcon className={`h-3.5 w-3.5 ${priority.iconClass}`} />
+                <span className="text-xs text-off-white/60">{priority.label}</span>
+              </div>
+            );
           })()}
         </div>
 

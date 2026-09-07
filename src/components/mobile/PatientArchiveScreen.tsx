@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, MessageSquare, X, ArchiveX, EyeOff, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Clock, Hourglass, Zap, X, ArchiveX, EyeOff, MessageCircle, CheckCircle2 } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -100,29 +100,6 @@ function ArchivedCard({
             );
           })()}
 
-          {isNeedsOnly && (
-            priority ? (() => {
-              const PriorityIcon = priority.icon;
-              return (
-                <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
-                  <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
-                  <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
-                  <div className="py-2 pr-3">
-                    <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                  </div>
-                </div>
-              );
-            })() : (
-              <div className="mb-3 flex items-center gap-3 overflow-hidden rounded-lg border bg-periwinkle/10 border-periwinkle/25">
-                <div className="w-1 self-stretch shrink-0 bg-periwinkle/50" />
-                <MessageSquare className="h-5 w-5 shrink-0 text-periwinkle/70" />
-                <div className="py-2 pr-3">
-                  <p className="text-sm font-bold text-white leading-none">Need request</p>
-                </div>
-              </div>
-            )
-          )}
-
           {needs.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {needs.map(need => {
@@ -150,6 +127,17 @@ function ArchivedCard({
               })}
             </div>
           )}
+
+          {/* Priority label (needs-only) — subtle, below content */}
+          {isNeedsOnly && priority && (() => {
+            const PriorityIcon = priority.icon;
+            return (
+              <div className="mt-3 flex items-center gap-1.5">
+                <PriorityIcon className={`h-3.5 w-3.5 ${priority.iconClass}`} />
+                <span className="text-xs text-off-white/60">{priority.label}</span>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="border-t border-white/5 px-4 py-3">
