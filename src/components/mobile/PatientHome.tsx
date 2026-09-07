@@ -93,6 +93,7 @@ export default function PatientHome({
             profileId={session?.profileId || ''}
             session={session}
             onNavigate={handleNavigate}
+            onSent={() => handleNavigate('home')}
           />
         )}
         {activeRoute === 'hospital' && (

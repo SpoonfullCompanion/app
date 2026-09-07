@@ -14,6 +14,7 @@ interface NeedsScreenProps {
   profileId: string;
   session: AppSession | null;
   onNavigate: (route: 'hospital') => void;
+  onSent?: () => void;
 }
 
 const PRIORITIES: { id: NeedPriority; label: string; sublabel: string; icon: React.ComponentType<{ className?: string }>; borderClass: string; selectedClass: string }[] = [
@@ -49,7 +50,7 @@ const APPRECIATION: { id: string; label: string; icon: React.ComponentType<{ cla
   { id: 'i_love_you', label: 'I love you', icon: Heart },
 ];
 
-export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, session, onNavigate }: NeedsScreenProps) {
+export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, session, onNavigate, onSent }: NeedsScreenProps) {
   const [selectedNeeds, setSelectedNeeds] = useState<Set<string>>(new Set());
   const [selectedPriority, setSelectedPriority] = useState<NeedPriority | null>(null);
   const [selectedAppreciation, setSelectedAppreciation] = useState<Set<string>>(new Set());
@@ -142,6 +143,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
       setCustomNote('');
       setSelectedAppreciation(new Set());
       setSent(true);
+      onSent?.();
     } finally {
       setIsSending(false);
     }
