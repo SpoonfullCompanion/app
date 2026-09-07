@@ -1103,6 +1103,7 @@ export async function getUpdatesForConnectedPatients(
     .from('status_updates')
     .select('*')
     .in('patient_id', activePatientIds)
+    .is('completed_at', null)
     .order('sent_at', { ascending: false })
     .limit(limit);
 
