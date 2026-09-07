@@ -504,15 +504,16 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   }, [connections]);
 
   // Split updates: status updates (energy/symptoms only, no needs) vs needs updates
-  const isStatusUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length === 0;
   const isNeedsUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length > 0;
+  const hasStatusInfo = (u: StatusUpdate) =>
+    (u.energyStatus != null && u.energyStatus !== '') ||
+    (u.selectedSymptoms ?? []).length > 0;
 
-  const statusUpdates = updates.filter(isStatusUpdate);
   const needsUpdates = updates.filter(isNeedsUpdate);
 
-  // Find latest status update per patient
+  // Find latest update with energy/symptoms per patient (even if it also has needs)
   const latestStatusByPatient = new Map<string, StatusUpdate | null>();
-  for (const u of statusUpdates) {
+  for (const u of updates.filter(hasStatusInfo)) {
     const existing = latestStatusByPatient.get(u.patientId);
     if (!existing || new Date(u.sentAt) > new Date(existing.sentAt)) {
       latestStatusByPatient.set(u.patientId, u);

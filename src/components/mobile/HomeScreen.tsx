@@ -356,12 +356,14 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
   const visibleUpdates = localUpdates.filter(u => !archivedIds.has(u.id));
 
-  // Split: status updates (no needs) vs needs updates
-  const isStatusUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length === 0;
-  const statusUpdates = visibleUpdates.filter(isStatusUpdate);
-  const needsUpdates = visibleUpdates.filter(u => !isStatusUpdate(u));
+  // Needs updates = any update with at least one need selected
+  const needsUpdates = visibleUpdates.filter(u => (u.selectedNeeds ?? []).length > 0);
 
-  // Latest status = most recent status update by timestamp
+  // Latest status = most recent update that has energy or symptoms (even if it also has needs)
+  const hasStatusInfo = (u: StatusUpdate) =>
+    (u.energyStatus != null && u.energyStatus !== '') ||
+    (u.selectedSymptoms ?? []).length > 0;
+  const statusUpdates = visibleUpdates.filter(hasStatusInfo);
   const latestStatus = statusUpdates.length > 0
     ? statusUpdates.reduce((latest, u) =>
         new Date(u.sentAt) > new Date(latest.sentAt) ? u : latest
