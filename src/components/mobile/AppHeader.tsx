@@ -27,7 +27,7 @@ export default function AppHeader({ onNavigate, activeRoute, avatarIconId }: App
           }`}
         >
           <AvatarIcon iconId={avatarIconId} size="sm" className="!h-6 !w-6" />
-          <span>Account</span>
+          <span>My Account</span>
         </button>
       </div>
     </header>
