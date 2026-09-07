@@ -365,6 +365,19 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [hasLoaded, setHasLoaded] = React.useState(false);
   const [selectedPatientId, setSelectedPatientId] = React.useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const pickerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!pickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [pickerOpen]);
 
   const loadFeed = React.useCallback(async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);
@@ -592,58 +605,75 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
 
-        {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <div>
+        {/* Header with avatar patient selector */}
+        <div className="mb-4 flex items-start justify-between">
+          <div className="relative" ref={pickerRef}>
             <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
-            <div className="flex items-center gap-2">
+            {allPatientIds.length > 0 && selectedPatientId && patientMap.has(selectedPatientId) ? (
+              <button
+                onClick={() => setPickerOpen(v => !v)}
+                className="flex items-center gap-2.5 rounded-2xl border border-periwinkle/20 bg-midnight-black/40 px-2.5 py-2 transition-all hover:border-periwinkle/40 active:scale-[0.98]"
+              >
+                <AvatarIcon iconId={patientMap.get(selectedPatientId)?.avatarIcon} size="md" />
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base font-semibold text-white">{patientMap.get(selectedPatientId)?.displayName ?? 'Patient'}</span>
+                    {totalUnseen > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+                        {totalUnseen}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-off-white/50">{allPatientIds.length} patient{allPatientIds.length !== 1 ? 's' : ''} connected</span>
+                </div>
+                <ChevronDown className={`ml-1 h-4 w-4 text-off-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
+              </button>
+            ) : (
               <p className="text-base font-semibold text-white">Patient Updates</p>
-              {totalUnseen > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-                  {totalUnseen}
-                </span>
-              )}
-            </div>
+            )}
+
+            {/* Dropdown patient picker */}
+            {pickerOpen && allPatientIds.length > 0 && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-periwinkle/25 bg-midnight-black/95 shadow-2xl shadow-black/60 backdrop-blur-md">
+                <div className="max-h-80 overflow-y-auto py-1.5">
+                  {allPatientIds.map(pid => {
+                    const patient = patientMap.get(pid);
+                    const isActive = pid === selectedPatientId;
+                    const unseen = unseenByPatient.get(pid) ?? 0;
+                    return (
+                      <button
+                        key={pid}
+                        onClick={() => { setSelectedPatientId(pid); setPickerOpen(false); }}
+                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 transition-all active:scale-[0.98] ${
+                          isActive ? 'bg-bold-blue/15' : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
+                        <span className={`flex-1 text-left text-sm font-medium ${isActive ? 'text-white' : 'text-off-white/80'}`}>
+                          {patient?.displayName ?? 'Patient'}
+                        </span>
+                        {unseen > 0 && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+                            {unseen}
+                          </span>
+                        )}
+                        {isActive && <Check className="h-4 w-4 text-bold-blue" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <button
             onClick={() => void loadFeed(true)}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
-
-        {/* Patient tab selector */}
-        {allPatientIds.length > 0 && (
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-            {allPatientIds.map(pid => {
-              const patient = patientMap.get(pid);
-              const isActive = pid === selectedPatientId;
-              const unseen = unseenByPatient.get(pid) ?? 0;
-              return (
-                <button
-                  key={pid}
-                  onClick={() => setSelectedPatientId(pid)}
-                  className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 transition-all active:scale-95 ${
-                    isActive
-                      ? 'border-bold-blue bg-bold-blue/20 text-white'
-                      : 'border-periwinkle/20 bg-midnight-black/40 text-off-white/70 hover:border-periwinkle/40 hover:text-off-white'
-                  }`}
-                >
-                  <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
-                  <span className="text-sm font-medium">{patient?.displayName ?? 'Patient'}</span>
-                  {unseen > 0 && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-bold-blue px-1 text-[10px] font-bold text-white">
-                      {unseen}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {allPatientIds.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
