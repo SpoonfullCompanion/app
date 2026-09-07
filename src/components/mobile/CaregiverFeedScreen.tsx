@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal, Check } from 'lucide-react';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -11,9 +11,11 @@ import {
   getFollowerConnections,
   getResponsesForUpdates,
   getUpdatesForConnectedPatients,
+  markUpdateResolved,
   markUpdatesSeen,
   sendCaregiverResponse,
   unarchiveUpdate,
+  unmarkUpdateResolved,
 } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import LatestStatusSummary from './LatestStatusSummary';
@@ -57,6 +59,7 @@ function UpdateFeedCard({
   isArchived,
   onRespond,
   onToggleArchive,
+  onToggleResolve,
 }: {
   update: StatusUpdate;
   response: CaregiverResponse | null;
@@ -66,6 +69,7 @@ function UpdateFeedCard({
   isArchived: boolean;
   onRespond: (updateId: string, message: string) => Promise<void>;
   onToggleArchive: (updateId: string) => void;
+  onToggleResolve: (updateId: string, patientId: string) => void;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
@@ -117,24 +121,26 @@ function UpdateFeedCard({
         <div className="p-4">
           {/* Header */}
           <div className="mb-3 flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
-                  {isNeedsOnly ? 'Needs' : 'Status'}
-                </span>
-                {!isSeen && <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />}
-              </div>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
-                {isResolved && (
-                  <>
-                    <span className="text-off-white/30">·</span>
-                    <span className="text-xs text-green-400">Resolved</span>
-                  </>
-                )}
-              </div>
+            <div className="flex items-center gap-1.5">
+              {!isSeen && <span className="h-1.5 w-1.5 rounded-full bg-bold-blue" />}
+              <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
+              {isResolved && (
+                <>
+                  <span className="text-off-white/30">·</span>
+                  <span className="text-xs text-green-400">Resolved</span>
+                </>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                onClick={() => onToggleResolve(update.id, update.patientId)}
+                className={`rounded-lg p-1.5 transition-all active:scale-90 ${
+                  isResolved ? 'text-green-400' : 'text-off-white/50 hover:text-off-white'
+                }`}
+                title={isResolved ? 'Unmark resolved' : 'Mark resolved'}
+              >
+                {isResolved ? <CheckCircle className="h-5 w-5" /> : <Check className="h-5 w-5" />}
+              </button>
               <button
                 onClick={() => onToggleArchive(update.id)}
                 className={`rounded-lg p-1.5 transition-all active:scale-90 ${
@@ -169,30 +175,17 @@ function UpdateFeedCard({
             );
           })()}
 
-          {/* Priority banner (needs-only) */}
-          {isNeedsOnly && (
-            priority ? (() => {
-              const PriorityIcon = priority.icon;
-              return (
-                <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
-                  <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
-                  <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
-                  <div className="py-2 pr-3">
-                    <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                    <p className="mt-0.5 text-xs text-white/80">{priority.sublabel}</p>
-                  </div>
-                </div>
-              );
-            })() : (
-              <div className="mb-3 flex items-center gap-3 overflow-hidden rounded-lg border bg-periwinkle/10 border-periwinkle/25">
-                <div className="w-1 self-stretch shrink-0 bg-periwinkle/50" />
-                <MessageSquare className="h-5 w-5 shrink-0 text-periwinkle/70" />
-                <div className="py-2 pr-3">
-                  <p className="text-sm font-bold text-white leading-none">Need request</p>
-                </div>
+          {/* Inline priority label (needs-only) */}
+          {isNeedsOnly && priority && (() => {
+            const PriorityIcon = priority.icon;
+            return (
+              <div className="mb-2 flex items-center gap-1.5">
+                <PriorityIcon className={`h-3.5 w-3.5 ${priority.iconClass}`} />
+                <span className={`text-xs font-medium ${priority.iconClass}`}>{priority.label}</span>
+                <span className="text-xs text-off-white/40">· {priority.sublabel}</span>
               </div>
-            )
-          )}
+            );
+          })()}
 
           {/* Needs */}
           {needs.length > 0 && (
@@ -444,6 +437,32 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updates, session.profileId]);
 
+  const handleToggleResolve = (updateId: string, patientId: string) => {
+    setUpdates(prev => prev.map(u =>
+      u.id === updateId
+        ? { ...u, resolvedAt: u.resolvedAt ? null : new Date().toISOString(), resolvedBy: u.resolvedAt ? null : session.profileId }
+        : u
+    ));
+    const update = updates.find(u => u.id === updateId);
+    if (update?.resolvedAt) {
+      void unmarkUpdateResolved(updateId);
+    } else {
+      void markUpdateResolved(updateId, session.profileId, patientId).then(() => {
+        setRemovingFromFeed(prev => new Set(prev).add(updateId));
+        setTimeout(() => {
+          setUpdates(prev => prev.filter(u => u.id !== updateId));
+          setRemovingFromFeed(prev => {
+            const next = new Set(prev);
+            next.delete(updateId);
+            return next;
+          });
+        }, 300);
+        setArchivedIds(prev => new Set(prev).add(updateId));
+        onArchiveChanged?.();
+      });
+    }
+  };
+
   const handleToggleArchive = (updateId: string) => {
     const nowArchived = !archivedIds.has(updateId);
     setArchivedIds(prev => {
@@ -625,6 +644,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                             isArchived={archivedIds.has(update.id)}
                             onRespond={handleRespond}
                             onToggleArchive={handleToggleArchive}
+                            onToggleResolve={handleToggleResolve}
                           />
                         </div>
                       ))}
@@ -671,6 +691,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                     isArchived={archivedIds.has(update.id)}
                     onRespond={handleRespond}
                     onToggleArchive={handleToggleArchive}
+                    onToggleResolve={handleToggleResolve}
                   />
                 </div>
               ))}
