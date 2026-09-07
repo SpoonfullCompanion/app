@@ -8,6 +8,7 @@ import HospitalScreen from './HospitalScreen';
 import AccountScreen from './AccountScreen';
 import ConnectionsScreen from './ConnectionsScreen';
 import PatientArchiveScreen from './PatientArchiveScreen';
+import FriendsStatusScreen from './FriendsStatusScreen';
 import type { AppSession, CommunicationSubmission, StatusUpdate } from '../../types/app';
 import { getPatientConnections } from '../../services/backend';
 
@@ -107,6 +108,9 @@ export default function PatientHome({
         )}
         {activeRoute === 'archive' && session && (
           <PatientArchiveScreen session={session} onBack={() => handleNavigate('home')} />
+        )}
+        {activeRoute === 'friends-status' && session && (
+          <FriendsStatusScreen session={session} onBack={() => handleNavigate('home')} />
         )}
         {activeRoute === 'account' && (
           <AccountScreen

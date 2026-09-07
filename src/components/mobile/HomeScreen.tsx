@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, Heart, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
@@ -265,6 +265,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
   const [archivingId, setArchivingId] = React.useState<string | null>(null);
   const [helpers, setHelpers] = React.useState<Connection[]>([]);
+  const [friendCount, setFriendCount] = React.useState(0);
   const [localUpdates, setLocalUpdates] = React.useState<StatusUpdate[]>(recentUpdatesProp);
 
   React.useEffect(() => {
@@ -298,7 +299,10 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
       return;
     }
     getPatientConnections(session)
-      .then((conns) => setHasActiveConnections(conns.some(c => c.status === 'active')))
+      .then((conns) => {
+        setHasActiveConnections(conns.some(c => c.status === 'active'));
+        setFriendCount(conns.filter(c => c.status === 'active' && c.connectionType === 'patient_friend').length);
+      })
       .catch(() => setHasActiveConnections(true));
   }, [session]);
 
@@ -376,26 +380,42 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
           </button>
         )}
 
-        {/* Latest Status Summary */}
-        {latestStatus ? (
-          <div className="mb-6">
-            <LatestStatusSummary update={latestStatus} />
+        {/* Latest Status Summary + Friends link */}
+        <div className="mb-6 flex items-stretch gap-3">
+          <div className="flex-1 min-w-0">
+            {latestStatus ? (
+              <LatestStatusSummary update={latestStatus} />
+            ) : (
+              <button
+                onClick={() => onNavigate('status')}
+                className="group flex h-full w-full items-center gap-4 rounded-xl border border-bold-blue/30 bg-bold-blue/10 px-5 py-5 text-left transition-all hover:border-bold-blue/50 hover:bg-bold-blue/15 active:scale-[0.98]"
+              >
+                <div className="rounded-full bg-bold-blue/20 p-3 shrink-0">
+                  <Activity className="h-6 w-6 text-bold-blue" strokeWidth={2} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">No recent status</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-off-white/80">Add your energy level and how you're feeling</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-bold-blue/50 transition-transform group-hover:translate-x-0.5 shrink-0" />
+              </button>
+            )}
           </div>
-        ) : (
-          <button
-            onClick={() => onNavigate('status')}
-            className="group mb-6 flex w-full items-center gap-4 rounded-2xl border border-bold-blue/30 bg-bold-blue/10 px-5 py-5 text-left transition-all hover:border-bold-blue/50 hover:bg-bold-blue/15 active:scale-[0.98]"
-          >
-            <div className="rounded-full bg-bold-blue/20 p-3 shrink-0">
-              <Activity className="h-6 w-6 text-bold-blue" strokeWidth={2} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white">No recent status</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-off-white/80">Add your energy level and how you're feeling</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-bold-blue/50 transition-transform group-hover:translate-x-0.5 shrink-0" />
-          </button>
-        )}
+
+          {/* Friends status link */}
+          {friendCount > 0 && (
+            <button
+              onClick={() => onNavigate('friends-status' as NavRoute)}
+              className="group flex w-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-periwinkle/20 bg-midnight-black/50 px-2 py-3 text-center transition-all hover:border-periwinkle/40 hover:bg-midnight-black/70 active:scale-[0.98]"
+            >
+              <div className="rounded-full bg-periwinkle/15 p-2">
+                <Heart className="h-4 w-4 text-periwinkle" />
+              </div>
+              <span className="text-xs font-medium text-off-white/80">Friends</span>
+              <span className="text-[10px] text-off-white/50">{friendCount}</span>
+            </button>
+          )}
+        </div>
 
         {/* Recent needs section */}
         <div className="mb-8">

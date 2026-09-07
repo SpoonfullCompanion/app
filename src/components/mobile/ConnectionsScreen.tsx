@@ -1,18 +1,14 @@
 import React from 'react';
-import * as LucideIcons from 'lucide-react';
 import { Search, UserPlus, Check, X, Users, Clock, Link2, Loader, Heart, Info } from 'lucide-react';
-import type { AppSession, Connection, StatusUpdate } from '../../types/app';
+import type { AppSession, Connection } from '../../types/app';
 import {
   searchProfiles,
   getPatientConnections,
   requestConnection,
   respondToConnection,
   removeConnection,
-  getFriendStatusUpdates,
 } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
-import { formatDistanceToNow } from './time';
-import { ENERGY_STATUSES, SYMPTOMS } from '../../utils/communicationData';
 
 interface ConnectionsScreenProps {
   session: AppSession;
@@ -27,66 +23,10 @@ type SearchResult = {
 
 type Tab = 'caregivers' | 'friends' | 'requests';
 
-const energyPillColors: Record<string, string> = {
-  crashing: 'bg-red-950/80 border border-red-600/50 text-red-200',
-  low:      'bg-amber-950/80 border border-amber-600/50 text-amber-200',
-  resting:  'bg-yellow-950/80 border border-yellow-600/50 text-yellow-200',
-  available:'bg-green-950/80 border border-green-600/50 text-green-200',
-};
-
-function FriendUpdateCard({ update }: { update: StatusUpdate }) {
-  const energy = ENERGY_STATUSES.find((e) => e.id === update.energyStatus);
-  const symptoms = (update.selectedSymptoms ?? [])
-    .map((id) => SYMPTOMS.find((s) => s.id === id))
-    .filter(Boolean) as typeof SYMPTOMS;
-
-  return (
-    <div className="rounded-xl border border-periwinkle/15 bg-midnight-black/50 px-4 py-3">
-      <div className="flex items-center gap-2.5 mb-2.5">
-        <AvatarIcon iconId={update.patientAvatarIcon ?? null} size="sm" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-off-white truncate">
-            {update.patientDisplayName ?? 'Friend'}
-          </p>
-          <p className="text-xs text-off-white/50">{formatDistanceToNow(update.sentAt)}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {energy && (() => {
-          const Icon = LucideIcons[energy.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-          const colorClass = energyPillColors[energy.id] ?? 'bg-bold-blue/20';
-          return (
-            <span className={`flex items-center gap-1 rounded-md ${colorClass} px-2.5 py-1 text-xs font-medium`}>
-              {Icon && <Icon className="h-3.5 w-3.5" />}
-              {energy.label}
-            </span>
-          );
-        })()}
-        {symptoms.map((symptom) => {
-          const Icon = LucideIcons[symptom.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-          return (
-            <span key={symptom.id} className="flex items-center gap-1 rounded-md bg-periwinkle/10 px-2.5 py-1 text-xs text-off-white/80">
-              {Icon && <Icon className="h-3.5 w-3.5" />}
-              {symptom.label}
-            </span>
-          );
-        })}
-        {!energy && symptoms.length === 0 && (
-          <span className="text-xs text-off-white/40">No details shared</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
   const [tab, setTab] = React.useState<Tab>('caregivers');
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [isLoadingConnections, setIsLoadingConnections] = React.useState(true);
-
-  // Friend feed
-  const [friendUpdates, setFriendUpdates] = React.useState<StatusUpdate[]>([]);
-  const [isLoadingFeed, setIsLoadingFeed] = React.useState(false);
 
   // Search state
   const [query, setQuery] = React.useState('');
@@ -105,24 +45,9 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     setIsLoadingConnections(false);
   }, [session]);
 
-  const loadFriendFeed = React.useCallback(async () => {
-    setIsLoadingFeed(true);
-    const updates = await getFriendStatusUpdates(session);
-    setFriendUpdates(updates);
-    setIsLoadingFeed(false);
-  }, [session]);
-
   React.useEffect(() => {
     void loadConnections();
   }, [loadConnections]);
-
-  React.useEffect(() => {
-    void loadFriendFeed();
-  }, [loadFriendFeed]);
-
-  React.useEffect(() => {
-    if (tab === 'friends') void loadFriendFeed();
-  }, [tab, loadFriendFeed]);
 
   const activeConnections = connections.filter(
     (c) => c.status === 'active' && c.connectionType === 'caregiver',
@@ -187,7 +112,6 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
     await removeConnection(session, connectionId);
     setRemovingId(null);
     void loadConnections();
-    if (tab === 'friends') void loadFriendFeed();
   };
 
   return (
@@ -500,31 +424,6 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
             )}
           </div>
         )}
-
-        {/* Friend Status — always visible below connections */}
-        <div className="mt-8">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60">Friend Status</p>
-            {isLoadingFeed && (
-              <Loader className="h-3.5 w-3.5 animate-spin text-periwinkle/60" />
-            )}
-          </div>
-          {!isLoadingFeed && friendUpdates.length === 0 ? (
-            <div className="rounded-xl border border-dark-blue/30 bg-midnight-black/40 px-4 py-8 text-center">
-              <p className="text-sm text-off-white/60">
-                {activeFriends.length === 0
-                  ? 'Add friends to see their latest status here'
-                  : 'No updates from friends yet'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {friendUpdates.map((u) => (
-                <FriendUpdateCard key={u.id} update={u} />
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
