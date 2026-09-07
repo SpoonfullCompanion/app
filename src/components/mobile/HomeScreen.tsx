@@ -178,20 +178,6 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
             </div>
           )}
 
-          {/* Sent to — only for need updates with explicit targeting */}
-          {isNeedsOnly && update.targetedFollowerIds && update.targetedFollowerIds.length > 0 && (() => {
-            const names = update.targetedFollowerIds
-              .map((id) => helperMap.get(id))
-              .filter(Boolean) as string[];
-            const label = names.length > 0 ? names.join(', ') : 'Selected helpers';
-            return (
-              <div className="mb-2 flex items-center gap-1.5 text-xs text-off-white/55">
-                <SendHorizonal className="h-3 w-3 shrink-0" />
-                <span>Sent to: {label}</span>
-              </div>
-            );
-          })()}
-
           {/* Symptoms */}
           {symptoms.length > 0 && (
             <div className={`flex flex-wrap gap-1.5 ${update.messageText ? 'mb-3' : ''}`}>
@@ -229,6 +215,19 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
 
         {/* Helper response footer — shown on all update types */}
         <div className="border-t border-white/5 px-4 py-3 space-y-2">
+          {/* Sent to — only for need updates with explicit targeting */}
+          {isNeedsOnly && update.targetedFollowerIds && update.targetedFollowerIds.length > 0 && (() => {
+            const names = update.targetedFollowerIds
+              .map((id) => helperMap.get(id))
+              .filter(Boolean) as string[];
+            const label = names.length > 0 ? names.join(', ') : 'Selected helpers';
+            return (
+              <div className="flex items-center gap-1.5 text-xs text-off-white/55">
+                <SendHorizonal className="h-3 w-3 shrink-0" />
+                <span>Sent to: {label}</span>
+              </div>
+            );
+          })()}
           {replied.map(r => (
             <div key={r.id} className="flex items-start gap-2.5">
               <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-bold-blue" />
