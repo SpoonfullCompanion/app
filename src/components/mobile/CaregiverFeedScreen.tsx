@@ -364,6 +364,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const [removingFromFeed, setRemovingFromFeed] = React.useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [hasLoaded, setHasLoaded] = React.useState(false);
+  const [selectedPatientId, setSelectedPatientId] = React.useState<string | null>(null);
 
   const loadFeed = React.useCallback(async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);
@@ -512,6 +513,14 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     activeConnections.map(c => [c.patientId, { displayName: c.patientDisplayName ?? 'Patient', avatarIcon: c.patientAvatarIcon }])
   );
 
+  // All connected patients for the tab selector (ordered by display name)
+  const allPatientIds = React.useMemo(() => {
+    return [...patientMap.keys()].sort((a, b) =>
+      (patientMap.get(a)?.displayName ?? '').localeCompare(patientMap.get(b)?.displayName ?? '')
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connections]);
+
   // Map of follower ID → display name for "Sent to" labels on cards
   const helperDisplayNames = React.useMemo(() => {
     const m = new Map<string, string>();
@@ -547,11 +556,35 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const patientIds = [...new Set(feedCards.map(u => u.patientId))];
   const isMultiPatient = patientIds.length > 1 || (patientIds.length === 1 && patientMap.has(patientIds[0]));
 
-  // Group needs updates by patient, preserving chronological order across groups
-  const grouped: Array<{ patientId: string; updateList: StatusUpdate[] }> = [];
-  for (const pid of patientIds) {
-    grouped.push({ patientId: pid, updateList: feedCards.filter(u => u.patientId === pid) });
-  }
+  // Auto-select first patient if none selected or selected patient disconnected
+  React.useEffect(() => {
+    if (allPatientIds.length === 0) return;
+    if (!selectedPatientId || !allPatientIds.includes(selectedPatientId)) {
+      // Prefer patient with unseen needs, otherwise first patient
+      const patientWithUnseen = allPatientIds.find(pid =>
+        feedCards.some(u => u.patientId === pid && !responses[u.id]?.seenAt)
+      );
+      setSelectedPatientId(patientWithUnseen ?? allPatientIds[0]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPatientIds, feedCards]);
+
+  // Unseen count per patient (for tab badges)
+  const unseenByPatient = React.useMemo(() => {
+    const m = new Map<string, number>();
+    for (const u of feedCards) {
+      if (!responses[u.id]?.seenAt) {
+        m.set(u.patientId, (m.get(u.patientId) ?? 0) + 1);
+      }
+    }
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedCards, responses]);
+
+  // Filter feed to selected patient only
+  const selectedFeedCards = selectedPatientId
+    ? feedCards.filter(u => u.patientId === selectedPatientId)
+    : feedCards;
 
   const totalUnseen = feedCards.filter(u => !responses[u.id]?.seenAt).length;
 
@@ -560,7 +593,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       <div className="mx-auto max-w-2xl px-4 py-8">
 
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
             <div className="flex items-center gap-2">
@@ -571,11 +604,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                 </span>
               )}
             </div>
-            {isMultiPatient && patientIds.length > 1 && (
-              <p className="mt-0.5 text-xs text-off-white/70">
-                {patientIds.length} patients
-              </p>
-            )}
           </div>
           <button
             onClick={() => void loadFeed(true)}
@@ -587,91 +615,75 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
           </button>
         </div>
 
-        {feedCards.length === 0 && updates.length === 0 ? (
-          <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
-            <p className="text-sm text-off-white/90">No updates yet</p>
-            {activeConnections.length === 0 ? (
-              <button
-                onClick={onNavigateToConnections}
-                className="mt-2 text-xs text-periwinkle underline underline-offset-2 transition-opacity hover:opacity-80"
-              >
-                Connect with a patient to see their updates here
-              </button>
-            ) : (
-              <p className="mt-1 text-xs text-off-white/70">Patient updates will appear here once they send one</p>
-            )}
-          </div>
-        ) : feedCards.length === 0 ? (
-          <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
-            <MessageSquare className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
-            <p className="text-sm text-off-white/90">No needs right now</p>
-            <p className="mt-1 text-xs text-off-white/70">Needs requests from the patient will appear here</p>
-          </div>
-        ) : isMultiPatient && patientIds.length > 1 ? (
-          /* Multi-patient grouped view */
-          <div className="space-y-1">
-            {grouped.map(({ patientId, updateList }) => {
-              const patient = patientMap.get(patientId);
-              const sectionUnseen = updateList.filter(u => !responses[u.id]?.seenAt).length;
+        {/* Patient tab selector */}
+        {allPatientIds.length > 0 && (
+          <div className="mb-5 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            {allPatientIds.map(pid => {
+              const patient = patientMap.get(pid);
+              const isActive = pid === selectedPatientId;
+              const unseen = unseenByPatient.get(pid) ?? 0;
               return (
-                <div key={patientId}>
-                  <PatientSectionHeader
-                    displayName={patient?.displayName ?? 'Patient'}
-                    avatarIcon={patient?.avatarIcon}
-                    unseenCount={sectionUnseen}
-                    latestStatus={latestStatusByPatient.get(patientId) ?? null}
-                  />
-                  {updateList.length > 0 ? (
-                    <div className="space-y-3">
-                      {updateList.map((update, i) => (
-                        <div
-                          key={update.id}
-                          className="animate-slide-up overflow-hidden transition-all duration-300"
-                          style={{
-                            animationDelay: `${i * 40}ms`,
-                            opacity: removingFromFeed.has(update.id) ? 0 : 1,
-                            maxHeight: removingFromFeed.has(update.id) ? '0px' : '800px',
-                            marginBottom: removingFromFeed.has(update.id) ? '0px' : undefined,
-                          }}
-                        >
-                          <UpdateFeedCard
-                            update={update}
-                            response={responses[update.id] ?? null}
-                            allResponses={allResponses[update.id] ?? []}
-                            currentProfileId={session.profileId}
-                            helperDisplayNames={helperDisplayNames}
-                            isArchived={archivedIds.has(update.id)}
-                            onRespond={handleRespond}
-                            onToggleArchive={handleToggleArchive}
-                            onToggleResolve={handleToggleResolve}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-dark-blue/20 bg-midnight-black/30 px-4 py-6 text-center">
-                      <p className="text-sm text-off-white/70">No needs right now</p>
-                      <p className="mt-0.5 text-xs text-off-white/50">Check back when the patient sends a request</p>
-                    </div>
+                <button
+                  key={pid}
+                  onClick={() => setSelectedPatientId(pid)}
+                  className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 transition-all active:scale-95 ${
+                    isActive
+                      ? 'border-bold-blue bg-bold-blue/20 text-white'
+                      : 'border-periwinkle/20 bg-midnight-black/40 text-off-white/70 hover:border-periwinkle/40 hover:text-off-white'
+                  }`}
+                >
+                  <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
+                  <span className="text-sm font-medium">{patient?.displayName ?? 'Patient'}</span>
+                  {unseen > 0 && (
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-bold-blue px-1 text-[10px] font-bold text-white">
+                      {unseen}
+                    </span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
-        ) : (
-          /* Single patient — show their name once at top if known, then flat list */
+        )}
+
+        {allPatientIds.length === 0 ? (
+          <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
+            <Users className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
+            <p className="text-sm text-off-white/90">No updates yet</p>
+            <button
+              onClick={onNavigateToConnections}
+              className="mt-2 text-xs text-periwinkle underline underline-offset-2 transition-opacity hover:opacity-80"
+            >
+              Connect with a patient to see their updates here
+            </button>
+          </div>
+        ) : selectedFeedCards.length === 0 ? (
           <div>
-            {isMultiPatient && patientIds.length === 1 && patientMap.has(patientIds[0]) && (
+            {selectedPatientId && patientMap.has(selectedPatientId) && (
               <PatientSectionHeader
-                displayName={patientMap.get(patientIds[0])!.displayName}
-                avatarIcon={patientMap.get(patientIds[0])!.avatarIcon}
+                displayName={patientMap.get(selectedPatientId)!.displayName}
+                avatarIcon={patientMap.get(selectedPatientId)!.avatarIcon}
                 unseenCount={0}
-                latestStatus={latestStatusByPatient.get(patientIds[0]) ?? null}
+                latestStatus={latestStatusByPatient.get(selectedPatientId) ?? null}
+              />
+            )}
+            <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
+              <MessageSquare className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
+              <p className="text-sm text-off-white/90">No needs right now</p>
+              <p className="mt-1 text-xs text-off-white/70">Needs requests from the patient will appear here</p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            {selectedPatientId && patientMap.has(selectedPatientId) && (
+              <PatientSectionHeader
+                displayName={patientMap.get(selectedPatientId)!.displayName}
+                avatarIcon={patientMap.get(selectedPatientId)!.avatarIcon}
+                unseenCount={unseenByPatient.get(selectedPatientId) ?? 0}
+                latestStatus={latestStatusByPatient.get(selectedPatientId) ?? null}
               />
             )}
             <div className="space-y-3">
-              {feedCards.map((update, i) => (
+              {selectedFeedCards.map((update, i) => (
                 <div
                   key={update.id}
                   className="animate-slide-up overflow-hidden transition-all duration-300"

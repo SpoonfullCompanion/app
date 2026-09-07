@@ -106,3 +106,11 @@
   animation: needsPulse 2.8s ease-in-out infinite;
   will-change: opacity, transform;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
