@@ -26,6 +26,8 @@ interface CaregiverFeedScreenProps {
   legacyUpdates: StatusUpdate[];
   onNavigateToConnections?: () => void;
   onArchiveChanged?: () => void;
+  pendingUpdateId?: string | null;
+  onPendingUpdateConsumed?: () => void;
 }
 
 const PRIORITY_CONFIG: Record<NeedPriority, {
@@ -376,7 +378,7 @@ function PatientSectionHeader({
 
 // ─── Main feed ────────────────────────────────────────────────────────────────
 
-export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections, onArchiveChanged }: CaregiverFeedScreenProps) {
+export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections, onArchiveChanged, pendingUpdateId, onPendingUpdateConsumed }: CaregiverFeedScreenProps) {
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
@@ -603,6 +605,45 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPatientIds, feedCards]);
 
+  // Deep-link from push notification: select the right patient + scroll to card
+  React.useEffect(() => {
+    if (!pendingUpdateId || !onPendingUpdateConsumed) return;
+    const targetUpdate = updates.find(u => u.id === pendingUpdateId);
+    if (targetUpdate) {
+      if (allPatientIds.includes(targetUpdate.patientId)) {
+        setSelectedPatientId(targetUpdate.patientId);
+      }
+      // Scroll after render
+      setTimeout(() => {
+        const el = document.getElementById(`update-card-${pendingUpdateId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-bold-blue', 'animate-pulse');
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-bold-blue', 'animate-pulse');
+          }, 2500);
+        }
+        onPendingUpdateConsumed();
+      }, 300);
+    } else {
+      // Update not in current feed — try refreshing once
+      void loadFeed().then(() => {
+        setTimeout(() => {
+          const el = document.getElementById(`update-card-${pendingUpdateId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-bold-blue', 'animate-pulse');
+            setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-bold-blue', 'animate-pulse');
+            }, 2500);
+          }
+          onPendingUpdateConsumed();
+        }, 300);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingUpdateId, updates, allPatientIds]);
+
   // Unseen count per patient (for tab badges)
   const unseenByPatient = React.useMemo(() => {
     const m = new Map<string, number>();
@@ -755,7 +796,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
               {selectedFeedCards.map((update, i) => (
                 <div
                   key={update.id}
-                  className="animate-slide-up overflow-hidden transition-all duration-300"
+                  id={`update-card-${update.id}`}
+                  className="animate-slide-up overflow-hidden rounded-2xl transition-all duration-300"
                   style={{
                     animationDelay: `${i * 50}ms`,
                     opacity: removingFromFeed.has(update.id) ? 0 : 1,

@@ -77,6 +77,59 @@ export async function logoutPush(): Promise<void> {
 
 export type EnablePushResult = { ok: boolean; reason?: 'unsupported' | 'denied' };
 
+export type PushNotificationData = {
+  updateId?: string;
+  patientId?: string;
+  kind?: string;
+};
+
+let pendingClickData: PushNotificationData | null = null;
+let clickHandler: ((data: PushNotificationData) => void) | null = null;
+
+/** Store notification data from a cold-start launch until a handler is registered. */
+export function setPendingNotificationData(data: PushNotificationData | null) {
+  pendingClickData = data;
+}
+
+/** Get and clear any notification data saved before the handler was ready. */
+export function consumePendingNotificationData(): PushNotificationData | null {
+  const data = pendingClickData;
+  pendingClickData = null;
+  return data;
+}
+
+/**
+ * Register a callback for notification taps. On cold start the callback fires
+ * after the listener is attached; any data captured before that is delivered
+ * immediately.
+ */
+export async function setupNotificationClickHandler(
+  onClick: (data: PushNotificationData) => void
+): Promise<void> {
+  const OneSignal = await loadOneSignal();
+  if (!OneSignal) return;
+  await initPush();
+
+  clickHandler = onClick;
+
+  try {
+    OneSignal.Notifications.addEventListener('notificationClick', (e: { notification?: { additionalData?: Record<string, unknown> } }) => {
+      const raw = e?.notification?.additionalData ?? {};
+      const data: PushNotificationData = {
+        updateId: raw.updateId as string | undefined,
+        patientId: raw.patientId as string | undefined,
+        kind: raw.kind as string | undefined,
+      };
+      if (data.updateId) onClick(data);
+    });
+  } catch (error) {
+    console.error('OneSignal notificationClick listener failed', error);
+  }
+
+  const saved = consumePendingNotificationData();
+  if (saved?.updateId) onClick(saved);
+}
+
 /**
  * Turn push on: request OS permission, opt the device's push subscription in,
  * and register the External ID. `unsupported` means web/demo or OneSignal isn't

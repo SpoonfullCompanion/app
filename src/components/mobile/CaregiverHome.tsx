@@ -13,6 +13,8 @@ interface CaregiverHomeProps {
   recentUpdates: StatusUpdate[];
   showHeaderChrome: boolean;
   showReturnToMain: boolean;
+  pendingUpdateId?: string | null;
+  onPendingUpdateConsumed?: () => void;
   onSignOut: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
@@ -26,6 +28,8 @@ export default function CaregiverHome({
   recentUpdates,
   showHeaderChrome,
   showReturnToMain,
+  pendingUpdateId,
+  onPendingUpdateConsumed,
   onSignOut,
   onReturnToMain,
   onUpdateDisplayName,
@@ -75,6 +79,8 @@ export default function CaregiverHome({
             legacyUpdates={recentUpdates}
             onNavigateToConnections={() => setActiveRoute('connections')}
             onArchiveChanged={() => setArchiveRefreshToken(t => t + 1)}
+            pendingUpdateId={pendingUpdateId}
+            onPendingUpdateConsumed={onPendingUpdateConsumed}
           />
         )}
         {activeRoute === 'connections' && (

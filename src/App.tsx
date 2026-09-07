@@ -28,7 +28,7 @@ import {
   updateEmail,
   updatePassword,
 } from './services/backend';
-import { initPush, logoutPush, reconcilePush } from './services/push';
+import { initPush, logoutPush, reconcilePush, setupNotificationClickHandler } from './services/push';
 
 function App() {
   const [showSignup, setShowSignup] = React.useState(false);
@@ -38,6 +38,7 @@ function App() {
   const [recentUpdates, setRecentUpdates] = React.useState<StatusUpdate[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [authMessage, setAuthMessage] = React.useState('');
+  const [pendingUpdateId, setPendingUpdateId] = React.useState<string | null>(null);
   const isDemoSession = session?.authMode === 'demo';
   const showDemoChrome = !isDemoSession;
   const showPatientHeaderChrome = appConfig.showPatientHeaderChrome && showDemoChrome;
@@ -133,6 +134,13 @@ function App() {
 
   React.useEffect(() => {
     void initPush();
+  }, []);
+
+  // Deep-link from push notification tap → scroll to the specific need card
+  React.useEffect(() => {
+    void setupNotificationClickHandler((data) => {
+      if (data.updateId) setPendingUpdateId(data.updateId);
+    });
   }, []);
 
   // Re-reconcile push when the app returns to foreground (e.g. user just
@@ -373,6 +381,8 @@ function App() {
       recentUpdates={recentUpdates}
       showHeaderChrome={showDemoChrome}
       showReturnToMain={isDemoSession}
+      pendingUpdateId={pendingUpdateId}
+      onPendingUpdateConsumed={() => setPendingUpdateId(null)}
       onSignOut={handleSignOut}
       onReturnToMain={handleReturnToMain}
       onUpdateDisplayName={handleUpdateDisplayName}
