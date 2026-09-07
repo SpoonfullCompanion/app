@@ -503,13 +503,11 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connections]);
 
-  // Split updates: status updates (energy/symptoms only, no needs) vs needs updates
-  const isNeedsUpdate = (u: StatusUpdate) => (u.selectedNeeds ?? []).length > 0;
+  // Show all updates as cards — both status-only and needs updates.
+  // The UpdateFeedCard already renders energy, needs, and symptoms conditionally.
   const hasStatusInfo = (u: StatusUpdate) =>
     (u.energyStatus != null && u.energyStatus !== '') ||
     (u.selectedSymptoms ?? []).length > 0;
-
-  const needsUpdates = updates.filter(isNeedsUpdate);
 
   // Find latest update with energy/symptoms per patient (even if it also has needs)
   const latestStatusByPatient = new Map<string, StatusUpdate | null>();
@@ -524,13 +522,13 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const patientIds = [...new Set(updates.map(u => u.patientId))];
   const isMultiPatient = patientIds.length > 1 || (patientIds.length === 1 && patientMap.has(patientIds[0]));
 
-  // Group needs updates by patient, preserving chronological order across groups
+  // Group all updates by patient, preserving chronological order across groups
   const grouped: Array<{ patientId: string; updateList: StatusUpdate[] }> = [];
   for (const pid of patientIds) {
-    grouped.push({ patientId: pid, updateList: needsUpdates.filter(u => u.patientId === pid) });
+    grouped.push({ patientId: pid, updateList: updates.filter(u => u.patientId === pid) });
   }
 
-  const totalUnseen = needsUpdates.filter(u => !responses[u.id]?.seenAt).length;
+  const totalUnseen = updates.filter(u => !responses[u.id]?.seenAt).length;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
@@ -640,9 +638,9 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
                 latestStatus={latestStatusByPatient.get(patientIds[0]) ?? null}
               />
             )}
-            {needsUpdates.length > 0 ? (
+            {updates.length > 0 ? (
               <div className="space-y-3">
-                {needsUpdates.map((update, i) => (
+                {updates.map((update, i) => (
                   <div
                     key={update.id}
                     className="animate-slide-up overflow-hidden transition-all duration-300"
@@ -668,8 +666,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
               </div>
             ) : (
               <div className="rounded-xl border border-dark-blue/20 bg-midnight-black/30 px-4 py-6 text-center">
-                <p className="text-sm text-off-white/70">No needs right now</p>
-                <p className="mt-0.5 text-xs text-off-white/50">Check back when the patient sends a request</p>
+                <p className="text-sm text-off-white/70">No updates right now</p>
+                <p className="mt-0.5 text-xs text-off-white/50">Check back when the patient sends a status or request</p>
               </div>
             )}
           </div>
