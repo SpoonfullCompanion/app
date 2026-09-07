@@ -163,6 +163,8 @@ export default function SignupScreen({
 
         {displayMessage && (
           <div
+            role={isError ? 'alert' : 'status'}
+            aria-live="polite"
             className={`mb-5 rounded-xl border px-4 py-3 text-sm font-medium ${
               isError
                 ? 'border-red-500/50 bg-red-500/15 text-red-200'
@@ -199,10 +201,12 @@ export default function SignupScreen({
               placeholder="How others will see you"
               autoCapitalize="words"
               autoCorrect="off"
+              aria-invalid={Boolean(displayNameError)}
+              aria-describedby={displayNameError ? 'signup-display-name-error' : undefined}
               className={`${inputClass} ${displayNameError ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30' : ''}`}
             />
             {displayNameError && (
-              <p className="mt-1.5 text-xs text-red-400">{displayNameError}</p>
+              <p id="signup-display-name-error" role="alert" className="mt-1.5 text-xs text-red-400">{displayNameError}</p>
             )}
           </div>
 
@@ -238,7 +242,7 @@ export default function SignupScreen({
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-off-white/40 hover:text-off-white transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-off-white/60 hover:text-off-white transition-colors"
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >

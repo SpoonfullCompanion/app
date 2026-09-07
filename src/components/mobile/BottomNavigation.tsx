@@ -30,7 +30,7 @@ export default function BottomNavigation({ activeRoute, onNavigate, pendingConne
       className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4"
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
-      <nav className="flex w-full max-w-2xl items-center gap-1 rounded-2xl border border-white/10 bg-midnight-black/90 px-2 py-2 shadow-2xl shadow-black/60 backdrop-blur-xl">
+      <nav aria-label="Main navigation" className="flex w-full max-w-2xl items-center gap-1 rounded-2xl border border-white/10 bg-midnight-black/90 px-2 py-2 shadow-2xl shadow-black/60 backdrop-blur-xl">
         {navItems.map(({ id, label, icon: Icon }) => {
           const isActive = activeRoute === id;
           const isBouncing = justTapped === id;
@@ -39,6 +39,8 @@ export default function BottomNavigation({ activeRoute, onNavigate, pendingConne
             <button
               key={id}
               onClick={() => handleTap(id)}
+              aria-label={label}
+              aria-current={isActive ? 'page' : undefined}
               className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all duration-150 active:scale-95 ${
                 isActive
                   ? 'bg-bold-blue/20 text-white'
@@ -51,7 +53,7 @@ export default function BottomNavigation({ activeRoute, onNavigate, pendingConne
                   strokeWidth={isActive ? 2.5 : 2}
                 />
                 {hasBadge && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-bold-blue text-[10px] font-bold text-white">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-bold-blue text-[10px] font-bold text-white" aria-label={`${pendingConnectionCount} unread`}>
                     {pendingConnectionCount > 9 ? '9+' : pendingConnectionCount}
                   </span>
                 )}

@@ -136,8 +136,9 @@ function UpdateFeedCard({
             <div className="flex shrink-0 items-center gap-0.5">
               <button
                 onClick={() => onToggleResolve(update.id, update.patientId)}
+                aria-label={isResolved ? 'Unmark resolved' : 'Mark resolved'}
                 className={`rounded-lg p-1.5 transition-all active:scale-90 ${
-                  isResolved ? 'text-green-400' : 'text-off-white/50 hover:text-off-white'
+                  isResolved ? 'text-green-400' : 'text-off-white/60 hover:text-off-white'
                 }`}
                 title={isResolved ? 'Unmark resolved' : 'Mark resolved'}
               >
@@ -145,8 +146,9 @@ function UpdateFeedCard({
               </button>
               <button
                 onClick={() => onToggleArchive(update.id)}
+                aria-label={isArchived ? 'Remove from archive' : 'Archive'}
                 className={`rounded-lg p-1.5 transition-all active:scale-90 ${
-                  isArchived ? 'text-bold-blue' : 'text-off-white/50 hover:text-off-white'
+                  isArchived ? 'text-bold-blue' : 'text-off-white/60 hover:text-off-white'
                 }`}
                 title={isArchived ? 'Remove from archive' : 'Archive'}
               >
@@ -279,11 +281,13 @@ function UpdateFeedCard({
                       onChange={e => setCustomNote(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') void handleSendNote(); }}
                       placeholder="Write a note…"
-                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-white placeholder-off-white/50 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
+                      aria-label="Write a note to send"
+                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-white placeholder-off-white/60 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
                     />
                     <button
                       onClick={() => void handleSendNote()}
                       disabled={!customNote.trim() || sending}
+                      aria-label="Send note"
                       className="flex items-center justify-center rounded-lg bg-bold-blue px-3 py-2 text-white transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-40"
                     >
                       <Send className="h-4 w-4" />
@@ -347,6 +351,9 @@ function PatientSectionHeader({
       {showSwitcher && onTogglePicker ? (
         <button
           onClick={onTogglePicker}
+          aria-label={`Select patient, currently ${displayName}`}
+          aria-expanded={pickerOpen}
+          aria-haspopup="listbox"
           className="mt-2.5 flex items-center gap-1.5 transition-opacity hover:opacity-80 active:scale-[0.98]"
         >
           <p className="text-base font-semibold text-off-white">{displayName}</p>
@@ -367,7 +374,7 @@ function PatientSectionHeader({
           )}
         </div>
       )}
-      <p className="mt-0.5 text-xs text-off-white/45 tracking-wide">Patient</p>
+      <p className="mt-0.5 text-xs text-off-white/70 tracking-wide">Patient</p>
       <div className="mt-3 w-full">
         <LatestStatusSummary update={latestStatus} />
       </div>
@@ -664,19 +671,21 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const totalUnseen = feedCards.filter(u => !responses[u.id]?.seenAt).length;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
+        <h1 className="sr-only">Patient Updates</h1>
 
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
+            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/70">Helper</p>
             <p className="text-base font-semibold text-white">Patient Updates</p>
           </div>
           <button
             onClick={() => void loadFeed(true)}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
+            aria-label="Refresh feed"
+            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/80 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -822,6 +831,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

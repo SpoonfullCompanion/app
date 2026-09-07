@@ -93,12 +93,13 @@ export default function CaregiverConnectionsScreen({
   const pendingConnections = connections.filter((c) => c.status === 'pending');
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
+        <h1 className="sr-only">Connections</h1>
 
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-1">Connections</p>
-          <p className="text-sm text-off-white/60">Manage which patients you follow.</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-off-white/70 mb-1">Connections</p>
+          <p className="text-sm text-off-white/80">Manage which patients you follow.</p>
         </div>
 
         {/* Search */}
@@ -112,7 +113,8 @@ export default function CaregiverConnectionsScreen({
               placeholder="Search patients by display name…"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-base text-off-white placeholder-off-white/55 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
+              aria-label="Search patients by display name"
+              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-base text-off-white placeholder-off-white/60 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
             />
             {isSearching && (
               <Loader className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-periwinkle/60" />
@@ -310,6 +312,6 @@ export default function CaregiverConnectionsScreen({
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

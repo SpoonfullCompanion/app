@@ -115,7 +115,8 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
               <button
                 onClick={() => onArchive(update.id)}
                 disabled={archiving}
-                className="rounded-lg p-1.5 text-off-white/50 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
+                aria-label="Archive update"
+                className="rounded-lg p-1.5 text-off-white/60 transition-colors hover:text-off-white/90 active:scale-90 disabled:opacity-30"
                 title="Archive"
               >
                 <Archive className="h-5 w-5" />
@@ -123,8 +124,9 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
               <button
                 onClick={handleToggleResolve}
                 disabled={resolving}
+                aria-label={isResolved ? 'Mark unresolved' : 'Mark as done'}
                 className={`rounded-lg p-1 transition-all active:scale-90 disabled:opacity-50 ${
-                  isResolved ? 'text-green-400' : 'text-off-white/35 hover:text-green-400'
+                  isResolved ? 'text-green-400' : 'text-off-white/50 hover:text-green-400'
                 }`}
                 title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
@@ -245,9 +247,9 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
             </div>
           )}
           {!anyActivity && (
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
-              <EyeOff className="h-3.5 w-3.5 text-off-white/60" />
-              <p className="text-xs text-off-white/70">Waiting for helper...</p>
+            <div role="status" className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1">
+              <EyeOff className="h-3.5 w-3.5 text-off-white/70" />
+              <p className="text-xs text-off-white/80">Waiting for helper...</p>
             </div>
           )}
         </div>
@@ -357,8 +359,9 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
     : null;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
+        <h1 className="sr-only">Home Feed</h1>
 
         {/* No-connections nudge */}
         {hasActiveConnections === false && (
@@ -498,6 +501,6 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
         </div>
 
       </div>
-    </div>
+    </main>
   );
 }

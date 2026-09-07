@@ -160,13 +160,13 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
   const hasSelection = selectedNeeds.size > 0 || customNote.trim().length > 0 || selectedAppreciation.size > 0;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-32">
       <div className="mx-auto max-w-2xl px-4 py-6">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-2">
+            <h1 className="text-xs uppercase tracking-[0.25em] text-off-white/70 mb-2">
               Needs
-            </p>
+            </h1>
             <p className="text-sm text-white">
               Tap to speak, or select your needs to notify to your helper.
             </p>
@@ -179,6 +179,8 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
           </div>
           <button
             onClick={onToggleTTS}
+            aria-label={ttsEnabled ? 'Turn off text-to-speech' : 'Turn on text-to-speech'}
+            aria-pressed={ttsEnabled}
             className="rounded-full border border-dark-blue bg-midnight-black/90 p-3 text-off-white shadow-lg shadow-black/20 transition-all hover:border-bold-blue hover:text-bold-blue active:scale-90"
           >
             {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
@@ -214,7 +216,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
 
         <div className="mt-6">
           <label htmlFor="customNote" className="mb-2 block text-sm font-medium text-white">
-            Type to Speak or Add Notes
+            Custom message to send to your helper
           </label>
           <div className="flex gap-2">
             <textarea
@@ -228,6 +230,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
             <button
               onClick={handleSpeakNote}
               disabled={!customNote.trim() || !ttsEnabled}
+              aria-label="Speak note aloud"
               className="rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 text-zinc-100 transition-all hover:border-bold-blue hover:bg-midnight-black/80 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Volume2 className="h-5 w-5" />
@@ -308,6 +311,9 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
             {/* Dropdown trigger */}
             <button
               onClick={() => setRecipientOpen(v => !v)}
+              aria-label="Select recipients"
+              aria-expanded={recipientOpen}
+              aria-haspopup="listbox"
               className="flex w-full items-center justify-between rounded-xl border border-periwinkle/25 bg-midnight-black/60 px-4 py-3 text-left transition-all hover:border-periwinkle/45 hover:bg-midnight-black/80 active:scale-[0.99]"
             >
               <div className="flex items-center gap-2.5">
@@ -402,16 +408,16 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
       </div>
 
       {sent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight-black/90 backdrop-blur-sm animate-fade-up">
+        <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-midnight-black/90 backdrop-blur-sm animate-fade-up">
           <div className="flex flex-col items-center gap-5">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-600 shadow-2xl shadow-green-900/50">
               <CheckCircle className="h-12 w-12 text-white" strokeWidth={2.5} />
             </div>
             <p className="text-xl font-bold text-white">Needs sent</p>
-            <p className="text-sm text-off-white/70">Taking you to your feed…</p>
+            <p className="text-sm text-off-white/80">Taking you to your feed…</p>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

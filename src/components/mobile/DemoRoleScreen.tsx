@@ -10,7 +10,7 @@ export default function DemoRoleScreen({ onSelectRole, onBack }: DemoRoleScreenP
     <main className="min-h-screen bg-midnight-black px-4 py-8 text-off-white sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col justify-between rounded-[2rem] border border-dark-blue/80 bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.18),_rgba(29,29,29,0.92)_55%)] p-6 shadow-2xl shadow-black/30">
         <div>
-          <button onClick={onBack} className="text-sm font-semibold text-periwinkle underline">
+          <button onClick={onBack} aria-label="Back to login" className="text-sm font-semibold text-periwinkle underline">
             Back to Login
           </button>
           <p className="mt-8 text-xs uppercase tracking-[0.3em] text-periwinkle">Demo mode</p>

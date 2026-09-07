@@ -33,7 +33,7 @@ function FriendUpdateCard({ update }: { update: StatusUpdate }) {
           <p className="text-sm font-medium text-off-white truncate">
             {update.patientDisplayName ?? 'Friend'}
           </p>
-          <p className="text-xs text-off-white/50">{formatDistanceToNow(update.sentAt)}</p>
+          <p className="text-xs text-off-white/70">{formatDistanceToNow(update.sentAt)}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -57,7 +57,7 @@ function FriendUpdateCard({ update }: { update: StatusUpdate }) {
           );
         })}
         {!energy && symptoms.length === 0 && (
-          <span className="text-xs text-off-white/40">No details shared</span>
+          <span className="text-xs text-off-white/70">No details shared</span>
         )}
       </div>
     </div>
@@ -87,19 +87,21 @@ export default function FriendsStatusScreen({ session, onBack }: FriendsStatusSc
   }, [session]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
+        <h1 className="sr-only">Friends</h1>
 
         <div className="mb-6 flex items-center gap-3">
           <button
             onClick={onBack}
-            className="rounded-full p-2 text-off-white/60 transition-colors hover:bg-white/5 hover:text-off-white active:scale-90"
+            aria-label="Go back"
+            className="rounded-full p-2 text-off-white/70 transition-colors hover:bg-white/5 hover:text-off-white active:scale-90"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-0.5">Friends</p>
-            <p className="text-sm text-off-white/60">See how your friends are doing</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/70 mb-0.5">Friends</p>
+            <p className="text-sm text-off-white/80">See how your friends are doing</p>
           </div>
         </div>
 
@@ -119,13 +121,13 @@ export default function FriendsStatusScreen({ session, onBack }: FriendsStatusSc
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-16 text-center">
             <Users className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
             <p className="text-sm text-off-white/80">No friends connected yet</p>
-            <p className="mt-1 text-xs text-off-white/50">Add friends from Connections to see their status here</p>
+            <p className="mt-1 text-xs text-off-white/70">Add friends from Connections to see their status here</p>
           </div>
         ) : friendUpdates.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-16 text-center">
             <Heart className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
             <p className="text-sm text-off-white/80">No updates from friends yet</p>
-            <p className="mt-1 text-xs text-off-white/50">When your friends share a status, you'll see it here</p>
+            <p className="mt-1 text-xs text-off-white/70">When your friends share a status, you'll see it here</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -135,6 +137,6 @@ export default function FriendsStatusScreen({ session, onBack }: FriendsStatusSc
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

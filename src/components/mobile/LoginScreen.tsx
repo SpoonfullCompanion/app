@@ -105,7 +105,7 @@ export default function LoginScreen({
         <div className="flex flex-col items-center mb-10 pt-4">
           <img
             src="/Spoonfull-Logo-DarkBG copy.svg"
-            alt="Spoonfull"
+            alt="Spoonfull logo"
             className="w-40 h-auto md:w-48"
           />
         </div>
@@ -117,6 +117,8 @@ export default function LoginScreen({
 
         {displayMessage && (
           <div
+            role={isError ? 'alert' : 'status'}
+            aria-live="polite"
             className={`mb-5 rounded-xl border px-4 py-3 text-sm font-medium ${
               isError
                 ? 'border-red-500/50 bg-red-500/15 text-red-200'
@@ -160,7 +162,7 @@ export default function LoginScreen({
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-off-white/40 hover:text-off-white transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-off-white/60 hover:text-off-white transition-colors"
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
@@ -173,6 +175,7 @@ export default function LoginScreen({
             <button
               type="button"
               onClick={() => setShowForgotPassword(!showForgotPassword)}
+              aria-expanded={showForgotPassword}
               className="text-sm text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
             >
               Forgot password?

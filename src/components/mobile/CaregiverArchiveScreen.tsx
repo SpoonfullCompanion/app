@@ -90,7 +90,8 @@ function ArchivedUpdateCard({
 
       <button
         onClick={() => onUnarchive(update.id)}
-        className="absolute right-2 top-2 rounded-lg p-1.5 text-off-white/40 transition-all hover:text-off-white/70 active:scale-90 z-10"
+        aria-label="Remove from archive"
+        className="absolute right-2 top-2 rounded-lg p-1.5 text-off-white/60 transition-all hover:text-off-white/90 active:scale-90 z-10"
         title="Remove from archive"
       >
         <X className="h-5 w-5" />
@@ -225,6 +226,7 @@ function ArchivedUpdateCard({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setExpanded(v => !v)}
+                  aria-expanded={expanded}
                   className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/80 transition-all hover:border-periwinkle/50 hover:text-off-white active:scale-95"
                 >
                   Respond
@@ -253,11 +255,13 @@ function ArchivedUpdateCard({
                       onChange={e => setCustomNote(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') void handleSendNote(); }}
                       placeholder="Write a note…"
-                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-white placeholder-off-white/50 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
+                      aria-label="Write a note to send"
+                      className="flex-1 rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-3 py-2 text-base text-white placeholder-off-white/60 outline-none focus:border-bold-blue focus:ring-1 focus:ring-bold-blue/20"
                     />
                     <button
                       onClick={() => void handleSendNote()}
                       disabled={!customNote.trim() || sending}
+                      aria-label="Send note"
                       className="flex items-center justify-center rounded-lg bg-bold-blue px-3 py-2 text-white transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-40"
                     >
                       <Send className="h-4 w-4" />
@@ -331,17 +335,18 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
+        <h1 className="sr-only">Archive</h1>
 
         {/* Header */}
         <div className="mb-6">
-          <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
+          <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/70">Helper</p>
           <div className="flex items-center gap-2">
             <Archive className="h-4 w-4 text-bold-blue" />
             <p className="text-base font-semibold text-white">Archive</p>
           </div>
-          <p className="mt-1 text-xs text-off-white/50">Up to 20 updates</p>
+          <p className="mt-1 text-xs text-off-white/70">Up to 20 updates</p>
         </div>
 
         {isLoading ? (
@@ -353,8 +358,8 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
         ) : updates.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
             <Archive className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
-            <p className="text-sm text-off-white/70">Archive is empty</p>
-            <p className="mt-1 text-xs text-off-white/50">Tap the bookmark icon on any feed card to archive it</p>
+            <p className="text-sm text-off-white/80">Archive is empty</p>
+            <p className="mt-1 text-xs text-off-white/70">Tap the bookmark icon on any feed card to archive it</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -376,6 +381,6 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

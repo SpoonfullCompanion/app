@@ -115,12 +115,13 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
+        <h1 className="sr-only">Connections</h1>
 
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-1">Connections</p>
-          <p className="text-sm text-off-white/60">Manage who can see your updates.</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-off-white/70 mb-1">Connections</p>
+          <p className="text-sm text-off-white/80">Manage who can see your updates.</p>
         </div>
 
         {/* Search bar */}
@@ -134,7 +135,8 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               placeholder="Search by display name…"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-base text-off-white placeholder-off-white/55 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
+              aria-label="Search by display name"
+              className="w-full rounded-xl border border-periwinkle/30 bg-midnight-black/60 py-3 pl-10 pr-4 text-base text-off-white placeholder-off-white/60 outline-none transition-colors focus:border-bold-blue focus:ring-2 focus:ring-bold-blue/20"
             />
             {isSearching && (
               <Loader className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-periwinkle/60" />
@@ -190,6 +192,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
         <div className="mb-4 flex gap-1 rounded-xl border border-white/10 bg-midnight-black/40 p-1">
           <button
             onClick={() => setTab('caregivers')}
+            aria-pressed={tab === 'caregivers'}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
               tab === 'caregivers'
                 ? 'bg-bold-blue/20 text-white'
@@ -205,6 +208,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
           </button>
           <button
             onClick={() => setTab('friends')}
+            aria-pressed={tab === 'friends'}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
               tab === 'friends'
                 ? 'bg-bold-blue/20 text-white'
@@ -220,6 +224,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
           </button>
           <button
             onClick={() => setTab('requests')}
+            aria-pressed={tab === 'requests'}
             className={`relative flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
               tab === 'requests'
                 ? 'bg-bold-blue/20 text-white'
@@ -247,7 +252,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
                 <Users className="mx-auto mb-3 h-8 w-8 text-off-white/50" />
                 <p className="text-sm text-off-white/90">No helpers connected</p>
-                <p className="mt-1 text-xs text-off-white/65">Search by display name above to invite a helper</p>
+                <p className="mt-1 text-xs text-off-white/70">Search by display name above to invite a helper</p>
               </div>
             ) : (
               activeConnections.map((conn) => {
@@ -300,7 +305,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-12 text-center">
                 <Heart className="mx-auto mb-3 h-8 w-8 text-off-white/50" />
                 <p className="text-sm text-off-white/90">No friends connected yet</p>
-                <p className="mt-1 text-xs text-off-white/65">Search for other patients above to add a friend</p>
+                <p className="mt-1 text-xs text-off-white/70">Search for other patients above to add a friend</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -348,7 +353,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
               <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
                 <Clock className="mx-auto mb-3 h-8 w-8 text-off-white/50" />
                 <p className="text-sm text-off-white/90">No pending requests</p>
-                <p className="mt-1 text-xs text-off-white/65">Connection requests will appear here</p>
+                <p className="mt-1 text-xs text-off-white/70">Connection requests will appear here</p>
               </div>
             ) : (
               pendingRequests.map((conn) => {
@@ -381,7 +386,7 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
                           </p>
                         </div>
                         {conn.connectionType === 'patient_friend' && (
-                          <p className="mt-1 text-xs text-off-white/45">Status updates only — needs are not shared</p>
+                          <p className="mt-1 text-xs text-off-white/70">Status updates only — needs are not shared</p>
                         )}
                       </div>
                     </div>
@@ -425,6 +430,6 @@ export default function ConnectionsScreen({ session }: ConnectionsScreenProps) {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

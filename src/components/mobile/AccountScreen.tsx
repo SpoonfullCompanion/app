@@ -213,15 +213,16 @@ export default function AccountScreen({
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
+        <h1 className="sr-only">Account</h1>
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-1">Account</p>
-          <p className="text-sm text-off-white/60">Manage your profile and settings.</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-off-white/70 mb-1">Account</p>
+          <p className="text-sm text-off-white/80">Manage your profile and settings.</p>
         </div>
 
         {/* Profile section */}
-        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/50">Profile</div>
+        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/70">Profile</div>
         <div className="space-y-2 mb-8">
 
           {/* Avatar icon */}
@@ -229,7 +230,7 @@ export default function AccountScreen({
             {editing === 'avatar' ? (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-off-white/50">Choose your icon</p>
+                  <p className="text-xs text-off-white/70">Choose your icon</p>
                   <div className="flex items-center gap-2">
                     <SaveButton onClick={() => void handleSaveAvatar()} disabled={isSaving} />
                     <CancelButton onClick={cancelEditing} />
@@ -241,7 +242,7 @@ export default function AccountScreen({
               <div className="flex items-center gap-3">
                 <AvatarIcon iconId={session?.avatarIcon} size="md" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-off-white/50 mb-0.5">Icon</p>
+                  <p className="text-xs text-off-white/70 mb-0.5">Icon</p>
                   <p className="font-medium text-off-white text-sm">Your profile icon</p>
                 </div>
                 <EditButton onClick={() => startEditing('avatar')} />
@@ -254,7 +255,7 @@ export default function AccountScreen({
             <div className="flex items-start gap-3">
               <User className="mt-0.5 h-5 w-5 shrink-0 text-off-white/60" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-off-white/50 mb-1">Display name</p>
+                <p className="text-xs text-off-white/70 mb-1">Display name</p>
                 {editing === 'displayName' ? (
                   <div>
                     <div className="flex items-center gap-2">
@@ -266,12 +267,15 @@ export default function AccountScreen({
                         autoFocus
                         autoCapitalize="words"
                         autoCorrect="off"
+                        aria-label="Display name"
+                        aria-invalid={Boolean(nameError)}
+                        aria-describedby={nameError ? 'display-name-error' : undefined}
                         className={inputClass}
                       />
                       <SaveButton onClick={() => void handleSaveName()} disabled={isSaving || !!nameError || !draftName.trim()} />
                       <CancelButton onClick={cancelEditing} />
                     </div>
-                    {nameError && <p className="mt-1.5 text-xs text-red-400">{nameError}</p>}
+                    {nameError && <p id="display-name-error" role="alert" className="mt-1.5 text-xs text-red-400">{nameError}</p>}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
@@ -288,7 +292,7 @@ export default function AccountScreen({
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 h-5 w-5 shrink-0 text-off-white/60" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-off-white/50 mb-1">Email</p>
+                <p className="text-xs text-off-white/70 mb-1">Email</p>
                 {editing === 'email' ? (
                   <div>
                     <div className="flex items-center gap-2">
@@ -300,12 +304,15 @@ export default function AccountScreen({
                         autoCapitalize="none"
                         autoCorrect="off"
                         placeholder="new@example.com"
+                        aria-label="Email address"
+                        aria-invalid={Boolean(emailError)}
+                        aria-describedby={emailError ? 'email-error' : undefined}
                         className={inputClass}
                       />
                       <SaveButton onClick={() => void handleSaveEmail()} disabled={isSaving || !draftEmail.trim()} />
                       <CancelButton onClick={cancelEditing} />
                     </div>
-                    {emailError && <p className="mt-1.5 text-xs text-red-400">{emailError}</p>}
+                    {emailError && <p id="email-error" role="alert" className="mt-1.5 text-xs text-red-400">{emailError}</p>}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
@@ -325,7 +332,7 @@ export default function AccountScreen({
             <div className="flex items-start gap-3">
               <Lock className="mt-0.5 h-5 w-5 shrink-0 text-off-white/60" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-off-white/50 mb-1">Password</p>
+                <p className="text-xs text-off-white/70 mb-1">Password</p>
                 {editing === 'password' ? (
                   <div className="space-y-2">
                     <input
@@ -334,6 +341,7 @@ export default function AccountScreen({
                       onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
                       autoFocus
                       placeholder="New password (min. 6 characters)"
+                      aria-label="New password"
                       className={`${inputClass} w-full`}
                     />
                     <div className="flex items-center gap-2">
@@ -342,6 +350,9 @@ export default function AccountScreen({
                         value={confirmPassword}
                         onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
                         placeholder="Confirm new password"
+                        aria-label="Confirm new password"
+                        aria-invalid={Boolean(passwordError)}
+                        aria-describedby={passwordError ? 'password-error' : undefined}
                         className={inputClass}
                       />
                       <SaveButton
@@ -350,7 +361,7 @@ export default function AccountScreen({
                       />
                       <CancelButton onClick={cancelEditing} />
                     </div>
-                    {passwordError && <p className="mt-0.5 text-xs text-red-400">{passwordError}</p>}
+                    {passwordError && <p id="password-error" role="alert" className="mt-0.5 text-xs text-red-400">{passwordError}</p>}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
@@ -368,7 +379,7 @@ export default function AccountScreen({
         </div>
 
         {/* Notifications section */}
-        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/50">Notifications</div>
+        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/70">Notifications</div>
         <div className="mb-8 rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4">
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${pushEnabled ? 'bg-bold-blue/20' : 'bg-dark-blue/40'}`}>
@@ -378,13 +389,13 @@ export default function AccountScreen({
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-off-white text-sm">Caregiver reply alerts</p>
-              <p className="text-xs text-off-white/50">Get notified when a helper responds to your update</p>
+              <p className="text-xs text-off-white/70">Get notified when a helper responds to your update</p>
             </div>
             <button
               type="button"
               onClick={() => void handleTogglePush()}
               disabled={pushLoading}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${pushEnabled ? 'bg-bold-blue' : 'bg-dark-blue'}`}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-2 focus:outline-offset-2 focus:outline-bold-blue disabled:cursor-not-allowed disabled:opacity-40 ${pushEnabled ? 'bg-bold-blue' : 'bg-dark-blue'}`}
               aria-checked={pushEnabled}
               role="switch"
               aria-label="Toggle caregiver reply notifications"
@@ -394,11 +405,11 @@ export default function AccountScreen({
               />
             </button>
           </div>
-          {pushHint && <p className="mt-3 text-xs text-off-white/50">{pushHint}</p>}
+          {pushHint && <p role="alert" className="mt-3 text-xs text-off-white/70">{pushHint}</p>}
         </div>
 
         {/* Session section */}
-        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/50">Session</div>
+        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/70">Session</div>
         <button
           onClick={() => void onSignOut()}
           className="w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-red-500 hover:bg-red-500/10"
@@ -407,11 +418,11 @@ export default function AccountScreen({
             <LogOut className="h-5 w-5 text-red-400" />
             <div className="flex-1">
               <p className="font-medium text-red-400">Sign Out</p>
-              <p className="text-xs text-off-white/50">Log out of your account</p>
+              <p className="text-xs text-off-white/70">Log out of your account</p>
             </div>
           </div>
         </button>
       </div>
-    </div>
+    </main>
   );
 }

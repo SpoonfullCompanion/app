@@ -57,7 +57,8 @@ function ArchivedCard({
       <button
         onClick={() => onUnarchive(update.id)}
         disabled={removing}
-        className="absolute right-2 top-2 rounded-lg p-1.5 text-off-white/40 transition-all hover:text-off-white/70 active:scale-90 disabled:opacity-30 z-10"
+        aria-label="Remove from archive"
+        className="absolute right-2 top-2 rounded-lg p-1.5 text-off-white/60 transition-all hover:text-off-white/90 active:scale-90 disabled:opacity-30 z-10"
         title="Remove from archive"
       >
         <X className="h-5 w-5" />
@@ -197,19 +198,21 @@ export default function PatientArchiveScreen({ session, onBack }: PatientArchive
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
+        <h1 className="sr-only">Archive</h1>
 
         <div className="mb-6 flex items-center gap-3">
           <button
             onClick={onBack}
-            className="rounded-full p-2 text-off-white/60 transition-colors hover:bg-white/5 hover:text-off-white active:scale-90"
+            aria-label="Go back"
+            className="rounded-full p-2 text-off-white/70 transition-colors hover:bg-white/5 hover:text-off-white active:scale-90"
           >
             <LucideIcons.ChevronLeft className="h-5 w-5" />
           </button>
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-off-white/60 mb-0.5">Archive</p>
-            <p className="text-sm text-off-white/60">Your archived updates</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-off-white/70 mb-0.5">Archive</p>
+            <p className="text-sm text-off-white/80">Your archived updates</p>
           </div>
         </div>
 
@@ -221,7 +224,7 @@ export default function PatientArchiveScreen({ session, onBack }: PatientArchive
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-16 text-center">
             <ArchiveX className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
             <p className="text-sm text-off-white/80">Nothing archived yet</p>
-            <p className="mt-1 text-xs text-off-white/50">Tap the archive icon on any update to save it here</p>
+            <p className="mt-1 text-xs text-off-white/70">Tap the archive icon on any update to save it here</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -237,6 +240,6 @@ export default function PatientArchiveScreen({ session, onBack }: PatientArchive
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
