@@ -58,7 +58,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
   onUnresolve: (updateId: string) => Promise<void>;
 }) {
   const [resolving, setResolving] = React.useState(false);
-  const isResolved = Boolean(update.resolvedAt);
+  const isResolved = Boolean(update.completedAt);
 
   const handleToggleResolve = async () => {
     setResolving(true);
@@ -327,7 +327,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
     if (!session || session.authMode === 'demo') return;
     setLocalUpdates(prev => prev.map(u =>
       u.id === update.id
-        ? { ...u, resolvedAt: new Date().toISOString(), resolvedBy: session.profileId }
+        ? { ...u, completedAt: new Date().toISOString(), completedBy: session.profileId }
         : u
     ));
     await markUpdateResolved(update.id, session.profileId, update.patientId);
@@ -337,7 +337,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
   const handleUnresolve = async (updateId: string) => {
     if (!session || session.authMode === 'demo') return;
     setLocalUpdates(prev => prev.map(u =>
-      u.id === updateId ? { ...u, resolvedAt: null, resolvedBy: null } : u
+      u.id === updateId ? { ...u, completedAt: null, completedBy: null } : u
     ));
     await unmarkUpdateResolved(updateId);
   };

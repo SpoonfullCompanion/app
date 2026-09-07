@@ -133,7 +133,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
       await onSendUpdate({
         type: 'need',
         selectedNeeds: needsArray,
-        message: parts.join('. '),
+        messageText: parts.join('. '),
         needPriority: selectedPriority,
         targetedFollowerIds,
       });

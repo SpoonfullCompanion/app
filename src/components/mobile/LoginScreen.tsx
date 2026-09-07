@@ -1,10 +1,7 @@
 import React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { appConfig } from '../../lib/appConfig';
-import type { DemoMode } from '../../types/app';
-
 interface LoginScreenProps {
-  mode: DemoMode;
   onSignInWithPassword: (email: string, password: string) => Promise<string>;
   onSendMagicLink: (email: string) => Promise<string>;
   onContinueDemo: () => void;
@@ -19,7 +16,6 @@ const ctaClass =
   'flex w-full items-center justify-center rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
 
 export default function LoginScreen({
-  mode,
   onSignInWithPassword,
   onSendMagicLink,
   onContinueDemo,

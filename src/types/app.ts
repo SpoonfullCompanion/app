@@ -62,8 +62,8 @@ export interface StatusUpdate {
   needPriority?: NeedPriority | null;
   /** null = broadcast to all active helpers; non-null = targeted helper profile IDs */
   targetedFollowerIds?: string[] | null;
-  resolvedAt?: string | null;
-  resolvedBy?: string | null;
+  completedAt?: string | null;
+  completedBy?: string | null;
   /** Denormalized — populated on friend feed updates */
   patientDisplayName?: string;
   patientAvatarIcon?: string | null;
@@ -79,22 +79,12 @@ export interface CaregiverResponse {
   createdAt: string;
 }
 
-export interface NotificationPreference {
-  userId: string;
-  pushEnabled: boolean;
-  localRemindersEnabled: boolean;
-}
-
 export interface CommunicationSubmission {
   type?: 'status' | 'need' | 'message';
   helperLocation?: HelperLocation;
   selectedNeeds?: string[];
-  need?: string;
-  energy?: string;
   energyStatus?: string | null;
   selectedSymptoms?: string[];
-  symptoms?: string[];
-  message?: string;
   messageText?: string;
   needPriority?: NeedPriority | null;
   /** null = all helpers; array of profile IDs = targeted send */

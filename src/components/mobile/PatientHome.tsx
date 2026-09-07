@@ -15,11 +15,8 @@ import { getPatientConnections } from '../../services/backend';
 interface PatientHomeProps {
   session: AppSession | null;
   recentUpdates: StatusUpdate[];
-  showHeaderChrome: boolean;
-  showReturnToMain: boolean;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
   onSignOut: () => Promise<void>;
-  onReturnToMain: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
@@ -29,11 +26,8 @@ interface PatientHomeProps {
 export default function PatientHome({
   session,
   recentUpdates,
-  showHeaderChrome,
-  showReturnToMain,
   onSendUpdate,
   onSignOut,
-  onReturnToMain,
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,

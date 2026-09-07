@@ -46,14 +46,6 @@ function buildConnectedSession(params: {
   } satisfies AppSession;
 }
 
-function resolveRoleForAuthUser(
-  roleFromMetadata: UserRole | undefined,
-  storedSession: AppSession | null,
-  pendingRole: UserRole | null,
-) {
-  return pendingRole ?? roleFromMetadata ?? storedSession?.role ?? 'patient';
-}
-
 function resolveAuthMode(
   storedSession: AppSession | null,
   pendingAuthMode: AppSession['authMode'] | null,
@@ -314,11 +306,6 @@ async function fetchProfile(userId: string): Promise<{ role: UserRole; displayNa
     console.error('Failed to fetch profile', error);
     return null;
   }
-}
-
-async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
-  const profile = await fetchProfile(userId);
-  return profile?.role ?? null;
 }
 
 export async function checkDisplayNameAvailable(name: string): Promise<boolean> {
@@ -607,9 +594,9 @@ export async function sendStatusUpdate(session: AppSession, submission: Communic
     caregiverId: null,
     helperLocation: submission.helperLocation,
     selectedNeeds: submission.selectedNeeds ?? [],
-    energyStatus: submission.energyStatus ?? submission.energy ?? null,
-    selectedSymptoms: submission.selectedSymptoms ?? submission.symptoms ?? [],
-    messageText: submission.messageText ?? submission.message ?? '',
+    energyStatus: submission.energyStatus ?? null,
+    selectedSymptoms: submission.selectedSymptoms ?? [],
+    messageText: submission.messageText ?? '',
     sentAt: new Date().toISOString(),
     delivery: 'sent',
     needPriority: submission.needPriority ?? null,
@@ -661,8 +648,8 @@ function mapStatusRecord(data: Record<string, unknown>): StatusUpdate {
     delivery: data.delivery as 'sent' | 'draft',
     needPriority: (data.need_priority as StatusUpdate['needPriority']) ?? null,
     targetedFollowerIds: (data.targeted_follower_ids as string[] | null) ?? null,
-    resolvedAt: (data.completed_at as string | null) ?? null,
-    resolvedBy: (data.completed_by as string | null) ?? null,
+    completedAt: (data.completed_at as string | null) ?? null,
+    completedBy: (data.completed_by as string | null) ?? null,
   };
 }
 
@@ -1205,150 +1192,112 @@ export async function getFriendStatusUpdates(
 
 const ARCHIVE_MAX = 20;
 
-export async function archiveUpdate(caregiverId: string, statusUpdateId: string): Promise<void> {
+interface ArchiveConfig {
+  table: string;
+  idColumn: string;
+}
+
+const CAREGIVER_ARCHIVE: ArchiveConfig = { table: 'caregiver_archived_updates', idColumn: 'caregiver_id' };
+const PATIENT_ARCHIVE: ArchiveConfig = { table: 'patient_archived_updates', idColumn: 'patient_id' };
+
+async function archiveUpdateGeneric(config: ArchiveConfig, profileId: string, statusUpdateId: string): Promise<void> {
   if (!supabase) return;
 
   await supabase
-    .from('caregiver_archived_updates')
+    .from(config.table)
     .upsert(
-      { caregiver_id: caregiverId, status_update_id: statusUpdateId },
-      { onConflict: 'caregiver_id,status_update_id' },
+      { [config.idColumn]: profileId, status_update_id: statusUpdateId },
+      { onConflict: `${config.idColumn},status_update_id` },
     );
 
-  // Prune beyond ARCHIVE_MAX — keep the newest rows
   const { data } = await supabase
-    .from('caregiver_archived_updates')
+    .from(config.table)
     .select('id, archived_at')
-    .eq('caregiver_id', caregiverId)
+    .eq(config.idColumn, profileId)
     .order('archived_at', { ascending: false });
 
   if (data && data.length > ARCHIVE_MAX) {
     const toDelete = data.slice(ARCHIVE_MAX).map((r) => r.id);
-    await supabase.from('caregiver_archived_updates').delete().in('id', toDelete);
+    await supabase.from(config.table).delete().in('id', toDelete);
   }
+}
+
+async function unarchiveUpdateGeneric(config: ArchiveConfig, profileId: string, statusUpdateId: string): Promise<void> {
+  if (!supabase) return;
+  await supabase
+    .from(config.table)
+    .delete()
+    .eq(config.idColumn, profileId)
+    .eq('status_update_id', statusUpdateId);
+}
+
+async function getArchivedIdsGeneric(config: ArchiveConfig, profileId: string): Promise<Set<string>> {
+  if (!supabase) return new Set();
+  const { data } = await supabase
+    .from(config.table)
+    .select('status_update_id')
+    .eq(config.idColumn, profileId)
+    .order('archived_at', { ascending: false })
+    .limit(ARCHIVE_MAX);
+
+  return new Set((data ?? []).map((r) => r.status_update_id as string));
+}
+
+async function getArchivedUpdatesGeneric(config: ArchiveConfig, session: AppSession): Promise<StatusUpdate[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  const { data, error } = await supabase
+    .from(config.table)
+    .select(`archived_at, status_updates (*)`)
+    .eq(config.idColumn, session.profileId)
+    .order('archived_at', { ascending: false })
+    .limit(ARCHIVE_MAX);
+
+  if (error || !data) return [];
+
+  return data
+    .map((row) => {
+      const u = row.status_updates as Record<string, unknown> | null;
+      if (!u) return null;
+      return mapStatusRecord(u);
+    })
+    .filter(Boolean) as StatusUpdate[];
+}
+
+export async function archiveUpdate(caregiverId: string, statusUpdateId: string): Promise<void> {
+  return archiveUpdateGeneric(CAREGIVER_ARCHIVE, caregiverId, statusUpdateId);
 }
 
 export async function unarchiveUpdate(caregiverId: string, statusUpdateId: string): Promise<void> {
-  if (!supabase) return;
-  await supabase
-    .from('caregiver_archived_updates')
-    .delete()
-    .eq('caregiver_id', caregiverId)
-    .eq('status_update_id', statusUpdateId);
+  return unarchiveUpdateGeneric(CAREGIVER_ARCHIVE, caregiverId, statusUpdateId);
 }
 
 export async function getArchivedUpdateIds(caregiverId: string): Promise<Set<string>> {
-  if (!supabase) return new Set();
-  const { data } = await supabase
-    .from('caregiver_archived_updates')
-    .select('status_update_id')
-    .eq('caregiver_id', caregiverId)
-    .order('archived_at', { ascending: false })
-    .limit(ARCHIVE_MAX);
-
-  return new Set((data ?? []).map((r) => r.status_update_id as string));
+  return getArchivedIdsGeneric(CAREGIVER_ARCHIVE, caregiverId);
 }
 
 export async function getArchivedUpdates(session: AppSession): Promise<StatusUpdate[]> {
-  if (!supabase || session.authMode === 'demo') return [];
-
-  const { data, error } = await supabase
-    .from('caregiver_archived_updates')
-    .select(`
-      archived_at,
-      status_updates (*)
-    `)
-    .eq('caregiver_id', session.profileId)
-    .order('archived_at', { ascending: false })
-    .limit(ARCHIVE_MAX);
-
-  if (error || !data) return [];
-
-  return data
-    .map((row) => {
-      const u = row.status_updates as Record<string, unknown> | null;
-      if (!u) return null;
-      return mapStatusRecord(u);
-    })
-    .filter(Boolean) as StatusUpdate[];
+  return getArchivedUpdatesGeneric(CAREGIVER_ARCHIVE, session);
 }
 
-// ─── Patient Archive ──────────────────────────────────────────────────────────
-
-const PATIENT_ARCHIVE_MAX = 20;
-
 export async function archivePatientUpdate(patientId: string, statusUpdateId: string): Promise<void> {
-  if (!supabase) return;
-
-  await supabase
-    .from('patient_archived_updates')
-    .upsert(
-      { patient_id: patientId, status_update_id: statusUpdateId },
-      { onConflict: 'patient_id,status_update_id' },
-    );
-
-  const { data } = await supabase
-    .from('patient_archived_updates')
-    .select('id, archived_at')
-    .eq('patient_id', patientId)
-    .order('archived_at', { ascending: false });
-
-  if (data && data.length > PATIENT_ARCHIVE_MAX) {
-    const toDelete = data.slice(PATIENT_ARCHIVE_MAX).map((r) => r.id);
-    await supabase.from('patient_archived_updates').delete().in('id', toDelete);
-  }
+  return archiveUpdateGeneric(PATIENT_ARCHIVE, patientId, statusUpdateId);
 }
 
 export async function unarchivePatientUpdate(patientId: string, statusUpdateId: string): Promise<void> {
-  if (!supabase) return;
-  await supabase
-    .from('patient_archived_updates')
-    .delete()
-    .eq('patient_id', patientId)
-    .eq('status_update_id', statusUpdateId);
+  return unarchiveUpdateGeneric(PATIENT_ARCHIVE, patientId, statusUpdateId);
 }
 
 export async function getPatientArchivedUpdateIds(patientId: string): Promise<Set<string>> {
-  if (!supabase) return new Set();
-  const { data } = await supabase
-    .from('patient_archived_updates')
-    .select('status_update_id')
-    .eq('patient_id', patientId)
-    .order('archived_at', { ascending: false })
-    .limit(PATIENT_ARCHIVE_MAX);
-
-  return new Set((data ?? []).map((r) => r.status_update_id as string));
+  return getArchivedIdsGeneric(PATIENT_ARCHIVE, patientId);
 }
 
 export async function getPatientArchivedUpdates(session: AppSession): Promise<StatusUpdate[]> {
-  if (!supabase || session.authMode === 'demo') return [];
-
-  const { data, error } = await supabase
-    .from('patient_archived_updates')
-    .select(`archived_at, status_updates (*)`)
-    .eq('patient_id', session.profileId)
-    .order('archived_at', { ascending: false })
-    .limit(PATIENT_ARCHIVE_MAX);
-
-  if (error || !data) return [];
-
-  return data
-    .map((row) => {
-      const u = row.status_updates as Record<string, unknown> | null;
-      if (!u) return null;
-      return mapStatusRecord(u);
-    })
-    .filter(Boolean) as StatusUpdate[];
+  return getArchivedUpdatesGeneric(PATIENT_ARCHIVE, session);
 }
-
-// ─── End Patient Archive ──────────────────────────────────────────────────────
 
 // ─── Resolve ──────────────────────────────────────────────────────────────────
 
-/**
- * Mark an update resolved and archive it for both the helper and patient side.
- * patientId is needed to write the patient archive entry.
- */
 export async function markUpdateResolved(
   updateId: string,
   resolvedByProfileId: string,
@@ -1376,13 +1325,11 @@ export async function unmarkUpdateResolved(updateId: string): Promise<void> {
     .eq('id', updateId);
 }
 
-// ─── End Resolve ──────────────────────────────────────────────────────────────
-
 // ─── End Archive ──────────────────────────────────────────────────────────────
 
 // ─── End Connections ──────────────────────────────────────────────────────────
 
-export async function getResponsesForPatient(
+async function fetchResponsesForUpdates(
   statusUpdateIds: string[],
 ): Promise<Record<string, CaregiverResponse[]>> {
   if (!supabase || !statusUpdateIds.length) return {};
@@ -1413,33 +1360,14 @@ export async function getResponsesForPatient(
   return map;
 }
 
+export async function getResponsesForPatient(
+  statusUpdateIds: string[],
+): Promise<Record<string, CaregiverResponse[]>> {
+  return fetchResponsesForUpdates(statusUpdateIds);
+}
+
 export async function getAllResponsesForUpdates(
   statusUpdateIds: string[],
 ): Promise<Record<string, CaregiverResponse[]>> {
-  if (!supabase || !statusUpdateIds.length) return {};
-
-  const { data, error } = await supabase
-    .from('caregiver_responses')
-    .select('*, caregiver:profiles!caregiver_responses_caregiver_id_fkey(display_name)')
-    .in('status_update_id', statusUpdateIds)
-    .order('created_at', { ascending: true });
-
-  if (error || !data) return {};
-
-  const map: Record<string, CaregiverResponse[]> = {};
-  for (const row of data) {
-    const caregiver = row.caregiver as Record<string, unknown> | null;
-    const response: CaregiverResponse = {
-      id: row.id,
-      statusUpdateId: row.status_update_id,
-      caregiverId: row.caregiver_id,
-      caregiverDisplayName: (caregiver?.display_name as string) ?? undefined,
-      message: row.message,
-      seenAt: row.seen_at,
-      createdAt: row.created_at,
-    };
-    if (!map[row.status_update_id]) map[row.status_update_id] = [];
-    map[row.status_update_id].push(response);
-  }
-  return map;
+  return fetchResponsesForUpdates(statusUpdateIds);
 }

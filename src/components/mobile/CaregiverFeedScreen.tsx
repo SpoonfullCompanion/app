@@ -77,7 +77,7 @@ function UpdateFeedCard({
   const [customNote, setCustomNote] = React.useState('');
   const [sending, setSending] = React.useState(false);
 
-  const isResolved = Boolean(update.resolvedAt);
+  const isResolved = Boolean(update.completedAt);
 
   const energy = update.energyStatus ? ENERGY_STATUSES.find(e => e.id === update.energyStatus) : null;
   const needs = (update.selectedNeeds ?? []).map(id => NEEDS.find(n => n.id === id)).filter(Boolean) as typeof NEEDS;
@@ -484,11 +484,11 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const handleToggleResolve = (updateId: string, patientId: string) => {
     setUpdates(prev => prev.map(u =>
       u.id === updateId
-        ? { ...u, resolvedAt: u.resolvedAt ? null : new Date().toISOString(), resolvedBy: u.resolvedAt ? null : session.profileId }
+        ? { ...u, completedAt: u.completedAt ? null : new Date().toISOString(), completedBy: u.completedAt ? null : session.profileId }
         : u
     ));
     const update = updates.find(u => u.id === updateId);
-    if (update?.resolvedAt) {
+    if (update?.completedAt) {
       void unmarkUpdateResolved(updateId);
     } else {
       void markUpdateResolved(updateId, session.profileId, patientId).then(() => {
@@ -511,7 +511,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     const nowArchived = !archivedIds.has(updateId);
     setArchivedIds(prev => {
       const next = new Set(prev);
-      nowArchived ? next.add(updateId) : next.delete(updateId);
+      if (nowArchived) { next.add(updateId); } else { next.delete(updateId); }
       return next;
     });
     if (nowArchived) {
@@ -596,8 +596,7 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const feedCards = updates.filter(hasNeeds);
 
   // Determine if we have multiple distinct patients in the feed
-  const patientIds = [...new Set(feedCards.map(u => u.patientId))];
-  const isMultiPatient = patientIds.length > 1 || (patientIds.length === 1 && patientMap.has(patientIds[0]));
+
 
   // Auto-select first patient if none selected or selected patient disconnected
   React.useEffect(() => {
@@ -667,8 +666,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
   const selectedFeedCards = selectedPatientId
     ? feedCards.filter(u => u.patientId === selectedPatientId)
     : feedCards;
-
-  const totalUnseen = feedCards.filter(u => !responses[u.id]?.seenAt).length;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">

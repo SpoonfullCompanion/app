@@ -68,9 +68,9 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
 
       await onSendUpdate({
         type: 'status',
-        energy: selectedEnergy ?? undefined,
-        symptoms: Array.from(selectedSymptoms),
-        message,
+        energyStatus: selectedEnergy ?? null,
+        selectedSymptoms: Array.from(selectedSymptoms),
+        messageText: message,
       });
       setSelectedEnergy(null);
       setSelectedSymptoms(new Set());

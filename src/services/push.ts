@@ -84,7 +84,6 @@ export type PushNotificationData = {
 };
 
 let pendingClickData: PushNotificationData | null = null;
-let clickHandler: ((data: PushNotificationData) => void) | null = null;
 
 /** Store notification data from a cold-start launch until a handler is registered. */
 export function setPendingNotificationData(data: PushNotificationData | null) {
@@ -109,8 +108,6 @@ export async function setupNotificationClickHandler(
   const OneSignal = await loadOneSignal();
   if (!OneSignal) return;
   await initPush();
-
-  clickHandler = onClick;
 
   try {
     OneSignal.Notifications.addEventListener('notificationClick', (e: { notification?: { additionalData?: Record<string, unknown> } }) => {

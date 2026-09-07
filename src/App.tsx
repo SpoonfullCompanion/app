@@ -41,7 +41,7 @@ function App() {
   const [pendingUpdateId, setPendingUpdateId] = React.useState<string | null>(null);
   const isDemoSession = session?.authMode === 'demo';
   const showDemoChrome = !isDemoSession;
-  const showPatientHeaderChrome = appConfig.showPatientHeaderChrome && showDemoChrome;
+
 
   React.useEffect(() => {
     let isMounted = true;
@@ -362,11 +362,8 @@ function App() {
       <PatientHome
         session={session}
         recentUpdates={recentUpdates}
-        showHeaderChrome={showPatientHeaderChrome}
-        showReturnToMain={isDemoSession}
         onSendUpdate={handleSendUpdate}
         onSignOut={handleSignOut}
-        onReturnToMain={handleReturnToMain}
         onUpdateDisplayName={handleUpdateDisplayName}
         onUpdateEmail={handleUpdateEmail}
         onUpdatePassword={handleUpdatePassword}
