@@ -327,23 +327,44 @@ function PatientSectionHeader({
   avatarIcon,
   unseenCount,
   latestStatus,
+  onTogglePicker,
+  pickerOpen,
+  showSwitcher,
 }: {
   displayName: string;
   avatarIcon: string | null | undefined;
   unseenCount: number;
   latestStatus: StatusUpdate | null;
+  onTogglePicker?: () => void;
+  pickerOpen?: boolean;
+  showSwitcher?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center mb-5 mt-8 first:mt-0">
       <AvatarIcon iconId={avatarIcon} size="lg" />
-      <div className="mt-2.5 flex items-center gap-2">
-        <p className="text-base font-semibold text-off-white">{displayName}</p>
-        {unseenCount > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-            {unseenCount}
-          </span>
-        )}
-      </div>
+      {showSwitcher && onTogglePicker ? (
+        <button
+          onClick={onTogglePicker}
+          className="mt-2.5 flex items-center gap-1.5 transition-opacity hover:opacity-80 active:scale-[0.98]"
+        >
+          <p className="text-base font-semibold text-off-white">{displayName}</p>
+          {unseenCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+              {unseenCount}
+            </span>
+          )}
+          <ChevronDown className={`h-4 w-4 text-off-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
+        </button>
+      ) : (
+        <div className="mt-2.5 flex items-center gap-2">
+          <p className="text-base font-semibold text-off-white">{displayName}</p>
+          {unseenCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+              {unseenCount}
+            </span>
+          )}
+        </div>
+      )}
       <p className="mt-0.5 text-xs text-off-white/45 tracking-wide">Patient</p>
       <div className="mt-3 w-full">
         <LatestStatusSummary update={latestStatus} />
@@ -605,64 +626,16 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(66,95,204,0.12),_rgba(29,29,29,0.98)_60%)] pb-24">
       <div className="mx-auto max-w-2xl px-4 py-8">
 
-        {/* Header with patient selector */}
-        <div className="mb-4 flex items-start justify-between">
-          <div className="relative" ref={pickerRef}>
-            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Patient</p>
-            {allPatientIds.length > 0 && selectedPatientId && patientMap.has(selectedPatientId) ? (
-              <button
-                onClick={() => setPickerOpen(v => !v)}
-                className="flex items-center gap-1.5 transition-opacity hover:opacity-80 active:scale-[0.98]"
-              >
-                <span className="text-base font-semibold text-white">{patientMap.get(selectedPatientId)?.displayName ?? 'Patient'}</span>
-                {totalUnseen > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-                    {totalUnseen}
-                  </span>
-                )}
-                <ChevronDown className={`h-4 w-4 text-off-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
-              </button>
-            ) : (
-              <p className="text-base font-semibold text-white">Patient Updates</p>
-            )}
-
-            {/* Dropdown patient picker */}
-            {pickerOpen && allPatientIds.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-periwinkle/25 bg-midnight-black/95 shadow-2xl shadow-black/60 backdrop-blur-md">
-                <div className="max-h-80 overflow-y-auto py-1.5">
-                  {allPatientIds.map(pid => {
-                    const patient = patientMap.get(pid);
-                    const isActive = pid === selectedPatientId;
-                    const unseen = unseenByPatient.get(pid) ?? 0;
-                    return (
-                      <button
-                        key={pid}
-                        onClick={() => { setSelectedPatientId(pid); setPickerOpen(false); }}
-                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 transition-all active:scale-[0.98] ${
-                          isActive ? 'bg-bold-blue/15' : 'hover:bg-white/5'
-                        }`}
-                      >
-                        <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
-                        <span className={`flex-1 text-left text-sm font-medium ${isActive ? 'text-white' : 'text-off-white/80'}`}>
-                          {patient?.displayName ?? 'Patient'}
-                        </span>
-                        {unseen > 0 && (
-                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
-                            {unseen}
-                          </span>
-                        )}
-                        {isActive && <Check className="h-4 w-4 text-bold-blue" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="mb-1 text-xs uppercase tracking-[0.25em] text-off-white/60">Helper</p>
+            <p className="text-base font-semibold text-white">Patient Updates</p>
           </div>
           <button
             onClick={() => void loadFeed(true)}
             disabled={isRefreshing}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-full border border-periwinkle/20 px-3 py-1.5 text-xs text-off-white/70 transition-all hover:border-periwinkle/40 hover:text-off-white disabled:opacity-40"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -683,12 +656,48 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
         ) : selectedFeedCards.length === 0 ? (
           <div>
             {selectedPatientId && patientMap.has(selectedPatientId) && (
-              <PatientSectionHeader
-                displayName={patientMap.get(selectedPatientId)!.displayName}
-                avatarIcon={patientMap.get(selectedPatientId)!.avatarIcon}
-                unseenCount={0}
-                latestStatus={latestStatusByPatient.get(selectedPatientId) ?? null}
-              />
+              <div className="relative" ref={pickerRef}>
+                <PatientSectionHeader
+                  displayName={patientMap.get(selectedPatientId)!.displayName}
+                  avatarIcon={patientMap.get(selectedPatientId)!.avatarIcon}
+                  unseenCount={0}
+                  latestStatus={latestStatusByPatient.get(selectedPatientId) ?? null}
+                  showSwitcher={allPatientIds.length > 1}
+                  onTogglePicker={() => setPickerOpen(v => !v)}
+                  pickerOpen={pickerOpen}
+                />
+                {pickerOpen && allPatientIds.length > 0 && (
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-periwinkle/25 bg-midnight-black/95 shadow-2xl shadow-black/60 backdrop-blur-md">
+                    <div className="max-h-80 overflow-y-auto py-1.5">
+                      {allPatientIds.map(pid => {
+                        const patient = patientMap.get(pid);
+                        const isActive = pid === selectedPatientId;
+                        const unseen = unseenByPatient.get(pid) ?? 0;
+                        return (
+                          <button
+                            key={pid}
+                            onClick={() => { setSelectedPatientId(pid); setPickerOpen(false); }}
+                            className={`flex w-full items-center gap-2.5 px-3 py-2.5 transition-all active:scale-[0.98] ${
+                              isActive ? 'bg-bold-blue/15' : 'hover:bg-white/5'
+                            }`}
+                          >
+                            <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
+                            <span className={`flex-1 text-left text-sm font-medium ${isActive ? 'text-white' : 'text-off-white/80'}`}>
+                              {patient?.displayName ?? 'Patient'}
+                            </span>
+                            {unseen > 0 && (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+                                {unseen}
+                              </span>
+                            )}
+                            {isActive && <Check className="h-4 w-4 text-bold-blue" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
               <MessageSquare className="mx-auto mb-3 h-8 w-8 text-off-white/60" />
@@ -699,12 +708,48 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
         ) : (
           <div>
             {selectedPatientId && patientMap.has(selectedPatientId) && (
-              <PatientSectionHeader
-                displayName={patientMap.get(selectedPatientId)!.displayName}
-                avatarIcon={patientMap.get(selectedPatientId)!.avatarIcon}
-                unseenCount={unseenByPatient.get(selectedPatientId) ?? 0}
-                latestStatus={latestStatusByPatient.get(selectedPatientId) ?? null}
-              />
+              <div className="relative" ref={pickerRef}>
+                <PatientSectionHeader
+                  displayName={patientMap.get(selectedPatientId)!.displayName}
+                  avatarIcon={patientMap.get(selectedPatientId)!.avatarIcon}
+                  unseenCount={unseenByPatient.get(selectedPatientId) ?? 0}
+                  latestStatus={latestStatusByPatient.get(selectedPatientId) ?? null}
+                  showSwitcher={allPatientIds.length > 1}
+                  onTogglePicker={() => setPickerOpen(v => !v)}
+                  pickerOpen={pickerOpen}
+                />
+                {pickerOpen && allPatientIds.length > 0 && (
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-periwinkle/25 bg-midnight-black/95 shadow-2xl shadow-black/60 backdrop-blur-md">
+                    <div className="max-h-80 overflow-y-auto py-1.5">
+                      {allPatientIds.map(pid => {
+                        const patient = patientMap.get(pid);
+                        const isActive = pid === selectedPatientId;
+                        const unseen = unseenByPatient.get(pid) ?? 0;
+                        return (
+                          <button
+                            key={pid}
+                            onClick={() => { setSelectedPatientId(pid); setPickerOpen(false); }}
+                            className={`flex w-full items-center gap-2.5 px-3 py-2.5 transition-all active:scale-[0.98] ${
+                              isActive ? 'bg-bold-blue/15' : 'hover:bg-white/5'
+                            }`}
+                          >
+                            <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
+                            <span className={`flex-1 text-left text-sm font-medium ${isActive ? 'text-white' : 'text-off-white/80'}`}>
+                              {patient?.displayName ?? 'Patient'}
+                            </span>
+                            {unseen > 0 && (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bold-blue px-1.5 text-[10px] font-bold text-white">
+                                {unseen}
+                              </span>
+                            )}
+                            {isActive && <Check className="h-4 w-4 text-bold-blue" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <div className="space-y-3">
               {selectedFeedCards.map((update, i) => (
