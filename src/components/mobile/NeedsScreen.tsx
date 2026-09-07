@@ -143,7 +143,9 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
       setCustomNote('');
       setSelectedAppreciation(new Set());
       setSent(true);
-      onSent?.();
+      if (onSent) {
+        window.setTimeout(onSent, 1500);
+      }
     } finally {
       setIsSending(false);
     }
