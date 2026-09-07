@@ -661,8 +661,8 @@ function mapStatusRecord(data: Record<string, unknown>): StatusUpdate {
     delivery: data.delivery as 'sent' | 'draft',
     needPriority: (data.need_priority as StatusUpdate['needPriority']) ?? null,
     targetedFollowerIds: (data.targeted_follower_ids as string[] | null) ?? null,
-    resolvedAt: (data.resolved_at as string | null) ?? null,
-    resolvedBy: (data.resolved_by as string | null) ?? null,
+    completedAt: (data.completed_at as string | null) ?? null,
+    completedBy: (data.completed_by as string | null) ?? null,
   };
 }
 
@@ -1329,40 +1329,82 @@ export async function getPatientArchivedUpdates(session: AppSession): Promise<St
 
 // ─── End Patient Archive ──────────────────────────────────────────────────────
 
-// ─── Resolve ──────────────────────────────────────────────────────────────────
+// ─── Complete ──────────────────────────────────────────────────────────────────
 
 /**
- * Mark an update resolved and archive it for both the helper and patient side.
- * patientId is needed to write the patient archive entry.
+ * Mark an update completed. Does NOT archive — completing and archiving are independent actions.
  */
-export async function markUpdateResolved(
+export async function markUpdateCompleted(
   updateId: string,
-  resolvedByProfileId: string,
-  patientId: string,
+  completedByProfileId: string,
 ): Promise<void> {
   if (!supabase) return;
 
   await supabase
     .from('status_updates')
-    .update({ resolved_at: new Date().toISOString(), resolved_by: resolvedByProfileId })
+    .update({ completed_at: new Date().toISOString(), completed_by: completedByProfileId })
     .eq('id', updateId);
-
-  await Promise.all([
-    archiveUpdate(resolvedByProfileId, updateId),
-    archivePatientUpdate(patientId, updateId),
-  ]);
 }
 
-export async function unmarkUpdateResolved(updateId: string): Promise<void> {
+export async function unmarkUpdateCompleted(updateId: string): Promise<void> {
   if (!supabase) return;
 
   await supabase
     .from('status_updates')
-    .update({ resolved_at: null, resolved_by: null })
+    .update({ completed_at: null, completed_by: null })
     .eq('id', updateId);
 }
 
-// ─── End Resolve ──────────────────────────────────────────────────────────────
+/** Get completed updates for a caregiver's connected patients, ordered by most recently completed. */
+export async function getCompletedUpdatesForCaregiver(
+  session: AppSession,
+  limit = 30,
+): Promise<StatusUpdate[]> {
+  if (!supabase || session.authMode === 'demo') return [];
+
+  const connections = await getFollowerConnections(session);
+  const activePatientIds = connections
+    .filter((c) => c.status === 'active')
+    .map((c) => c.patientId);
+
+  if (!activePatientIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('status_updates')
+    .select('*')
+    .in('patient_id', activePatientIds)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map(mapStatusRecord);
+}
+
+/** Returns a set of completed update IDs — used by the feed to filter them out. */
+export async function getCompletedUpdateIdsForCaregiver(
+  session: AppSession,
+): Promise<Set<string>> {
+  if (!supabase || session.authMode === 'demo') return new Set();
+
+  const connections = await getFollowerConnections(session);
+  const activePatientIds = connections
+    .filter((c) => c.status === 'active')
+    .map((c) => c.patientId);
+
+  if (!activePatientIds.length) return new Set();
+
+  const { data, error } = await supabase
+    .from('status_updates')
+    .select('id')
+    .in('patient_id', activePatientIds)
+    .not('completed_at', 'is', null);
+
+  if (error || !data) return new Set();
+  return new Set(data.map((r) => r.id as string));
+}
+
+// ─── End Complete ──────────────────────────────────────────────────────────────
 
 // ─── End Archive ──────────────────────────────────────────────────────────────
 
