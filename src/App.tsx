@@ -21,6 +21,7 @@ import {
   sendMagicLink,
   sendStatusUpdate,
   savePushPreference,
+  deleteAccount,
   signOut,
   subscribeToStatusUpdates,
   updateAvatarIcon,
@@ -297,6 +298,15 @@ function App() {
     setAuthMessage('');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!session) return;
+    await deleteAccount(session);
+    void logoutPush();
+    setSession(null);
+    setRecentUpdates([]);
+    setAuthMessage('');
+  };
+
   const handleReturnToMain = async () => {
     await signOut();
     void logoutPush();
@@ -364,6 +374,7 @@ function App() {
         recentUpdates={recentUpdates}
         onSendUpdate={handleSendUpdate}
         onSignOut={handleSignOut}
+        onDeleteAccount={handleDeleteAccount}
         onUpdateDisplayName={handleUpdateDisplayName}
         onUpdateEmail={handleUpdateEmail}
         onUpdatePassword={handleUpdatePassword}
@@ -382,6 +393,7 @@ function App() {
       onPendingUpdateConsumed={() => setPendingUpdateId(null)}
       onSignOut={handleSignOut}
       onReturnToMain={handleReturnToMain}
+      onDeleteAccount={handleDeleteAccount}
       onUpdateDisplayName={handleUpdateDisplayName}
       onUpdateEmail={handleUpdateEmail}
       onUpdatePassword={handleUpdatePassword}

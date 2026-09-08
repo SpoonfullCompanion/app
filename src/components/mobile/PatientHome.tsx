@@ -17,6 +17,7 @@ interface PatientHomeProps {
   recentUpdates: StatusUpdate[];
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
   onSignOut: () => Promise<void>;
+  onDeleteAccount: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
@@ -28,6 +29,7 @@ export default function PatientHome({
   recentUpdates,
   onSendUpdate,
   onSignOut,
+  onDeleteAccount,
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,
@@ -111,6 +113,7 @@ export default function PatientHome({
           <AccountScreen
             session={session}
             onSignOut={onSignOut}
+            onDeleteAccount={onDeleteAccount}
             onUpdateDisplayName={onUpdateDisplayName}
             onUpdateEmail={onUpdateEmail}
             onUpdatePassword={onUpdatePassword}

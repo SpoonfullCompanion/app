@@ -1371,3 +1371,33 @@ export async function getAllResponsesForUpdates(
 ): Promise<Record<string, CaregiverResponse[]>> {
   return fetchResponsesForUpdates(statusUpdateIds);
 }
+
+export async function deleteAccount(session: AppSession): Promise<{ ok: boolean; error?: string }> {
+  if (session.authMode === 'demo' || !supabase) {
+    clearStorage(STORAGE_KEYS.session);
+    clearStorage(STORAGE_KEYS.pendingRole);
+    clearStorage(STORAGE_KEYS.pendingAuthMode);
+    clearStorage(STORAGE_KEYS.statusUpdates);
+    return { ok: true };
+  }
+
+  try {
+    const { error } = await supabase.functions.invoke('delete-account', {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (error) {
+      return { ok: false, error: error.message ?? 'Failed to delete account' };
+    }
+
+    await supabase.auth.signOut();
+    clearStorage(STORAGE_KEYS.session);
+    clearStorage(STORAGE_KEYS.pendingRole);
+    clearStorage(STORAGE_KEYS.pendingAuthMode);
+    clearStorage(STORAGE_KEYS.statusUpdates);
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to delete account';
+    return { ok: false, error: message };
+  }
+}

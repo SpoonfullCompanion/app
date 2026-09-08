@@ -16,6 +16,7 @@ interface CaregiverHomeProps {
   pendingUpdateId?: string | null;
   onPendingUpdateConsumed?: () => void;
   onSignOut: () => Promise<void>;
+  onDeleteAccount: () => Promise<void>;
   onReturnToMain: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
@@ -31,6 +32,7 @@ export default function CaregiverHome({
   pendingUpdateId,
   onPendingUpdateConsumed,
   onSignOut,
+  onDeleteAccount,
   onReturnToMain,
   onUpdateDisplayName,
   onUpdateEmail,
@@ -100,6 +102,7 @@ export default function CaregiverHome({
             session={session}
             showHeaderChrome={showHeaderChrome}
             onSignOut={onSignOut}
+            onDeleteAccount={onDeleteAccount}
             onUpdateDisplayName={onUpdateDisplayName}
             onUpdateEmail={onUpdateEmail}
             onUpdatePassword={onUpdatePassword}

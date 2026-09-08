@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff } from 'lucide-react';
+import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import type { AppSession } from '../../types/app';
 import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
@@ -9,6 +9,7 @@ import { enablePush, disablePush, isPushActive } from '../../services/push';
 interface AccountScreenProps {
   session: AppSession | null;
   onSignOut: () => Promise<void>;
+  onDeleteAccount: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
   onUpdatePassword: (newPassword: string) => Promise<{ ok: boolean; message: string }>;
@@ -63,11 +64,15 @@ function EditButton({ onClick }: { onClick: () => void }) {
 export default function AccountScreen({
   session,
   onSignOut,
+  onDeleteAccount,
   onUpdateDisplayName,
   onUpdateEmail,
   onUpdatePassword,
   onUpdateAvatarIcon,
 }: AccountScreenProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState('');
   const [editing, setEditing] = React.useState<EditingField>(null);
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -422,7 +427,71 @@ export default function AccountScreen({
             </div>
           </div>
         </button>
+
+        {/* Delete account */}
+        <button
+          onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
+          className="mt-2 w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-red-500/60 hover:bg-red-500/5"
+        >
+          <div className="flex items-center gap-3">
+            <Trash2 className="h-5 w-5 text-red-400/80" />
+            <div className="flex-1">
+              <p className="font-medium text-red-400/90">Delete Account</p>
+              <p className="text-xs text-off-white/70">Permanently remove your account and all data</p>
+            </div>
+          </div>
+        </button>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+          <div className="w-full max-w-sm rounded-2xl border border-periwinkle/20 bg-midnight-black p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/15">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <h2 id="delete-title" className="text-lg font-semibold text-off-white">Delete Account?</h2>
+            </div>
+            <p className="mb-5 text-sm text-off-white/70 leading-relaxed">
+              This will permanently delete your account, all your status updates, connections, and preferences. This action cannot be undone.
+            </p>
+            {deleteError && (
+              <p role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+                {deleteError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeleteError(''); }}
+                disabled={isDeleting}
+                className="flex-1 rounded-full border border-periwinkle/20 px-4 py-2.5 text-sm font-medium text-off-white/80 transition-colors hover:border-periwinkle/50 hover:text-white disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setIsDeleting(true);
+                  setDeleteError('');
+                  await onDeleteAccount();
+                  setIsDeleting(false);
+                }}
+                disabled={isDeleting}
+                className="flex-1 rounded-full bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-40"
+              >
+                {isDeleting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  'Delete Permanently'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
