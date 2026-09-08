@@ -659,7 +659,6 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
       }
     }
     return m;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedCards, responses]);
 
   // Filter feed to selected patient only

@@ -109,6 +109,7 @@ export default function PatientHome({
         {activeRoute === 'account' && (
           <AccountScreen
             session={session}
+            onNavigate={handleNavigate}
             onSignOut={onSignOut}
             onUpdateDisplayName={onUpdateDisplayName}
             onUpdateEmail={onUpdateEmail}

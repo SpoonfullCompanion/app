@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff } from 'lucide-react';
+import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff, Archive, ChevronRight } from 'lucide-react';
 import type { AppSession } from '../../types/app';
 import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
@@ -8,6 +8,7 @@ import { enablePush, disablePush, isPushActive } from '../../services/push';
 
 interface AccountScreenProps {
   session: AppSession | null;
+  onNavigate?: (route: 'archive') => void;
   onSignOut: () => Promise<void>;
   onUpdateDisplayName: (newName: string) => Promise<{ ok: boolean; message: string }>;
   onUpdateEmail: (newEmail: string) => Promise<{ ok: boolean; message: string }>;
@@ -62,6 +63,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
 
 export default function AccountScreen({
   session,
+  onNavigate,
   onSignOut,
   onUpdateDisplayName,
   onUpdateEmail,
@@ -407,6 +409,22 @@ export default function AccountScreen({
           </div>
           {pushHint && <p role="alert" className="mt-3 text-xs text-off-white/70">{pushHint}</p>}
         </div>
+
+        {/* History section */}
+        <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/70">History</div>
+        <button
+          onClick={() => onNavigate?.('archive')}
+          className="group w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-periwinkle/40 hover:bg-periwinkle/5"
+        >
+          <div className="flex items-center gap-3">
+            <Archive className="h-5 w-5 text-periwinkle" />
+            <div className="flex-1">
+              <p className="font-medium text-off-white">Archive</p>
+              <p className="text-xs text-off-white/70">View your archived updates</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-off-white/30 transition-transform group-hover:translate-x-0.5" />
+          </div>
+        </button>
 
         {/* Session section */}
         <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/70">Session</div>
