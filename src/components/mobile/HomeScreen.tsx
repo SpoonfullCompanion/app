@@ -439,6 +439,21 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
               <p className="mt-1 text-xs text-off-white/60">Use Needs below to send a request to your helper</p>
             </div>
           )}
+
+          {/* Archive link — only shown when archived updates exist */}
+          {archivedIds.size > 0 && (
+            <button
+              onClick={() => onNavigate('archive')}
+              className="group mt-3 flex w-full items-center gap-3 rounded-xl border border-dark-blue/40 bg-midnight-black/40 p-3.5 text-left transition-all hover:border-periwinkle/40 hover:bg-midnight-black/60 active:scale-[0.98]"
+            >
+              <Archive className="h-5 w-5 text-periwinkle shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-off-white">Archive</p>
+                <p className="text-xs text-off-white/70">View your {archivedIds.size} archived update{archivedIds.size === 1 ? '' : 's'}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-off-white/30 shrink-0 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          )}
         </div>
 
         {/* Action cards */}
