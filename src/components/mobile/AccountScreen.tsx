@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
+import { User, Mail, LogOut, Pencil, Check, X, Lock, Bell, BellOff, AlertTriangle, Loader2 } from 'lucide-react';
 import type { AppSession } from '../../types/app';
 import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
@@ -431,15 +431,9 @@ export default function AccountScreen({
         {/* Delete account */}
         <button
           onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
-          className="mt-2 w-full rounded-xl border border-dark-blue/50 bg-midnight-black/50 p-4 text-left transition-colors hover:border-red-500/60 hover:bg-red-500/5"
+          className="mt-3 self-center text-xs text-off-white/40 underline-offset-2 transition-colors hover:text-red-400/80 hover:underline"
         >
-          <div className="flex items-center gap-3">
-            <Trash2 className="h-5 w-5 text-red-400/80" />
-            <div className="flex-1">
-              <p className="font-medium text-red-400/90">Delete Account</p>
-              <p className="text-xs text-off-white/70">Permanently remove your account and all data</p>
-            </div>
-          </div>
+          Delete account
         </button>
       </div>
 
