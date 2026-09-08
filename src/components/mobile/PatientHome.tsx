@@ -78,6 +78,7 @@ export default function PatientHome({
             ttsEnabled={ttsEnabled}
             onToggleTTS={handleToggleTTS}
             onSendUpdate={onSendUpdate}
+            onSent={() => handleNavigate('home')}
           />
         )}
         {activeRoute === 'needs' && (

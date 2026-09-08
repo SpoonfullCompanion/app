@@ -9,9 +9,10 @@ interface StatusScreenProps {
   ttsEnabled: boolean;
   onToggleTTS: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
+  onSent?: () => void;
 }
 
-export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: StatusScreenProps) {
+export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate, onSent }: StatusScreenProps) {
   const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
   const [isSending, setIsSending] = useState(false);
@@ -75,6 +76,9 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
       setSelectedEnergy(null);
       setSelectedSymptoms(new Set());
       setSent(true);
+      if (onSent) {
+        window.setTimeout(onSent, 2000);
+      }
     } finally {
       setIsSending(false);
     }
@@ -206,24 +210,29 @@ export default function StatusScreen({ ttsEnabled, onToggleTTS, onSendUpdate }: 
         </div>
 
         <div className="mt-8">
-          {sent ? (
-            <div role="status" aria-live="polite" className="flex w-full items-center justify-center gap-2 rounded-full bg-green-700 px-6 py-4 font-semibold text-white shadow-xl shadow-green-900/30">
-              <CheckCircle className="h-5 w-5" />
-              Status updated
-            </div>
-          ) : (
-            <button
-              key={pulseKey}
-              onClick={() => void handleSendStatus()}
-              disabled={isSending || !canSend}
-              className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
-            >
-              <RefreshCw className="h-5 w-5" />
-              {isSending ? 'Updating...' : 'Update Status'}
-            </button>
-          )}
+          <button
+            key={pulseKey}
+            onClick={() => void handleSendStatus()}
+            disabled={isSending || !canSend || sent}
+            className={`flex w-full items-center justify-center gap-2 rounded-full bg-bold-blue px-6 py-4 font-semibold text-white shadow-xl shadow-bold-blue/30 transition-all hover:bg-bold-blue/90 active:scale-95 disabled:opacity-50 ${pulseKey > 0 ? 'animate-pulse-once' : ''}`}
+          >
+            <RefreshCw className="h-5 w-5" />
+            {isSending ? 'Updating...' : 'Update Status'}
+          </button>
         </div>
       </div>
+
+      {sent && (
+        <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-midnight-black/90 backdrop-blur-sm animate-fade-up">
+          <div className="flex flex-col items-center gap-5">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-600 shadow-2xl shadow-green-900/50">
+              <CheckCircle className="h-12 w-12 text-white" strokeWidth={2.5} />
+            </div>
+            <p className="text-xl font-bold text-white">Status updated</p>
+            <p className="text-sm text-off-white/80">Taking you to your feed…</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
