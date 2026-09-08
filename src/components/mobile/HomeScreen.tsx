@@ -458,58 +458,51 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
         {/* Action cards */}
         <div className="mb-3">
-          <div className="mb-4">
+          <div className="mb-3">
             <p className="text-sm font-semibold text-off-white/80">Communicate</p>
             <p className="text-xs text-off-white/70">Tap a card to send a message</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            {/* Needs — primary */}
             <button
               onClick={() => onNavigate('needs')}
-              className="group relative w-full overflow-hidden rounded-xl border-2 border-bold-blue bg-bold-blue/20 p-5 text-left transition-all active:scale-[0.98] hover:bg-bold-blue/30"
+              className="group relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-bold-blue/50 bg-gradient-to-b from-bold-blue/25 to-bold-blue/5 p-3.5 text-center transition-all active:scale-95 hover:border-bold-blue/70 hover:from-bold-blue/35 hover:to-bold-blue/10"
             >
-              <span className="pointer-events-none absolute inset-0 rounded-xl border-2 border-bold-blue animate-needs-pulse" />
-              <div className="flex items-center gap-4">
-                <div className="rounded-full bg-bold-blue p-3 shrink-0">
-                  <MessageSquare className="h-6 w-6 text-white" strokeWidth={2} />
-                </div>
-                <div className="flex-1">
-                  <h2 className="mb-0.5 text-lg font-bold text-white">Needs</h2>
-                  <p className="text-sm leading-relaxed text-white/90">Tell your helper what you need right now</p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-white/50 transition-transform group-hover:translate-x-0.5" />
+              <div className="relative rounded-2xl bg-bold-blue p-2.5 shadow-lg shadow-bold-blue/30">
+                <MessageSquare className="h-5 w-5 text-white" strokeWidth={2.2} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Needs</p>
+                <p className="mt-0.5 text-[10px] leading-tight text-white/70">What you need now</p>
               </div>
             </button>
 
+            {/* Status */}
             <button
               onClick={() => onNavigate('status')}
-              className="group w-full rounded-xl border border-bold-blue/40 bg-bold-blue/15 p-4 text-left transition-all active:scale-[0.98] hover:bg-bold-blue/25 hover:border-bold-blue/60"
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-periwinkle/25 bg-midnight-black/50 p-3.5 text-center transition-all active:scale-95 hover:border-periwinkle/50 hover:bg-midnight-black/70"
             >
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-white/10 p-2.5 shrink-0">
-                  <Activity className="h-5 w-5 text-white" strokeWidth={2} />
-                </div>
-                <div className="flex-1">
-                  <h2 className="mb-0.5 text-base font-semibold text-white">Status</h2>
-                  <p className="text-xs leading-relaxed text-white/85">Update your energy level and how you are feeling</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-white/30 transition-transform group-hover:translate-x-0.5" />
+              <div className="rounded-2xl bg-periwinkle/15 p-2.5">
+                <Activity className="h-5 w-5 text-periwinkle" strokeWidth={2.2} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-off-white">Status</p>
+                <p className="mt-0.5 text-[10px] leading-tight text-off-white/60">Energy & symptoms</p>
               </div>
             </button>
 
+            {/* Hospital */}
             <button
               onClick={() => onNavigate('hospital')}
-              className="group w-full rounded-xl border border-periwinkle/30 bg-periwinkle/10 p-4 text-left transition-all active:scale-[0.98] hover:bg-periwinkle/15 hover:border-periwinkle/50"
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-periwinkle/25 bg-midnight-black/50 p-3.5 text-center transition-all active:scale-95 hover:border-periwinkle/50 hover:bg-midnight-black/70"
             >
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-white/5 p-2.5 shrink-0">
-                  <Stethoscope className="h-5 w-5 text-white" strokeWidth={2} />
-                </div>
-                <div className="flex-1">
-                  <h2 className="mb-0.5 text-base font-semibold text-white">Hospital Mode</h2>
-                  <p className="text-xs leading-relaxed text-white/85">Quick phrases for hospital staff and visitors</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-white/30 transition-transform group-hover:translate-x-0.5" />
+              <div className="rounded-2xl bg-periwinkle/15 p-2.5">
+                <Stethoscope className="h-5 w-5 text-periwinkle" strokeWidth={2.2} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-off-white">Hospital</p>
+                <p className="mt-0.5 text-[10px] leading-tight text-off-white/60">Quick phrases</p>
               </div>
             </button>
           </div>
