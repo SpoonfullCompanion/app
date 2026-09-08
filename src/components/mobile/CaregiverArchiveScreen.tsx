@@ -57,6 +57,7 @@ function ArchivedUpdateCard({
   const energyStyle = energy ? (energyStyles[energy.id] ?? energyStyles.resting) : null;
   const isNeedsOnly = !energy && needs.length > 0 && symptoms.length === 0;
   const hasResponse = Boolean(response?.message);
+  const isCompleted = Boolean(update.completedAt);
 
   const handleQuickReply = async (msg: string) => {
     setSending(true);
@@ -77,7 +78,7 @@ function ArchivedUpdateCard({
   return (
     <div className={`flex flex-col overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
       removing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-    } border-periwinkle/20`}>
+    } ${isCompleted ? 'border-green-700/40' : 'border-periwinkle/20'}`}>
       {isNeedsOnly && <div className="h-1 bg-periwinkle" />}
 
       <div className="flex-1 min-w-0">
@@ -86,6 +87,12 @@ function ArchivedUpdateCard({
           <div className="mb-3 flex items-start justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
+              {isCompleted && (
+                <>
+                  <span className="text-off-white/30">·</span>
+                  <span className="text-xs text-green-400">Completed</span>
+                </>
+              )}
             </div>
             <button
               onClick={() => onUnarchive(update.id)}
