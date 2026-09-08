@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, X, ArchiveX, EyeOff, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Clock, Hourglass, Zap, X, ArchiveX, EyeOff, MessageCircle, CheckCircle } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -152,7 +152,7 @@ function ArchivedCard({
             </div>
           ) : isSeen ? (
             <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-400" />
               <p className="text-xs font-medium text-green-300">Helper saw this</p>
             </div>
           ) : (

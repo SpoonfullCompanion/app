@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle2, Users, Archive, Heart, SendHorizontal as SendHorizonal } from 'lucide-react';
+import { Activity, MessageSquare, Stethoscope, Clock, Hourglass, Zap, ChevronRight, EyeOff, MessageCircle, CheckCircle, Users, Archive, Heart, SendHorizontal as SendHorizonal } from 'lucide-react';
 import type { NavRoute } from './BottomNavigation';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
@@ -130,7 +130,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
                 }`}
                 title={isResolved ? 'Mark unresolved' : 'Mark as done'}
               >
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -240,7 +240,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
           ))}
           {seenOnly.length > 0 && (
             <div className="inline-flex items-center gap-2 rounded-full bg-green-900/40 px-3 py-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+              <CheckCircle className="h-3.5 w-3.5 text-green-400" />
               <p className="text-xs font-medium text-green-300">
                 Seen by {seenOnly.map(r => r.caregiverDisplayName ?? 'Helper').join(', ')}
               </p>
