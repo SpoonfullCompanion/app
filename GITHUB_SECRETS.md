@@ -343,3 +343,44 @@ Ask for help if:
 - the provisioning profile is not clearly tied to `com.spoonfull.app`
 - the GitHub workflow fails during signing or upload
 - you are unsure whether the build should use `prototype_only=true`
+
+## 11. In-App Feedback (Supabase Edge Function Secrets)
+
+The app has a "Send Feedback" card on the Account screen for both patients and caregivers. When a user submits feedback, it creates a GitHub issue in your repository automatically. This requires two Supabase edge function secrets (not GitHub Actions secrets — these are set in the Supabase dashboard).
+
+### Required Supabase Secrets
+
+- `GITHUB_TOKEN` — a GitHub Personal Access Token
+- `GITHUB_REPO` — your repository in `owner/name` format
+
+### Creating The GitHub Personal Access Token
+
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens) (classic) or Settings > Developer settings > Personal access tokens (fine-grained).
+2. For a classic token:
+   - Click "Generate new token (classic)".
+   - Give it a clear name, e.g. "Spoonfull Feedback Bot".
+   - Select the `repo` scope (for private repos) or `public_repo` scope (for public repos).
+   - Generate and copy the token.
+3. For a fine-grained token:
+   - Select the `spoonfullcompanion/app` repository.
+   - Grant "Issues" read/write permissions.
+   - Generate and copy the token.
+
+### Setting The Secrets In Supabase
+
+1. Open the Supabase dashboard for your project.
+2. Go to Project Settings > Edge Functions > Secrets (or Settings > Secrets, depending on dashboard version).
+3. Add a new secret:
+   - name: `GITHUB_TOKEN`
+   - value: the token you copied above
+4. Add another secret:
+   - name: `GITHUB_REPO`
+   - value: `spoonfullcompanion/app`
+
+### How It Works
+
+When a user taps "Send Feedback" and writes a message, the app calls the `submit-feedback` edge function. The function verifies the user is signed in, looks up their display name and role, then uses the GitHub REST API to create an issue titled "Feedback: [short excerpt]" with the full message, the sender's name, their role, and a timestamp. The issue is labeled `user-feedback` so you can filter for it in your backlog.
+
+### Verification
+
+After setting the secrets, submit a test feedback from the app. Check the Issues tab of your repository — a new issue with the `user-feedback` label should appear within a few seconds.

@@ -15,3 +15,9 @@ verify_jwt = true
 # authenticated, and the function verifies the caller's identity before
 # deleting their profile and auth account.
 verify_jwt = true
+
+[functions.submit-feedback]
+# Require a valid Supabase JWT to invoke. The app calls this function while
+# authenticated, and the function verifies the caller's identity before
+# creating a GitHub issue from their feedback.
+verify_jwt = true

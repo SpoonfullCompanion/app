@@ -8,6 +8,7 @@ import type { PushPermissionStatus } from '../../services/push';
 import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
+import FeedbackCard from './FeedbackCard';
 
 interface CaregiverAccountScreenProps {
   session: AppSession | null;
@@ -472,6 +473,8 @@ export default function CaregiverAccountScreen({
             <p role="alert" className="mt-3 text-xs text-off-white/70">{pushHint}</p>
           )}
         </div>
+
+        <FeedbackCard />
 
         {/* Sign out */}
         <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-off-white/70">Session</div>

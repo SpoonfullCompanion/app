@@ -1372,6 +1372,32 @@ export async function getAllResponsesForUpdates(
   return fetchResponsesForUpdates(statusUpdateIds);
 }
 
+export async function submitFeedback(feedback: string): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) {
+    return { ok: false, error: 'Requires a connected account to submit feedback.' };
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('submit-feedback', {
+      headers: { 'Content-Type': 'application/json' },
+      body: { feedback },
+    });
+
+    if (error) {
+      return { ok: false, error: error.message ?? 'Failed to submit feedback' };
+    }
+
+    if (data?.error) {
+      return { ok: false, error: data.error };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to submit feedback';
+    return { ok: false, error: message };
+  }
+}
+
 export async function deleteAccount(session: AppSession): Promise<{ ok: boolean; error?: string }> {
   if (session.authMode === 'demo' || !supabase) {
     clearStorage(STORAGE_KEYS.session);

@@ -5,6 +5,7 @@ import { checkDisplayNameAvailable, savePushPreference } from '../../services/ba
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
 import { enablePush, disablePush, isPushActive } from '../../services/push';
+import FeedbackCard from './FeedbackCard';
 
 interface AccountScreenProps {
   session: AppSession | null;
@@ -412,6 +413,8 @@ export default function AccountScreen({
           </div>
           {pushHint && <p role="alert" className="mt-3 text-xs text-off-white/70">{pushHint}</p>}
         </div>
+
+        <FeedbackCard />
 
         {/* Session section */}
         <div className="mb-3 text-xs uppercase tracking-[0.2em] font-semibold text-off-white/70">Session</div>
