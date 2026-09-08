@@ -249,7 +249,7 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
-    const archived = await getArchivedUpdates(session);
+    const archived = (await getArchivedUpdates(session)).filter(u => (u.selectedNeeds ?? []).length > 0);
     setUpdates(archived);
     if (archived.length > 0) {
       const ids = archived.map(u => u.id);
