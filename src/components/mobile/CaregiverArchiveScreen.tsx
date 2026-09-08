@@ -1,6 +1,6 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Check, Send, ChevronDown, ChevronUp, MessageSquare, Archive, X } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, Archive, X } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -49,14 +49,6 @@ function ArchivedUpdateCard({
   const [expanded, setExpanded] = React.useState(false);
   const [customNote, setCustomNote] = React.useState('');
   const [sending, setSending] = React.useState(false);
-  const [checkedNeeds, setCheckedNeeds] = React.useState<Set<string>>(new Set());
-
-  const toggleNeed = (id: string) =>
-    setCheckedNeeds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
-      return next;
-    });
 
   const energy = update.energyStatus ? ENERGY_STATUSES.find(e => e.id === update.energyStatus) : null;
   const needs = (update.selectedNeeds ?? []).map(id => NEEDS.find(n => n.id === id)).filter(Boolean) as typeof NEEDS;
@@ -83,37 +75,27 @@ function ArchivedUpdateCard({
   };
 
   return (
-    <div className={`relative flex flex-col overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
+    <div className={`flex flex-col overflow-hidden rounded-2xl border bg-midnight-black/60 shadow-lg transition-all duration-300 ${
       removing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
     } border-periwinkle/20`}>
       {isNeedsOnly && <div className="h-1 bg-periwinkle" />}
 
-      <button
-        onClick={() => onUnarchive(update.id)}
-        aria-label="Remove from archive"
-        className="absolute right-2 top-2 rounded-lg p-1.5 text-off-white/60 transition-all hover:text-off-white/90 active:scale-90 z-10"
-        title="Remove from archive"
-      >
-        <X className="h-5 w-5" />
-      </button>
-
       <div className="flex-1 min-w-0">
         <div className="p-4">
           {/* Header */}
-          <div className="mb-3 flex items-center gap-2 pr-8">
-            <span className="text-xs uppercase tracking-[0.2em] text-off-white/70">
-              {isNeedsOnly ? 'Needs' : 'Status'}
-            </span>
-            <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-off-white/60">{formatDistanceToNow(update.sentAt)}</span>
+            </div>
+            <button
+              onClick={() => onUnarchive(update.id)}
+              aria-label="Remove from archive"
+              className="rounded-lg p-1.5 text-off-white/60 transition-all hover:text-off-white/90 active:scale-90"
+              title="Remove from archive"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-
-          {/* Message / appreciation text */}
-          {update.messageText && (() => {
-            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
-            return stripped ? (
-              <p className="mb-3 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">{stripped}</p>
-            ) : null;
-          })()}
 
           {/* Energy */}
           {energy && energyStyle && (() => {
@@ -137,64 +119,40 @@ function ArchivedUpdateCard({
             );
           })()}
 
-          {/* Priority banner (needs-only) */}
-          {isNeedsOnly && (
-            priority ? (() => {
-              const PriorityIcon = priority.icon;
-              return (
-                <div className={`mb-3 flex items-center gap-3 overflow-hidden rounded-lg border ${priority.banner}`}>
-                  <div className={`w-1 self-stretch shrink-0 ${priority.stripe}`} />
-                  <PriorityIcon className={`h-5 w-5 shrink-0 ${priority.iconClass}`} />
-                  <div className="py-2 pr-3">
-                    <p className="text-sm font-bold text-white leading-none">{priority.label}</p>
-                    <p className="mt-0.5 text-xs text-white/80">{priority.sublabel}</p>
-                  </div>
-                </div>
-              );
-            })() : (
-              <div className="mb-3 flex items-center gap-3 overflow-hidden rounded-lg border bg-periwinkle/10 border-periwinkle/25">
-                <div className="w-1 self-stretch shrink-0 bg-periwinkle/50" />
-                <MessageSquare className="h-5 w-5 shrink-0 text-periwinkle/70" />
-                <div className="py-2 pr-3">
-                  <p className="text-sm font-bold text-white leading-none">Need request</p>
-                </div>
+          {/* Inline priority label (needs-only) */}
+          {isNeedsOnly && priority && (() => {
+            const PriorityIcon = priority.icon;
+            return (
+              <div className="mb-2 flex items-center gap-1.5">
+                <PriorityIcon className={`h-3.5 w-3.5 ${priority.iconClass}`} />
+                <span className={`text-xs font-medium ${priority.iconClass}`}>{priority.label}</span>
+                <span className="text-xs text-off-white/40">· {priority.sublabel}</span>
               </div>
-            )
-          )}
+            );
+          })()}
 
           {/* Needs */}
           {needs.length > 0 && (
-            <div className="mb-2 space-y-1.5">
+            <div className="mb-2 flex flex-wrap gap-1.5">
               {needs.map(need => {
                 const Icon = LucideIcons[need.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
-                const checked = checkedNeeds.has(need.id);
                 return (
-                  <button
-                    key={need.id}
-                    onClick={() => toggleNeed(need.id)}
-                    className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all active:scale-[0.98] ${
-                      checked
-                        ? 'border-green-600/40 bg-green-950/40'
-                        : 'border-bold-blue/40 bg-bold-blue/15'
-                    }`}
-                  >
-                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                      checked ? 'border-green-400 bg-green-400' : 'border-periwinkle/50 bg-transparent'
-                    }`}>
-                      {checked && <Check className="h-3 w-3 text-midnight-black" strokeWidth={3} />}
-                    </div>
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {Icon && <Icon className={`h-4 w-4 shrink-0 transition-colors ${checked ? 'text-green-400' : 'text-periwinkle'}`} />}
-                      <span className={`text-sm font-semibold transition-colors ${checked ? 'text-green-300 line-through decoration-green-600/60' : 'text-white'}`}>
-                        {need.label}
-                      </span>
-                    </div>
-                    {checked && <span className="text-xs text-green-400 shrink-0">Done</span>}
-                  </button>
+                  <div key={need.id} className="flex items-center gap-1.5 rounded-lg bg-bold-blue px-2.5 py-1 text-sm font-semibold text-white">
+                    {Icon && <Icon className="h-3.5 w-3.5" />}
+                    {need.label}
+                  </div>
                 );
               })}
             </div>
           )}
+
+          {/* Message / appreciation text */}
+          {update.messageText && (() => {
+            const stripped = stripNeedSpeechFromMessage(update.messageText, update.selectedNeeds ?? []);
+            return stripped ? (
+              <p className="mt-2 mb-1 text-sm leading-relaxed text-off-white/80 whitespace-pre-wrap">{stripped}</p>
+            ) : null;
+          })()}
 
           {/* Symptoms */}
           {symptoms.length > 0 && (
@@ -213,7 +171,7 @@ function ArchivedUpdateCard({
         </div>
 
         {/* Response area */}
-        <div className="border-t border-white/5 px-4 pb-4 pt-3">
+        <div className="border-t border-white/5 px-4 pb-4 pt-3 space-y-3">
           {hasResponse ? (
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
@@ -226,7 +184,6 @@ function ArchivedUpdateCard({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setExpanded(v => !v)}
-                  aria-expanded={expanded}
                   className="flex items-center gap-1 rounded-full border border-periwinkle/30 bg-midnight-black/60 px-3 py-1.5 text-sm text-off-white/80 transition-all hover:border-periwinkle/50 hover:text-off-white active:scale-95"
                 >
                   Respond
@@ -235,7 +192,7 @@ function ArchivedUpdateCard({
               </div>
 
               {expanded && (
-                <div className="mt-3 space-y-2">
+                <div className="space-y-2">
                   <div className="flex flex-wrap gap-2">
                     {(isNeedsOnly ? QUICK_REPLIES_NEEDS : QUICK_REPLIES_STATUS).map(msg => (
                       <button
