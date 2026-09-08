@@ -1,10 +1,11 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, Archive, X } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, Archive, X, Eye } from 'lucide-react';
 import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
 import {
+  getAllResponsesForUpdates,
   getArchivedUpdates,
   getResponsesForUpdates,
   sendCaregiverResponse,
@@ -36,12 +37,16 @@ const QUICK_REPLIES_NEEDS = ['On it!', 'Be there soon', 'Coming in 10 minutes'];
 function ArchivedUpdateCard({
   update,
   response,
+  allResponses,
+  currentProfileId,
   onRespond,
   onUnarchive,
   removing,
 }: {
   update: StatusUpdate;
   response: CaregiverResponse | null;
+  allResponses: CaregiverResponse[];
+  currentProfileId: string;
   onRespond: (updateId: string, message: string) => Promise<void>;
   onUnarchive: (updateId: string) => void;
   removing: boolean;
@@ -58,6 +63,9 @@ function ArchivedUpdateCard({
   const isNeedsOnly = !energy && needs.length > 0 && symptoms.length === 0;
   const hasResponse = Boolean(response?.message);
   const isCompleted = Boolean(update.completedAt);
+
+  const othersReplied = allResponses.filter(r => r.caregiverId !== currentProfileId && r.message?.trim());
+  const othersSeen = allResponses.filter(r => r.caregiverId !== currentProfileId && r.seenAt && !r.message?.trim());
 
   const handleQuickReply = async (msg: string) => {
     setSending(true);
@@ -235,6 +243,29 @@ function ArchivedUpdateCard({
               )}
             </>
           )}
+
+          {/* Other helpers' responses */}
+          {(othersReplied.length > 0 || othersSeen.length > 0) && (
+            <div className="border-t border-white/5 pt-2.5 space-y-1.5">
+              {othersReplied.map(r => (
+                <div key={r.id} className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-periwinkle/60" />
+                  <p className="text-xs text-off-white/60">
+                    <span className="font-medium text-off-white/75">{r.caregiverDisplayName ?? 'Helper'}</span> replied:{' '}
+                    <span className="italic">{r.message}</span>
+                  </p>
+                </div>
+              ))}
+              {othersSeen.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Eye className="h-3.5 w-3.5 shrink-0 text-off-white/40" />
+                  <p className="text-xs text-off-white/50">
+                    Seen by {othersSeen.map(r => r.caregiverDisplayName ?? 'Helper').join(', ')}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -251,6 +282,7 @@ interface CaregiverArchiveScreenProps {
 export default function CaregiverArchiveScreen({ session, refreshToken }: CaregiverArchiveScreenProps) {
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
+  const [allResponses, setAllResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [removingIds, setRemovingIds] = React.useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -260,8 +292,12 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
     setUpdates(archived);
     if (archived.length > 0) {
       const ids = archived.map(u => u.id);
-      const resps = await getResponsesForUpdates(session.profileId, ids);
+      const [resps, allResps] = await Promise.all([
+        getResponsesForUpdates(session.profileId, ids),
+        getAllResponsesForUpdates(ids),
+      ]);
       setResponses(resps);
+      setAllResponses(allResps);
     }
     setIsLoading(false);
   }, [session]);
@@ -289,12 +325,18 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
     const result = await sendCaregiverResponse(session.profileId, updateId, message);
     if (result) {
       setResponses(prev => ({ ...prev, [updateId]: result }));
+      setAllResponses(prev => {
+        const existing = (prev[updateId] ?? []).filter(r => r.caregiverId !== session.profileId);
+        return { ...prev, [updateId]: [...existing, result] };
+      });
     } else {
       const now = new Date().toISOString();
-      setResponses(prev => ({
-        ...prev,
-        [updateId]: { id: crypto.randomUUID(), statusUpdateId: updateId, caregiverId: session.profileId, message, seenAt: now, createdAt: now },
-      }));
+      const fallback: CaregiverResponse = { id: crypto.randomUUID(), statusUpdateId: updateId, caregiverId: session.profileId, message, seenAt: now, createdAt: now };
+      setResponses(prev => ({ ...prev, [updateId]: fallback }));
+      setAllResponses(prev => {
+        const existing = (prev[updateId] ?? []).filter(r => r.caregiverId !== session.profileId);
+        return { ...prev, [updateId]: [...existing, fallback] };
+      });
     }
   };
 
@@ -336,6 +378,8 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
                 <ArchivedUpdateCard
                   update={update}
                   response={responses[update.id] ?? null}
+                  allResponses={allResponses[update.id] ?? []}
+                  currentProfileId={session.profileId}
                   onRespond={handleRespond}
                   onUnarchive={handleUnarchive}
                   removing={removingIds.has(update.id)}
