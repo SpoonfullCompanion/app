@@ -15,6 +15,8 @@ import { getPatientConnections } from '../../services/backend';
 interface PatientHomeProps {
   session: AppSession | null;
   recentUpdates: StatusUpdate[];
+  pendingUpdateId?: string | null;
+  onPendingUpdateConsumed?: () => void;
   onSendUpdate: (submission: CommunicationSubmission) => Promise<void>;
   onSignOut: () => Promise<void>;
   onDeleteAccount: () => Promise<void>;
@@ -27,6 +29,8 @@ interface PatientHomeProps {
 export default function PatientHome({
   session,
   recentUpdates,
+  pendingUpdateId,
+  onPendingUpdateConsumed,
   onSendUpdate,
   onSignOut,
   onDeleteAccount,
@@ -72,6 +76,8 @@ export default function PatientHome({
           <HomeScreen
             session={session}
             recentUpdates={recentUpdates}
+            pendingUpdateId={pendingUpdateId}
+            onPendingUpdateConsumed={onPendingUpdateConsumed}
             onNavigate={handleNavigate}
           />
         )}

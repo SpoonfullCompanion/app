@@ -11,6 +11,8 @@ import LatestStatusSummary from './LatestStatusSummary';
 interface HomeScreenProps {
   session: AppSession | null;
   recentUpdates: StatusUpdate[];
+  pendingUpdateId?: string | null;
+  onPendingUpdateConsumed?: () => void;
   onNavigate: (route: NavRoute) => void;
 }
 
@@ -258,7 +260,7 @@ function UpdateCard({ update, responses, onArchive, archiving, helperMap, onMark
   );
 }
 
-export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, onNavigate }: HomeScreenProps) {
+export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, pendingUpdateId, onPendingUpdateConsumed, onNavigate }: HomeScreenProps) {
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [hasActiveConnections, setHasActiveConnections] = React.useState<boolean | null>(null);
   const [archivedIds, setArchivedIds] = React.useState<Set<string>>(new Set());
@@ -344,6 +346,29 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
 
   const visibleUpdates = localUpdates.filter(u => !archivedIds.has(u.id));
 
+  // Deep-link from push notification tap: scroll to and highlight the card
+  React.useEffect(() => {
+    if (!pendingUpdateId || !onPendingUpdateConsumed) return;
+    const target = visibleUpdates.find(u => u.id === pendingUpdateId);
+    if (target) {
+      const id = pendingUpdateId;
+      setTimeout(() => {
+        const el = document.getElementById(`patient-card-${id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-bold-blue', 'animate-pulse');
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-bold-blue', 'animate-pulse');
+          }, 2500);
+        }
+        onPendingUpdateConsumed();
+      }, 300);
+    } else {
+      onPendingUpdateConsumed();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingUpdateId, visibleUpdates]);
+
   // Needs updates = any update with at least one need selected
   const needsUpdates = visibleUpdates.filter(u => (u.selectedNeeds ?? []).length > 0);
 
@@ -421,8 +446,12 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
           {needsUpdates.length > 0 ? (
             <div className="space-y-3">
               {needsUpdates.map((update) => (
-                <UpdateCard
+                <div
                   key={update.id}
+                  id={`patient-card-${update.id}`}
+                  className="rounded-2xl transition-all"
+                >
+                <UpdateCard
                   update={update}
                   responses={responses[update.id] ?? []}
                   onArchive={handleArchive}
@@ -431,6 +460,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
                   onMarkResolved={handleMarkResolved}
                   onUnresolve={handleUnresolve}
                 />
+                </div>
               ))}
             </div>
           ) : (

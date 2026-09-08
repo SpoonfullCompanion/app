@@ -384,6 +384,8 @@ function App() {
       <PatientHome
         session={session}
         recentUpdates={recentUpdates}
+        pendingUpdateId={pendingUpdateId}
+        onPendingUpdateConsumed={() => setPendingUpdateId(null)}
         onSendUpdate={handleSendUpdate}
         onSignOut={handleSignOut}
         onDeleteAccount={handleDeleteAccount}
