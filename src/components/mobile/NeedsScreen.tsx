@@ -152,7 +152,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
   };
 
   const handleSpeakNote = () => {
-    if (customNote.trim() && ttsEnabled) {
+    if (customNote.trim()) {
       speak(customNote);
     }
   };
@@ -229,7 +229,7 @@ export default function NeedsScreen({ ttsEnabled, onToggleTTS, onSendUpdate, ses
             />
             <button
               onClick={handleSpeakNote}
-              disabled={!customNote.trim() || !ttsEnabled}
+              disabled={!customNote.trim()}
               aria-label="Speak note aloud"
               className="rounded-lg border border-periwinkle/30 bg-midnight-black/60 px-4 text-zinc-100 transition-all hover:border-bold-blue hover:bg-midnight-black/80 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
             >
