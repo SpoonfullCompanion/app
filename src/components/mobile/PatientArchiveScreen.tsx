@@ -175,7 +175,7 @@ export default function PatientArchiveScreen({ session, onBack }: PatientArchive
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
-    const data = await getPatientArchivedUpdates(session);
+    const data = (await getPatientArchivedUpdates(session)).filter(u => (u.selectedNeeds ?? []).length > 0);
     setUpdates(data);
     if (data.length > 0) {
       const ids = data.map(u => u.id);
