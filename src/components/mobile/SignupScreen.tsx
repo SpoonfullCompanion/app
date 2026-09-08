@@ -1,11 +1,13 @@
 import React from 'react';
 import { appConfig } from '../../lib/appConfig';
 import type { UserRole } from '../../types/app';
-import { UserRound, HeartHandshake, ChevronLeft, Eye, EyeOff } from 'lucide-react';
+import { UserRound, HeartHandshake, ChevronLeft, Eye, EyeOff, Check } from 'lucide-react';
 import { checkDisplayNameAvailable } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
 import { DEFAULT_AVATAR_ICON_ID } from '../../utils/avatarIcons';
+import TermsOfUseScreen from './TermsOfUseScreen';
+import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 
 interface SignupScreenProps {
   onSignUpWithPassword: (email: string, password: string, role: UserRole, displayName: string, avatarIcon: string) => Promise<string>;
@@ -34,6 +36,9 @@ export default function SignupScreen({
   const [isError, setIsError] = React.useState(false);
   const [isBusy, setIsBusy] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [acknowledgedNotEmergency, setAcknowledgedNotEmergency] = React.useState(false);
+  const [agreedToTerms, setAgreedToTerms] = React.useState(false);
+  const [legalView, setLegalView] = React.useState<'terms' | 'privacy' | null>(null);
 
   const handleDisplayNameBlur = async () => {
     const trimmed = displayName.trim();
@@ -81,6 +86,14 @@ export default function SignupScreen({
   };
 
   const displayMessage = statusMessage || localStatusMessage;
+
+  if (legalView === 'terms') {
+    return <TermsOfUseScreen onBack={() => setLegalView(null)} />;
+  }
+
+  if (legalView === 'privacy') {
+    return <PrivacyPolicyScreen onBack={() => setLegalView(null)} />;
+  }
 
   if (!selectedRole) {
     return (
@@ -251,9 +264,77 @@ export default function SignupScreen({
             </div>
           </div>
 
+          {/* Legal acknowledgements */}
+          <div className="space-y-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setAcknowledgedNotEmergency((v) => !v)}
+              className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all active:scale-[0.99] ${
+                acknowledgedNotEmergency
+                  ? 'border-bold-blue/50 bg-bold-blue/10'
+                  : 'border-periwinkle/20 bg-midnight-black/50'
+              }`
+            }
+            >
+              <div
+                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border transition-colors ${
+                  acknowledgedNotEmergency
+                    ? 'border-bold-blue bg-bold-blue'
+                    : 'border-periwinkle/40 bg-transparent'
+                }`}
+              >
+                {acknowledgedNotEmergency && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+              </div>
+              <span className="text-sm text-off-white/80 leading-relaxed">
+                I understand Spoonfull.app is <strong className="text-off-white">NOT</strong> to be used for medical emergencies.
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAgreedToTerms((v) => !v)}
+              className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all active:scale-[0.99] ${
+                agreedToTerms
+                  ? 'border-bold-blue/50 bg-bold-blue/10'
+                  : 'border-periwinkle/20 bg-midnight-black/50'
+              }`
+            }
+            >
+              <div
+                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border transition-colors ${
+                  agreedToTerms
+                    ? 'border-bold-blue bg-bold-blue'
+                    : 'border-periwinkle/40 bg-transparent'
+                }`}
+              >
+                {agreedToTerms && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+              </div>
+              <span className="text-sm text-off-white/80 leading-relaxed">
+                I’ve read and agree to the{' '}
+                <span
+                  role="link"
+                  onClick={(e) => { e.stopPropagation(); setLegalView('terms'); }}
+                  className="font-semibold text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
+                >
+                  Terms of Use
+                </span>
+                {' '}
+                and{' '}
+                <span
+                  role="link"
+                  onClick={(e) => { e.stopPropagation(); setLegalView('privacy'); }}
+                  className="font-semibold text-periwinkle underline underline-offset-2 hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </span>
+                .
+              </span>
+            </button>
+          </div>
+
           <button
             type="submit"
-            disabled={!email || !password || !displayName.trim() || !!displayNameError || isBusy || !appConfig.hasSupabase}
+            disabled={!email || !password || !displayName.trim() || !!displayNameError || !acknowledgedNotEmergency || !agreedToTerms || isBusy || !appConfig.hasSupabase}
             className={ctaClass}
           >
             {isBusy ? 'Creating account…' : 'Create account'}
