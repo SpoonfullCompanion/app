@@ -1,12 +1,14 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, Archive, X, Eye } from 'lucide-react';
-import type { AppSession, CaregiverResponse, NeedPriority, StatusUpdate } from '../../types/app';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, Archive, X, Eye, Users } from 'lucide-react';
+import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
+import AvatarIcon from '../AvatarIcon';
 import { formatDistanceToNow } from './time';
 import {
   getAllResponsesForUpdates,
   getArchivedUpdates,
+  getFollowerConnections,
   getResponsesForUpdates,
   sendCaregiverResponse,
   unarchiveUpdate,
@@ -280,18 +282,50 @@ interface CaregiverArchiveScreenProps {
 }
 
 export default function CaregiverArchiveScreen({ session, refreshToken }: CaregiverArchiveScreenProps) {
+  const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
   const [responses, setResponses] = React.useState<Record<string, CaregiverResponse>>({});
   const [allResponses, setAllResponses] = React.useState<Record<string, CaregiverResponse[]>>({});
   const [removingIds, setRemovingIds] = React.useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = React.useState(true);
+  const [selectedPatientId, setSelectedPatientId] = React.useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const pickerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!pickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [pickerOpen]);
+
+  const activeConnections = connections.filter(c => c.status === 'active');
+  const patientMap = new Map<string, { displayName: string; avatarIcon: string | null | undefined }>(
+    activeConnections.map(c => [c.patientId, { displayName: c.patientDisplayName ?? 'Patient', avatarIcon: c.patientAvatarIcon }])
+  );
+
+  const allPatientIds = React.useMemo(() => {
+    return [...patientMap.keys()].sort((a, b) =>
+      (patientMap.get(a)?.displayName ?? '').localeCompare(patientMap.get(b)?.displayName ?? '')
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connections]);
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
-    const archived = (await getArchivedUpdates(session)).filter(u => (u.selectedNeeds ?? []).length > 0);
-    setUpdates(archived);
-    if (archived.length > 0) {
-      const ids = archived.map(u => u.id);
+    const [conns, archived] = await Promise.all([
+      getFollowerConnections(session),
+      getArchivedUpdates(session),
+    ]);
+    setConnections(conns);
+    const needsOnly = archived.filter(u => (u.selectedNeeds ?? []).length > 0);
+    setUpdates(needsOnly);
+    if (needsOnly.length > 0) {
+      const ids = needsOnly.map(u => u.id);
       const [resps, allResps] = await Promise.all([
         getResponsesForUpdates(session.profileId, ids),
         getAllResponsesForUpdates(ids),
@@ -306,6 +340,19 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
     void load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.profileId, refreshToken]);
+
+  // Auto-select first patient when connections load
+  React.useEffect(() => {
+    if (allPatientIds.length === 0) return;
+    if (!selectedPatientId || !allPatientIds.includes(selectedPatientId)) {
+      setSelectedPatientId(allPatientIds[0]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPatientIds]);
+
+  const selectedUpdates = selectedPatientId
+    ? updates.filter(u => u.patientId === selectedPatientId)
+    : updates;
 
   const handleUnarchive = (updateId: string) => {
     setRemovingIds(prev => new Set(prev).add(updateId));
@@ -355,21 +402,69 @@ export default function CaregiverArchiveScreen({ session, refreshToken }: Caregi
           <p className="mt-1 text-xs text-off-white/70">Up to 20 updates</p>
         </div>
 
+        {/* Patient selector */}
+        {allPatientIds.length > 1 && (
+          <div className="relative mb-5" ref={pickerRef}>
+            <button
+              onClick={() => setPickerOpen(v => !v)}
+              aria-label={`Select patient, currently ${selectedPatientId ? patientMap.get(selectedPatientId)?.displayName ?? 'All patients' : 'All patients'}`}
+              aria-expanded={pickerOpen}
+              aria-haspopup="listbox"
+              className="flex w-full items-center gap-2.5 rounded-2xl border border-periwinkle/20 bg-midnight-black/50 px-4 py-3 transition-all hover:border-periwinkle/40 active:scale-[0.99]"
+            >
+              <AvatarIcon iconId={selectedPatientId ? patientMap.get(selectedPatientId)?.avatarIcon : undefined} size="sm" />
+              <span className="flex-1 text-left text-sm font-medium text-off-white">
+                {selectedPatientId ? patientMap.get(selectedPatientId)?.displayName ?? 'Patient' : 'All patients'}
+              </span>
+              <ChevronDown className={`h-4 w-4 text-off-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {pickerOpen && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-periwinkle/25 bg-midnight-black/95 shadow-2xl shadow-black/60 backdrop-blur-md">
+                <div className="max-h-80 overflow-y-auto py-1.5">
+                  {allPatientIds.map(pid => {
+                    const patient = patientMap.get(pid);
+                    const isActive = pid === selectedPatientId;
+                    const count = updates.filter(u => u.patientId === pid).length;
+                    return (
+                      <button
+                        key={pid}
+                        onClick={() => { setSelectedPatientId(pid); setPickerOpen(false); }}
+                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 transition-all active:scale-[0.98] ${
+                          isActive ? 'bg-bold-blue/15' : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <AvatarIcon iconId={patient?.avatarIcon} size="sm" />
+                        <span className={`flex-1 text-left text-sm font-medium ${isActive ? 'text-white' : 'text-off-white/80'}`}>
+                          {patient?.displayName ?? 'Patient'}
+                        </span>
+                        {count > 0 && (
+                          <span className="text-xs text-off-white/50">{count}</span>
+                        )}
+                        {isActive && <CheckCircle className="h-4 w-4 text-bold-blue" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
               <div key={i} className="h-28 animate-pulse rounded-2xl bg-white/5" />
             ))}
           </div>
-        ) : updates.length === 0 ? (
+        ) : selectedUpdates.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">
             <Archive className="mx-auto mb-3 h-8 w-8 text-off-white/30" />
-            <p className="text-sm text-off-white/80">Archive is empty</p>
-            <p className="mt-1 text-xs text-off-white/70">Tap the bookmark icon on any feed card to archive it</p>
+            <p className="text-sm text-off-white/80">{allPatientIds.length === 0 ? 'No connections yet' : 'No archived needs'}</p>
+            <p className="mt-1 text-xs text-off-white/70">{allPatientIds.length === 0 ? 'Connect with a patient to see their updates' : 'Tap the bookmark icon on any feed card to archive it'}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {updates.map((update, i) => (
+            {selectedUpdates.map((update, i) => (
               <div
                 key={update.id}
                 className="animate-slide-up"
