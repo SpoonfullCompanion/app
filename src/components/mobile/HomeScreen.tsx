@@ -460,7 +460,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
         <div className="mb-3">
           <div className="mb-3">
             <p className="text-sm font-semibold text-off-white/80">Communicate</p>
-            <p className="text-xs text-off-white/70">Tap a card to send a message</p>
+            <p className="text-xs text-off-white/70">Talk to your helpers</p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -474,7 +474,7 @@ export default function HomeScreen({ session, recentUpdates: recentUpdatesProp, 
               </div>
               <div>
                 <p className="text-sm font-bold text-white">Needs</p>
-                <p className="mt-0.5 text-[10px] leading-tight text-white/70">What you need now</p>
+                <p className="mt-0.5 text-[10px] leading-tight text-white/70">Share a request</p>
               </div>
             </button>
 
