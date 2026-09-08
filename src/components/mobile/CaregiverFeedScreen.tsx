@@ -1,6 +1,8 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal, Check } from 'lucide-react';
+import { Clock, Hourglass, Zap, CheckCircle, Send, ChevronDown, ChevronUp, MessageSquare, Users, RefreshCw, Archive, Eye, SendHorizontal as SendHorizonal, Check, Bell, BellOff, Settings as SettingsIcon, X, Loader2 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import type { AppSession, CaregiverResponse, Connection, NeedPriority, StatusUpdate } from '../../types/app';
 import { ENERGY_STATUSES, NEEDS, SYMPTOMS, stripNeedSpeechFromMessage } from '../../utils/communicationData';
 import { formatDistanceToNow } from './time';
@@ -13,12 +15,16 @@ import {
   getUpdatesForConnectedPatients,
   markUpdateResolved,
   markUpdatesSeen,
+  savePushPreference,
   sendCaregiverResponse,
   unarchiveUpdate,
   unmarkUpdateResolved,
 } from '../../services/backend';
+import { enablePush, getPushPermissionStatus, isPushActive, openNotificationSettings } from '../../services/push';
+import type { PushPermissionStatus } from '../../services/push';
 import AvatarIcon from '../AvatarIcon';
 import LatestStatusSummary from './LatestStatusSummary';
+import { readStorage, writeStorage } from '../../utils/storage';
 
 interface CaregiverFeedScreenProps {
   session: AppSession;
@@ -384,6 +390,94 @@ function PatientSectionHeader({
 
 // ─── Main feed ────────────────────────────────────────────────────────────────
 
+const NOTIF_BANNER_DISMISSED_KEY = 'notif-banner-dismissed';
+
+function NotificationStatusBanner({ profileId }: { profileId: string }) {
+  const [pushActive, setPushActive] = React.useState<boolean | null>(null);
+  const [permStatus, setPermStatus] = React.useState<PushPermissionStatus>('unsupported');
+  const [dismissed, setDismissed] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const isNative = Capacitor.isNativePlatform();
+
+  React.useEffect(() => {
+    if (!isNative) return;
+    void isPushActive().then(setPushActive);
+    void getPushPermissionStatus().then(setPermStatus);
+    setDismissed(readStorage(NOTIF_BANNER_DISMISSED_KEY, false));
+  }, [isNative]);
+
+  // Re-check on foreground return
+  React.useEffect(() => {
+    if (!isNative) return;
+    const listener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive) return;
+      void isPushActive().then(setPushActive);
+      void getPushPermissionStatus().then(setPermStatus);
+    });
+    return () => { void listener.then((l) => l.remove()); };
+  }, [isNative]);
+
+  if (!isNative || pushActive === null || dismissed || pushActive) return null;
+
+  const handleEnable = async () => {
+    if (permStatus === 'denied') {
+      await openNotificationSettings();
+      return;
+    }
+    setBusy(true);
+    const result = await enablePush(profileId);
+    await savePushPreference(profileId, result.ok);
+    setBusy(false);
+    if (result.ok) {
+      setPushActive(true);
+    } else if (result.reason === 'denied') {
+      setPermStatus('denied');
+    }
+  };
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    writeStorage(NOTIF_BANNER_DISMISSED_KEY, true);
+  };
+
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-600/40 bg-amber-900/30 px-4 py-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
+        <BellOff className="h-4 w-4 text-amber-300" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-amber-100">Notifications are off</p>
+        <p className="text-xs text-amber-200/70">
+          {permStatus === 'denied'
+            ? 'Open Settings to allow Spoonfull alerts.'
+            : 'You could miss your patient\'s messages.'}
+        </p>
+      </div>
+      <button
+        onClick={() => void handleEnable()}
+        disabled={busy}
+        className="flex shrink-0 items-center gap-1.5 rounded-full bg-amber-500/80 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-amber-500 active:scale-95 disabled:opacity-50"
+      >
+        {busy ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : permStatus === 'denied' ? (
+          <SettingsIcon className="h-3.5 w-3.5" />
+        ) : (
+          <Bell className="h-3.5 w-3.5" />
+        )}
+        {permStatus === 'denied' ? 'Settings' : 'Enable'}
+      </button>
+      <button
+        onClick={handleDismiss}
+        aria-label="Dismiss notification banner"
+        className="shrink-0 text-amber-200/50 transition-colors hover:text-amber-100"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigateToConnections, onArchiveChanged, pendingUpdateId, onPendingUpdateConsumed }: CaregiverFeedScreenProps) {
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updates, setUpdates] = React.useState<StatusUpdate[]>([]);
@@ -686,6 +780,8 @@ export default function CaregiverFeedScreen({ session, legacyUpdates, onNavigate
             Refresh
           </button>
         </div>
+
+        <NotificationStatusBanner profileId={session.profileId} />
 
         {allPatientIds.length === 0 ? (
           <div className="rounded-2xl border border-dark-blue/30 bg-midnight-black/40 px-5 py-14 text-center">

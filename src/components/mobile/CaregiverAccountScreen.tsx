@@ -1,8 +1,10 @@
 import React from 'react';
-import { Bell, BellOff, LogOut, Mail, Pencil, Check, X, User, Lock, AlertTriangle, Loader2 } from 'lucide-react';
+import { Bell, BellOff, LogOut, Mail, Pencil, Check, X, User, Lock, AlertTriangle, Loader2, Settings as SettingsIcon } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import type { AppSession } from '../../types/app';
-import { enablePush, disablePush, isPushActive } from '../../services/push';
+import { enablePush, disablePush, getPushPermissionStatus, isPushActive, openNotificationSettings } from '../../services/push';
+import type { PushPermissionStatus } from '../../services/push';
 import { checkDisplayNameAvailable, savePushPreference } from '../../services/backend';
 import AvatarIcon from '../AvatarIcon';
 import AvatarIconPicker from '../AvatarIconPicker';
@@ -100,12 +102,20 @@ export default function CaregiverAccountScreen({
   const [pushEnabled, setPushEnabled] = React.useState(false);
   const [pushLoading, setPushLoading] = React.useState(false);
   const [pushHint, setPushHint] = React.useState('');
+  const [permStatus, setPermStatus] = React.useState<PushPermissionStatus>('unsupported');
   const isNative = Capacitor.isNativePlatform();
 
   React.useEffect(() => {
     if (!session?.profileId) return;
     void isPushActive().then(setPushEnabled);
+    void getPushPermissionStatus().then(setPermStatus);
   }, [session?.profileId]);
+
+  const refreshPushState = async () => {
+    const [active, status] = await Promise.all([isPushActive(), getPushPermissionStatus()]);
+    setPushEnabled(active);
+    setPermStatus(status);
+  };
 
   const handleTogglePush = async () => {
     if (!session?.profileId || pushLoading) return;
@@ -113,6 +123,11 @@ export default function CaregiverAccountScreen({
     setPushHint('');
 
     if (!pushEnabled) {
+      if (permStatus === 'denied') {
+        await openNotificationSettings();
+        setPushLoading(false);
+        return;
+      }
       const result = await enablePush(session.profileId);
       if (!result.ok) {
         setPushHint(
@@ -120,6 +135,7 @@ export default function CaregiverAccountScreen({
             ? 'Enable notifications in your device Settings to receive alerts.'
             : 'Push notifications are available in the Spoonfull mobile app.',
         );
+        await refreshPushState();
         setPushLoading(false);
         return;
       }
@@ -133,6 +149,15 @@ export default function CaregiverAccountScreen({
 
     setPushLoading(false);
   };
+
+  // Re-check push state when app returns to foreground (user may have changed iOS Settings)
+  React.useEffect(() => {
+    if (!isNative || !session?.profileId) return;
+    const listener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void refreshPushState();
+    });
+    return () => { void listener.then((l) => l.remove()); };
+  }, [isNative, session?.profileId]);
 
   const startEditing = (field: EditingField) => {
     setEditing(field);
@@ -408,23 +433,40 @@ export default function CaregiverAccountScreen({
               <p className="font-medium text-off-white text-sm">Patient update alerts</p>
               <p className="text-xs text-off-white/70">
                 {isNative
-                  ? 'Get notified when a patient sends you a message'
+                  ? pushEnabled
+                    ? 'You\'ll be notified when a patient sends a message'
+                    : permStatus === 'denied'
+                      ? 'Notifications were denied. Open Settings to allow alerts.'
+                      : 'Get notified when a patient sends you a message'
                   : 'Toggle notifications on or off from your mobile device'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => void handleTogglePush()}
-              disabled={!isNative || pushLoading}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-2 focus:outline-offset-2 focus:outline-bold-blue disabled:cursor-not-allowed disabled:opacity-40 ${pushEnabled ? 'bg-bold-blue' : 'bg-dark-blue'}`}
-              aria-checked={pushEnabled}
-              role="switch"
-              aria-label="Toggle patient update notifications"
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${pushEnabled ? 'translate-x-6' : 'translate-x-1'}`}
-              />
-            </button>
+            {isNative && permStatus === 'denied' && !pushEnabled ? (
+              <button
+                type="button"
+                onClick={() => void openNotificationSettings()}
+                disabled={pushLoading}
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-bold-blue/40 bg-bold-blue/10 px-3 py-2 text-xs font-semibold text-bold-blue transition-all hover:bg-bold-blue/20 active:scale-95 disabled:opacity-40"
+                aria-label="Open device settings to enable notifications"
+              >
+                <SettingsIcon className="h-3.5 w-3.5" />
+                Settings
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleTogglePush()}
+                disabled={!isNative || pushLoading}
+                className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-2 focus:outline-offset-2 focus:outline-bold-blue disabled:cursor-not-allowed disabled:opacity-40 ${pushEnabled ? 'bg-bold-blue' : 'bg-dark-blue'}`}
+                aria-checked={pushEnabled}
+                role="switch"
+                aria-label="Toggle patient update notifications"
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${pushEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            )}
           </div>
           {pushHint && (
             <p role="alert" className="mt-3 text-xs text-off-white/70">{pushHint}</p>

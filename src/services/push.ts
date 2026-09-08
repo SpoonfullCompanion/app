@@ -167,6 +167,42 @@ export async function isPushActive(): Promise<boolean> {
   }
 }
 
+export type PushPermissionStatus = 'granted' | 'denied' | 'notDetermined' | 'unsupported';
+
+/**
+ * Returns the raw OS permission state without side effects. Used by the UI to
+ * decide whether to show a toggle, an "Open Settings" button, or an enable prompt.
+ */
+export async function getPushPermissionStatus(): Promise<PushPermissionStatus> {
+  if (!pushAvailable()) return 'unsupported';
+  const OneSignal = await loadOneSignal();
+  if (!OneSignal) return 'unsupported';
+  await initPush();
+  try {
+    const native = await OneSignal.Notifications.permissionNative();
+    // OSNotificationPermission: 0=NotDetermined, 1=Denied, 2=Authorized, 3=Provisional, 4=Ephemeral.
+    if (native === 0) return 'notDetermined';
+    if (native === 1) return 'denied';
+    return 'granted';
+  } catch {
+    return 'unsupported';
+  }
+}
+
+/**
+ * Open the iOS Settings app directly to the Spoonfull notification settings page.
+ * On Android, opens the app's notification settings channel.
+ */
+export async function openNotificationSettings(): Promise<void> {
+  const platform = Capacitor.getPlatform();
+  if (platform === 'ios') {
+    window.open('app-settings:');
+  } else if (platform === 'android') {
+    // On Android, open the app notification settings
+    window.open('package:com.spoonfull.app');
+  }
+}
+
 /**
  * Reconcile push state on launch; returns whether push is effectively active so
  * the caller can persist it to notification_preferences (which the server uses

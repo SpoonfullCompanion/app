@@ -30,6 +30,7 @@ import {
   updatePassword,
 } from './services/backend';
 import { initPush, logoutPush, reconcilePush, setupNotificationClickHandler } from './services/push';
+import NotificationOnboardingScreen, { hasSeenNotificationOnboarding } from './components/mobile/NotificationOnboardingScreen';
 
 function App() {
   const [showSignup, setShowSignup] = React.useState(false);
@@ -40,6 +41,7 @@ function App() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [authMessage, setAuthMessage] = React.useState('');
   const [pendingUpdateId, setPendingUpdateId] = React.useState<string | null>(null);
+  const [showNotifOnboarding, setShowNotifOnboarding] = React.useState(false);
   const isDemoSession = session?.authMode === 'demo';
   const showDemoChrome = !isDemoSession;
 
@@ -168,6 +170,16 @@ function App() {
       void reconcilePush(session.profileId)
         .then((enabled) => savePushPreference(session.profileId, enabled))
         .catch((error) => console.error('Push reconcile failed', error));
+    }
+
+    // Show notification onboarding for first-time caregivers on native
+    if (
+      isNativeApp() &&
+      session.role === 'caregiver' &&
+      session.authMode !== 'demo' &&
+      !hasSeenNotificationOnboarding()
+    ) {
+      setShowNotifOnboarding(true);
     }
 
     void getRecentUpdates(session)
@@ -379,6 +391,15 @@ function App() {
         onUpdateEmail={handleUpdateEmail}
         onUpdatePassword={handleUpdatePassword}
         onUpdateAvatarIcon={handleUpdateAvatarIcon}
+      />
+    );
+  }
+
+  if (showNotifOnboarding && session?.role === 'caregiver') {
+    return (
+      <NotificationOnboardingScreen
+        profileId={session.profileId}
+        onDone={() => setShowNotifOnboarding(false)}
       />
     );
   }
