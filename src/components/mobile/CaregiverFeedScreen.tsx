@@ -374,7 +374,6 @@ function PatientSectionHeader({
           )}
         </div>
       )}
-      <p className="mt-0.5 text-xs text-off-white/70 tracking-wide">Patient</p>
       <div className="mt-3 w-full">
         <LatestStatusSummary update={latestStatus} />
       </div>
