@@ -73,4 +73,6 @@ export const SYMPTOMS: Symptom[] = [
   { id: 'no_think', label: "Difficulty Thinking", icon: 'Cloud', text: "It's hard to think" },
   { id: 'no_speak', label: "Difficulty Speaking", icon: 'VolumeX', text: "It's hard to speak" },
   { id: 'no_move', label: "Difficulty Moving", icon: 'UserX', text: "It's hard to move" },
+  { id: 'doing_okay', label: 'Doing Okay', icon: 'HandThumbsUp', text: "I'm doing okay" },
+  { id: 'feeling_good', label: 'Feeling Good', icon: 'Smile', text: "I'm feeling good" },
 ];
