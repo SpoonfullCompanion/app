@@ -449,7 +449,7 @@ export default function CaregiverAccountScreen({
         {/* Delete account */}
         <button
           onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
-          className="mt-3 self-center text-xs text-off-white/40 underline-offset-2 transition-colors hover:text-red-400/80 hover:underline"
+          className="mt-3 self-center text-xs text-off-white/80 underline-offset-2 transition-colors hover:text-red-400 hover:underline"
         >
           Delete account
         </button>
