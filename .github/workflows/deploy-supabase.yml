@@ -54,4 +54,7 @@ jobs:
             exit 1
           fi
           echo "Deploying Edge Functions to project: $PROJECT_REF"
-          supabase functions deploy send-push --project-ref "$PROJECT_REF"
+          for fn in send-push delete-account submit-feedback; do
+            echo "--- deploying $fn ---"
+            supabase functions deploy "$fn" --project-ref "$PROJECT_REF"
+          done
