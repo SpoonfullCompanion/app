@@ -34,50 +34,117 @@ function json(body: unknown, status = 200): Response {
 }
 
 Deno.serve(async (req: Request) => {
+  // Short id so every line from one submission can be grepped together.
+  const rid = crypto.randomUUID().slice(0, 8);
+  const log = (...args: unknown[]) => console.log(`[submit-feedback][${rid}]`, ...args);
+  const logErr = (...args: unknown[]) => console.error(`[submit-feedback][${rid}]`, ...args);
+
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (req.method !== 'POST') {
+    logErr('Method not allowed:', req.method);
+    return json({ error: 'Method not allowed' }, 405);
+  }
+
+  // Read and parse the body FIRST, before any check that can bail out. Whatever
+  // else goes wrong from here on, the user's words are already in hand and get
+  // written to the error log rather than lost.
+  let rawBody = '';
+  try {
+    rawBody = await req.text();
+  } catch (err) {
+    logErr('Could not read request body:', err);
+  }
+
+  let feedback = '';
+  let parseFailed = false;
+  if (rawBody) {
+    try {
+      const payload = JSON.parse(rawBody) as { feedback?: unknown };
+      feedback = String(payload.feedback ?? '').trim();
+    } catch {
+      parseFailed = true;
+      logErr('Request body was not valid JSON. Raw body:', rawBody.slice(0, 5000));
+    }
+  }
+
+  // Anything that prevents the issue from being filed logs this, so the text is
+  // recoverable from the function logs and can be filed by hand.
+  const logUnfiled = (reason: string, who = 'unidentified user') => {
+    logErr(
+      `UNFILED FEEDBACK (${reason}) from ${who} at ${new Date().toISOString()}:`,
+      feedback || rawBody.slice(0, 5000) || '(nothing captured)',
+    );
+  };
+
+  log('Request received. bytes=', rawBody.length, 'parsedChars=', feedback.length);
 
   if (!GITHUB_TOKEN) {
+    logErr('GITHUB_TOKEN is not set on this function. Check Project Settings -> Edge Functions -> Secrets.');
+    logUnfiled('GITHUB_TOKEN missing');
     return json({ error: 'GitHub integration is not configured on the server' }, 500);
   }
 
   try {
     const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-    if (!jwt) return json({ error: 'Missing Authorization header' }, 401);
+    if (!jwt) {
+      logErr('Missing Authorization header.');
+      logUnfiled('no auth header');
+      return json({ error: 'Missing Authorization header' }, 401);
+    }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
     const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
-    if (userErr || !userData?.user) return json({ error: 'Invalid session' }, 401);
+    if (userErr || !userData?.user) {
+      logErr('Session validation failed:', userErr?.message ?? 'no user on token');
+      logUnfiled('invalid session');
+      return json({ error: 'Invalid session' }, 401);
+    }
     const callerId = userData.user.id;
 
-    const { data: profile } = await admin
+    const { data: profile, error: profileErr } = await admin
       .from('profiles')
       .select('display_name, role')
       .eq('id', callerId)
       .maybeSingle();
 
-    const displayName = (profile?.display_name as string) ?? 'Unknown user';
-    const role = (profile?.role as string) ?? 'unknown';
-
-    let payload: { feedback?: string };
-    try {
-      payload = await req.json();
-    } catch {
-      return json({ error: 'Invalid JSON body' }, 400);
+    if (profileErr) {
+      // Non-fatal: the issue can still be filed with placeholder attribution.
+      logErr('Profile lookup failed (continuing with placeholders):', profileErr.message);
     }
 
-    const feedback = (payload.feedback ?? '').trim();
-    if (!feedback) return json({ error: 'Feedback cannot be empty' }, 400);
-    if (feedback.length > 5000) return json({ error: 'Feedback is too long (max 5000 characters)' }, 400);
+    const displayName = (profile?.display_name as string) ?? 'Unknown user';
+    const role = (profile?.role as string) ?? 'unknown';
+    const who = `${displayName} (${role}, ${callerId})`;
+    log('Authenticated as', who);
+
+    // Body problems are reported only now, so the log line can name the sender.
+    if (!rawBody) {
+      logErr('Request body was empty (content-length 0) — the client sent no payload.');
+      logUnfiled('empty request body', who);
+      return json({ error: 'Request body was empty — no feedback payload was sent' }, 400);
+    }
+    if (parseFailed) {
+      logUnfiled('malformed JSON body', who);
+      return json({ error: 'Invalid JSON body' }, 400);
+    }
+    if (!feedback) {
+      logErr('Feedback field missing or blank after parsing. Raw body:', rawBody.slice(0, 1000));
+      return json({ error: 'Feedback cannot be empty' }, 400);
+    }
+    if (feedback.length > 5000) {
+      logErr('Feedback too long:', feedback.length, 'characters');
+      logUnfiled('over length limit', who);
+      return json({ error: 'Feedback is too long (max 5000 characters)' }, 400);
+    }
 
     const timestamp = new Date().toISOString();
     const titleExcerpt = feedback.slice(0, 60).replace(/\n/g, ' ');
     const title = `Feedback: ${titleExcerpt}${feedback.length > 60 ? '…' : ''}`;
 
-    const body = [
+    const issueBody = [
       `**Submitted by:** ${displayName}`,
       `**Role:** ${role}`,
       `**Time:** ${timestamp}`,
@@ -87,7 +154,7 @@ Deno.serve(async (req: Request) => {
       feedback,
     ].join('\n');
 
-    const labels = ['user-feedback'];
+    log('Creating issue in', GITHUB_REPO);
 
     const ghRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
       method: 'POST',
@@ -97,21 +164,38 @@ Deno.serve(async (req: Request) => {
         'X-GitHub-Api-Version': '2022-11-28',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ title, body, labels }),
+      body: JSON.stringify({ title, body: issueBody, labels: ['user-feedback'] }),
     });
 
     if (!ghRes.ok) {
-      const ghErr = await ghRes.json().catch(() => ({}));
-      console.error('[submit-feedback] GitHub API error', ghRes.status, JSON.stringify(ghErr));
-      return json({ error: 'Failed to create feedback issue' }, 502);
+      const ghErrText = await ghRes.text().catch(() => '(could not read response body)');
+      logErr(
+        'GitHub API rejected the issue.',
+        'status=', ghRes.status,
+        'repo=', GITHUB_REPO,
+        'response=', ghErrText.slice(0, 2000),
+      );
+      // 404 on a private repo almost always means the token lacks `repo` scope
+      // (classic) or was not granted Issues access to this repository
+      // (fine-grained) — GitHub hides existence rather than returning 403.
+      if (ghRes.status === 404) {
+        logErr(
+          'A 404 here usually means the token cannot see',
+          GITHUB_REPO,
+          '— check the token scope and that GITHUB_REPO is exactly "owner/name".',
+        );
+      }
+      logUnfiled(`GitHub ${ghRes.status}`, who);
+      return json({ error: `Failed to create feedback issue (GitHub ${ghRes.status})` }, 502);
     }
 
     const ghData = await ghRes.json();
-    console.log('[submit-feedback] Created issue', ghData.number, 'in', GITHUB_REPO);
+    log('Created issue #' + ghData.number, 'in', GITHUB_REPO);
 
     return json({ ok: true, issueNumber: ghData.number });
   } catch (err) {
-    console.error('[submit-feedback] Unexpected error', err);
+    logErr('Unexpected error:', err instanceof Error ? err.stack ?? err.message : err);
+    logUnfiled('unexpected server error');
     return json({ error: 'An unexpected error occurred' }, 500);
   }
 });

@@ -1372,28 +1372,74 @@ export async function getAllResponsesForUpdates(
   return fetchResponsesForUpdates(statusUpdateIds);
 }
 
+/**
+ * supabase-js wraps any non-2xx from an Edge Function in a FunctionsHttpError
+ * whose `message` is always the generic "Edge Function returned a non-2xx
+ * status code". The useful payload — our function's own `{ error }` JSON — is
+ * on `error.context`, which is the raw Response. Pull it out so the caller sees
+ * the real reason instead of a string that is identical for every failure mode.
+ */
+async function describeFunctionError(error: unknown, fallback: string): Promise<string> {
+  const context = (error as { context?: unknown })?.context;
+
+  if (typeof Response !== 'undefined' && context instanceof Response) {
+    const { status } = context;
+    let body = '';
+    try {
+      body = await context.text();
+    } catch {
+      // Body already consumed or unreadable — fall through to the status-only message.
+    }
+
+    if (body) {
+      let parsed: { error?: string } | null = null;
+      try {
+        parsed = JSON.parse(body);
+      } catch {
+        // Not JSON (e.g. a gateway error page) — surface a trimmed excerpt.
+        return `${body.slice(0, 200)} (HTTP ${status})`;
+      }
+      if (parsed?.error) return `${parsed.error} (HTTP ${status})`;
+    }
+
+    return `${fallback} (HTTP ${status})`;
+  }
+
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
 export async function submitFeedback(feedback: string): Promise<{ ok: boolean; error?: string }> {
   if (!supabase) {
     return { ok: false, error: 'Requires a connected account to submit feedback.' };
   }
 
   try {
+    // NOTE: do not set a Content-Type header here. supabase-js only serializes
+    // `body` when the caller has NOT supplied one (see functions-js
+    // FunctionsClient: the whole serialization branch is gated on
+    // `!hasOwnProperty(headers, 'Content-Type')`). Passing it explicitly meant
+    // the request went out with no body at all, and the function rejected it
+    // with 400 "Invalid JSON body". It sets application/json for us.
     const { data, error } = await supabase.functions.invoke('submit-feedback', {
-      headers: { 'Content-Type': 'application/json' },
       body: { feedback },
     });
 
     if (error) {
-      return { ok: false, error: error.message ?? 'Failed to submit feedback' };
+      const message = await describeFunctionError(error, 'Failed to submit feedback');
+      console.error('[submitFeedback] Edge function call failed:', message, error);
+      return { ok: false, error: message };
     }
 
     if (data?.error) {
+      console.error('[submitFeedback] Function reported an error:', data.error);
       return { ok: false, error: data.error };
     }
 
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to submit feedback';
+    console.error('[submitFeedback] Unexpected client error:', err);
     return { ok: false, error: message };
   }
 }
