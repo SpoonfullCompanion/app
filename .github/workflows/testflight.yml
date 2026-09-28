@@ -2,7 +2,7 @@ name: TestFlight
 
 on:
   push:
-    branches: [main]
+    branches: [production]
   workflow_dispatch:
     inputs:
       hide_header_chrome:
