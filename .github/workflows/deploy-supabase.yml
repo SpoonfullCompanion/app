@@ -5,13 +5,12 @@ name: Deploy Supabase Functions
 # the SUPABASE_ACCESS_TOKEN secret has not been configured yet.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "supabase/functions/**"
-      - "supabase/config.toml"
-      - ".github/workflows/deploy-supabase.yml"
-  workflow_dispatch:
+  workflow_call:
+    secrets:
+      SUPABASE_ACCESS_TOKEN:
+        required: true
+      VITE_SUPABASE_URL:
+        required: true
 
 concurrency:
   group: supabase-deploy-${{ github.ref }}
