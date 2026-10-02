@@ -1,0 +1,36 @@
+name: "Build Android Debug APK"
+
+on: workflow_dispatch
+jobs:
+  build_apk:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_ONESIGNAL_APP_ID: ${{ secrets.VITE_ONESIGNAL_APP_ID }}
+      VITE_SHOW_PATIENT_HEADER_CHROME: ${{ github.event_name == 'push' && 'false' || (inputs.hide_header_chrome && 'false' || 'true') }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install node dependencies
+        run: npm ci
+      - name: Build Apk
+        run: |
+          npm run build
+          npx cap sync android
+          cd android
+          ./gradlew build
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.ref }}-debug-apk
+          path: ${{ github.workspace }}/android/app/build/outputs/apk/debug/app-debug.apk
