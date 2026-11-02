@@ -15,6 +15,9 @@
     "android": "npx cap open android",
     "release:ios:prepare": "npm run build && npx cap sync ios"
   },
+  "prettier": {
+    "singleQuote": true
+  },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
     "@capacitor/app": "^8.0.1",
